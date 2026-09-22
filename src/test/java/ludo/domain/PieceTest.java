@@ -279,4 +279,46 @@ class PieceTest {
                 assertFalse(
                                 piece.hasPassedApproachTwice());
         }
+
+        @Test
+        void shouldEnterHomeStraight() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(
+                                26,
+                                Direction.CLOCKWISE);
+
+                piece.enterHomeStraight(0);
+
+                assertEquals(
+                                PieceState.HOME_STRAIGHT,
+                                piece.getState());
+
+                assertEquals(0, piece.getPosition());
+        }
+
+        @Test
+        void shouldRejectEnteringHomeStraightFromBase() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                assertThrows(
+                                IllegalStateException.class,
+                                () -> piece.enterHomeStraight(0));
+        }
+
+        @Test
+        void shouldRejectInvalidHomeStraightPosition() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(
+                                26,
+                                Direction.CLOCKWISE);
+
+                assertThrows(
+                                IllegalArgumentException.class,
+                                () -> piece.enterHomeStraight(5));
+        }
 }
