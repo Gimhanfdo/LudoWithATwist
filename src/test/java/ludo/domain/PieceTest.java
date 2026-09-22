@@ -203,4 +203,80 @@ class PieceTest {
 
                 assertTrue(piece.hasCaptured());
         }
+
+        @Test
+        void shouldStartWithZeroApproachPasses() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                assertEquals(
+                                0,
+                                piece.getApproachPassCount());
+        }
+
+        @Test
+        void shouldRecordApproachPass() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.recordApproachPass();
+
+                assertEquals(
+                                1,
+                                piece.getApproachPassCount());
+        }
+
+        @Test
+        void shouldRecordMultipleApproachPasses() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.recordApproachPass();
+                piece.recordApproachPass();
+
+                assertEquals(
+                                2,
+                                piece.getApproachPassCount());
+        }
+
+        @Test
+        void shouldReportApproachNotPassedTwiceAfterOnePass() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.recordApproachPass();
+
+                assertFalse(
+                                piece.hasPassedApproachTwice());
+        }
+
+        @Test
+        void shouldReportApproachPassedTwiceAfterTwoPasses() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.recordApproachPass();
+                piece.recordApproachPass();
+
+                assertTrue(
+                                piece.hasPassedApproachTwice());
+        }
+
+        @Test
+        void shouldResetApproachPassCountWhenPieceIsReset() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.recordApproachPass();
+                piece.recordApproachPass();
+
+                piece.reset();
+
+                assertEquals(
+                                0,
+                                piece.getApproachPassCount());
+
+                assertFalse(
+                                piece.hasPassedApproachTwice());
+        }
 }
