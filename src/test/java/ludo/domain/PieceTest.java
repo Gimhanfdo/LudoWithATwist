@@ -321,4 +321,94 @@ class PieceTest {
                                 IllegalArgumentException.class,
                                 () -> piece.enterHomeStraight(5));
         }
+
+        @Test
+        void shouldReachHomeFromHomeStraight() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(
+                                26,
+                                Direction.CLOCKWISE);
+
+                piece.enterHomeStraight(4);
+
+                piece.reachHome();
+
+                assertEquals(
+                                PieceState.HOME,
+                                piece.getState());
+
+                assertNull(piece.getPosition());
+        }
+
+        @Test
+        void shouldRejectReachingHomeFromStandardPath() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(
+                                26,
+                                Direction.CLOCKWISE);
+
+                assertThrows(
+                                IllegalStateException.class,
+                                piece::reachHome);
+        }
+
+        @Test
+        void shouldRejectReachingHomeFromBase() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                assertThrows(
+                                IllegalStateException.class,
+                                piece::reachHome);
+        }
+
+        @Test
+        void shouldMoveWithinHomeStraight() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(26, Direction.CLOCKWISE);
+
+                piece.enterHomeStraight(1);
+
+                piece.moveWithinHomeStraight(3);
+
+                assertEquals(3, piece.getPosition());
+
+                assertEquals(
+                                PieceState.HOME_STRAIGHT,
+                                piece.getState());
+        }
+
+        @Test
+        void shouldRejectHomeStraightMovementFromStandardPath() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(26, Direction.CLOCKWISE);
+
+                assertThrows(
+                                IllegalStateException.class,
+                                () -> piece.moveWithinHomeStraight(2));
+        }
+
+        @Test
+        void shouldRejectInvalidMovementWithinHomeStraight() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(
+                                26,
+                                Direction.CLOCKWISE);
+
+                piece.enterHomeStraight(0);
+
+                assertThrows(
+                                IllegalArgumentException.class,
+                                () -> piece.moveWithinHomeStraight(5));
+        }
 }
