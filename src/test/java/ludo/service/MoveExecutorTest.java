@@ -14,242 +14,401 @@ import static org.mockito.Mockito.*;
 
 class MoveExecutorTest {
 
-    private Board board;
-    private Coin coin;
-    private MoveExecutor moveExecutor;
+        private Board board;
+        private Coin coin;
+        private MoveExecutor moveExecutor;
 
-    @BeforeEach
-    void setUp() {
-        board = new Board();
-        coin = mock(Coin.class);
+        @BeforeEach
+        void setUp() {
+                board = new Board();
+                coin = mock(Coin.class);
 
-        moveExecutor = new MoveExecutor(
-                board,
-                coin);
-    }
+                moveExecutor = new MoveExecutor(
+                                board,
+                                coin);
+        }
 
-    @Test
-    void shouldMovePieceFromBaseToStartPositionOnSixWithHeads() {
+        @Test
+        void shouldMovePieceFromBaseToStartPositionOnSixWithHeads() {
 
-        Piece piece = new Piece(Colour.RED, 1);
+                Piece piece = new Piece(Colour.RED, 1);
 
-        when(coin.toss()).thenReturn(true);
+                when(coin.toss()).thenReturn(true);
 
-        boolean moved = moveExecutor.moveFromBase(piece, 6);
+                boolean moved = moveExecutor.moveFromBase(piece, 6);
 
-        assertTrue(moved);
+                assertTrue(moved);
 
-        assertEquals(
-                PieceState.STANDARD_PATH,
-                piece.getState());
+                assertEquals(
+                                PieceState.STANDARD_PATH,
+                                piece.getState());
 
-        assertEquals(26, piece.getPosition());
+                assertEquals(26, piece.getPosition());
 
-        assertEquals(
-                Direction.CLOCKWISE,
-                piece.getDirection());
+                assertEquals(
+                                Direction.CLOCKWISE,
+                                piece.getDirection());
 
-        verify(coin).toss();
-    }
+                verify(coin).toss();
+        }
 
-    @Test
-    void shouldMovePieceFromBaseToStartPositionOnSixWithTails() {
+        @Test
+        void shouldMovePieceFromBaseToStartPositionOnSixWithTails() {
 
-        Piece piece = new Piece(Colour.BLUE, 1);
+                Piece piece = new Piece(Colour.BLUE, 1);
 
-        when(coin.toss()).thenReturn(false);
+                when(coin.toss()).thenReturn(false);
 
-        boolean moved = moveExecutor.moveFromBase(piece, 6);
+                boolean moved = moveExecutor.moveFromBase(piece, 6);
 
-        assertTrue(moved);
+                assertTrue(moved);
 
-        assertEquals(
-                PieceState.STANDARD_PATH,
-                piece.getState());
+                assertEquals(
+                                PieceState.STANDARD_PATH,
+                                piece.getState());
 
-        assertEquals(13, piece.getPosition());
+                assertEquals(13, piece.getPosition());
 
-        assertEquals(
-                Direction.COUNTERCLOCKWISE,
-                piece.getDirection());
+                assertEquals(
+                                Direction.COUNTERCLOCKWISE,
+                                piece.getDirection());
 
-        verify(coin).toss();
-    }
+                verify(coin).toss();
+        }
 
-    @Test
-    void shouldNotMovePieceFromBaseWithoutSix() {
+        @Test
+        void shouldNotMovePieceFromBaseWithoutSix() {
 
-        Piece piece = new Piece(Colour.YELLOW, 1);
+                Piece piece = new Piece(Colour.YELLOW, 1);
 
-        boolean moved = moveExecutor.moveFromBase(piece, 5);
+                boolean moved = moveExecutor.moveFromBase(piece, 5);
 
-        assertFalse(moved);
+                assertFalse(moved);
 
-        assertEquals(
-                PieceState.BASE,
-                piece.getState());
+                assertEquals(
+                                PieceState.BASE,
+                                piece.getState());
 
-        assertNull(piece.getPosition());
-        assertNull(piece.getDirection());
+                assertNull(piece.getPosition());
+                assertNull(piece.getDirection());
 
-        verifyNoInteractions(coin);
-    }
+                verifyNoInteractions(coin);
+        }
 
-    @Test
-    void shouldNotMovePieceFromBaseWhenPieceIsAlreadyOnBoard() {
+        @Test
+        void shouldNotMovePieceFromBaseWhenPieceIsAlreadyOnBoard() {
 
-        Piece piece = new Piece(Colour.GREEN, 1);
+                Piece piece = new Piece(Colour.GREEN, 1);
 
-        piece.enterBoard(
-                39,
-                Direction.CLOCKWISE);
+                piece.enterBoard(
+                                39,
+                                Direction.CLOCKWISE);
 
-        boolean moved = moveExecutor.moveFromBase(piece, 6);
+                boolean moved = moveExecutor.moveFromBase(piece, 6);
 
-        assertFalse(moved);
+                assertFalse(moved);
 
-        assertEquals(39, piece.getPosition());
+                assertEquals(39, piece.getPosition());
 
-        assertEquals(
-                Direction.CLOCKWISE,
-                piece.getDirection());
+                assertEquals(
+                                Direction.CLOCKWISE,
+                                piece.getDirection());
 
-        verifyNoInteractions(coin);
-    }
+                verifyNoInteractions(coin);
+        }
 
-    @Test
-    void shouldRejectNullBoard() {
+        @Test
+        void shouldRejectNullBoard() {
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new MoveExecutor(null, coin));
-    }
+                assertThrows(
+                                IllegalArgumentException.class,
+                                () -> new MoveExecutor(null, coin));
+        }
 
-    @Test
-    void shouldRejectNullCoin() {
+        @Test
+        void shouldRejectNullCoin() {
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new MoveExecutor(board, null));
-    }
+                assertThrows(
+                                IllegalArgumentException.class,
+                                () -> new MoveExecutor(board, null));
+        }
 
-    @Test
-    void shouldRejectNullPiece() {
+        @Test
+        void shouldRejectNullPiece() {
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> moveExecutor.moveFromBase(null, 6));
-    }
+                assertThrows(
+                                IllegalArgumentException.class,
+                                () -> moveExecutor.moveFromBase(null, 6));
+        }
 
-    @Test
-    void shouldMoveClockwiseOnStandardPath() {
+        @Test
+        void shouldMoveClockwiseOnStandardPath() {
 
-        Piece piece = new Piece(Colour.YELLOW, 1);
+                Piece piece = new Piece(Colour.YELLOW, 1);
 
-        piece.enterBoard(
-                0,
-                Direction.CLOCKWISE);
+                piece.enterBoard(
+                                0,
+                                Direction.CLOCKWISE);
 
-        boolean moved = moveExecutor.moveOnStandardPath(piece, 4);
+                boolean moved = moveExecutor.moveOnStandardPath(piece, 4);
 
-        assertTrue(moved);
-        assertEquals(4, piece.getPosition());
-    }
+                assertTrue(moved);
+                assertEquals(4, piece.getPosition());
+        }
 
-    @Test
-    void shouldMoveCounterclockwiseOnStandardPath() {
+        @Test
+        void shouldMoveCounterclockwiseOnStandardPath() {
 
-        Piece piece = new Piece(Colour.YELLOW, 1);
+                Piece piece = new Piece(Colour.YELLOW, 1);
 
-        piece.enterBoard(
-                0,
-                Direction.COUNTERCLOCKWISE);
+                piece.enterBoard(
+                                0,
+                                Direction.COUNTERCLOCKWISE);
 
-        boolean moved = moveExecutor.moveOnStandardPath(piece, 4);
+                boolean moved = moveExecutor.moveOnStandardPath(piece, 4);
 
-        assertTrue(moved);
-        assertEquals(48, piece.getPosition());
-    }
+                assertTrue(moved);
+                assertEquals(48, piece.getPosition());
+        }
 
-    @Test
-    void shouldWrapAroundWhenMovingClockwisePastEndOfStandardPath() {
+        @Test
+        void shouldWrapAroundWhenMovingClockwisePastEndOfStandardPath() {
 
-        Piece piece = new Piece(Colour.RED, 1);
+                Piece piece = new Piece(Colour.RED, 1);
 
-        piece.enterBoard(
-                26,
-                Direction.CLOCKWISE);
+                piece.enterBoard(
+                                26,
+                                Direction.CLOCKWISE);
 
-        piece.moveTo(50);
+                piece.moveTo(50);
 
-        boolean moved = moveExecutor.moveOnStandardPath(piece, 4);
+                boolean moved = moveExecutor.moveOnStandardPath(piece, 4);
 
-        assertTrue(moved);
-        assertEquals(2, piece.getPosition());
-    }
+                assertTrue(moved);
+                assertEquals(2, piece.getPosition());
+        }
 
-    @Test
-    void shouldWrapAroundWhenMovingCounterclockwisePastStartOfStandardPath() {
+        @Test
+        void shouldWrapAroundWhenMovingCounterclockwisePastStartOfStandardPath() {
 
-        Piece piece = new Piece(Colour.BLUE, 1);
+                Piece piece = new Piece(Colour.BLUE, 1);
 
-        piece.enterBoard(
-                13,
-                Direction.COUNTERCLOCKWISE);
+                piece.enterBoard(
+                                13,
+                                Direction.COUNTERCLOCKWISE);
 
-        piece.moveTo(2);
+                piece.moveTo(2);
 
-        boolean moved = moveExecutor.moveOnStandardPath(piece, 4);
+                boolean moved = moveExecutor.moveOnStandardPath(piece, 4);
 
-        assertTrue(moved);
-        assertEquals(50, piece.getPosition());
-    }
+                assertTrue(moved);
+                assertEquals(50, piece.getPosition());
+        }
 
-    @Test
-    void shouldNotMoveBasePieceOnStandardPath() {
+        @Test
+        void shouldNotMoveBasePieceOnStandardPath() {
 
-        Piece piece = new Piece(Colour.GREEN, 1);
+                Piece piece = new Piece(Colour.GREEN, 1);
 
-        boolean moved = moveExecutor.moveOnStandardPath(piece, 4);
+                boolean moved = moveExecutor.moveOnStandardPath(piece, 4);
 
-        assertFalse(moved);
+                assertFalse(moved);
 
-        assertEquals(
-                PieceState.BASE,
-                piece.getState());
+                assertEquals(
+                                PieceState.BASE,
+                                piece.getState());
 
-        assertNull(piece.getPosition());
-    }
+                assertNull(piece.getPosition());
+        }
 
-    @Test
-    void shouldRejectNoMovementDistance() {
+        @Test
+        void shouldRejectNoMovementDistance() {
 
-        Piece piece = new Piece(Colour.RED, 1);
+                Piece piece = new Piece(Colour.RED, 1);
 
-        piece.enterBoard(
-                26,
-                Direction.CLOCKWISE);
+                piece.enterBoard(
+                                26,
+                                Direction.CLOCKWISE);
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> moveExecutor.moveOnStandardPath(
-                        piece,
-                        0));
-    }
+                assertThrows(
+                                IllegalArgumentException.class,
+                                () -> moveExecutor.moveOnStandardPath(
+                                                piece,
+                                                0));
+        }
 
-    @Test
-    void shouldRejectNegativeMovementDistance() {
+        @Test
+        void shouldRejectNegativeMovementDistance() {
 
-        Piece piece = new Piece(Colour.RED, 1);
+                Piece piece = new Piece(Colour.RED, 1);
 
-        piece.enterBoard(
-                26,
-                Direction.CLOCKWISE);
+                piece.enterBoard(
+                                26,
+                                Direction.CLOCKWISE);
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> moveExecutor.moveOnStandardPath(
-                        piece,
-                        -1));
-    }
+                assertThrows(
+                                IllegalArgumentException.class,
+                                () -> moveExecutor.moveOnStandardPath(
+                                                piece,
+                                                -1));
+        }
+
+        @Test
+        void shouldEnterHomeStraightWhenClockwisePieceHasCaptured() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(
+                                26,
+                                Direction.CLOCKWISE);
+
+                piece.moveTo(22);
+                piece.recordCapture();
+
+                boolean moved = moveExecutor.moveOnStandardPath(
+                                piece,
+                                5);
+
+                assertTrue(moved);
+
+                assertEquals(
+                                PieceState.HOME_STRAIGHT,
+                                piece.getState());
+
+                assertEquals(1, piece.getPosition());
+        }
+
+        @Test
+        void shouldNotEnterHomeStraightWithoutCapture() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(
+                                26,
+                                Direction.CLOCKWISE);
+
+                piece.moveTo(22);
+
+                boolean moved = moveExecutor.moveOnStandardPath(
+                                piece,
+                                5);
+
+                assertTrue(moved);
+
+                assertEquals(
+                                PieceState.STANDARD_PATH,
+                                piece.getState());
+
+                assertEquals(27, piece.getPosition());
+        }
+
+        @Test
+        void shouldContinueStandardPathOnFirstCounterclockwiseApproachPass() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(
+                                26,
+                                Direction.COUNTERCLOCKWISE);
+
+                piece.moveTo(28);
+                piece.recordCapture();
+
+                boolean moved = moveExecutor.moveOnStandardPath(
+                                piece,
+                                5);
+
+                assertTrue(moved);
+
+                assertEquals(
+                                PieceState.STANDARD_PATH,
+                                piece.getState());
+
+                assertEquals(23, piece.getPosition());
+
+                assertEquals(
+                                1,
+                                piece.getApproachPassCount());
+        }
+
+        @Test
+        void shouldEnterHomeStraightOnEligibleCounterclockwiseApproachPass() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(
+                                26,
+                                Direction.COUNTERCLOCKWISE);
+
+                piece.moveTo(28);
+
+                piece.recordCapture();
+
+                piece.recordApproachPass();
+                piece.recordApproachPass();
+
+                boolean moved = moveExecutor.moveOnStandardPath(
+                                piece,
+                                5);
+
+                assertTrue(moved);
+
+                assertEquals(
+                                PieceState.HOME_STRAIGHT,
+                                piece.getState());
+
+                assertEquals(1, piece.getPosition());
+        }
+
+        @Test
+        void shouldEnterHomeStraightOnSecondCounterclockwiseApproachPass() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(
+                                26,
+                                Direction.COUNTERCLOCKWISE);
+
+                piece.moveTo(28);
+                piece.recordCapture();
+
+                piece.recordApproachPass();
+
+                boolean moved = moveExecutor.moveOnStandardPath(
+                                piece,
+                                5);
+
+                assertTrue(moved);
+
+                assertEquals(
+                                PieceState.HOME_STRAIGHT,
+                                piece.getState());
+
+                assertEquals(1, piece.getPosition());
+        }
+
+        @Test
+        void shouldRemainOnStandardPathWhenLandingExactlyOnApproach() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(
+                                26,
+                                Direction.CLOCKWISE);
+
+                piece.moveTo(22);
+                piece.recordCapture();
+
+                boolean moved = moveExecutor.moveOnStandardPath(
+                                piece,
+                                3);
+
+                assertTrue(moved);
+
+                assertEquals(
+                                PieceState.STANDARD_PATH,
+                                piece.getState());
+
+                assertEquals(25, piece.getPosition());
+        }
 }
