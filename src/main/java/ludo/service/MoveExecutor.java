@@ -59,4 +59,41 @@ public class MoveExecutor {
 
         return true;
     }
+
+    public boolean moveOnStandardPath(Piece piece, int distance) {
+
+        if (piece == null) {
+            throw new IllegalArgumentException(
+                    "Piece cannot be null.");
+        }
+
+        if (piece.getState() != PieceState.STANDARD_PATH) {
+            return false;
+        }
+
+        if (distance <= 0) {
+            throw new IllegalArgumentException(
+                    "Movement distance must be greater than zero.");
+        }
+
+        int currentPosition = piece.getPosition();
+
+        int newPosition;
+
+        if (piece.getDirection() == Direction.CLOCKWISE) {
+
+            newPosition = (currentPosition + distance)
+                    % Board.STANDARD_PATH_SIZE;
+
+        } else {
+
+            newPosition = Math.floorMod(
+                    currentPosition - distance,
+                    Board.STANDARD_PATH_SIZE);
+        }
+
+        piece.moveTo(newPosition);
+
+        return true;
+    }
 }
