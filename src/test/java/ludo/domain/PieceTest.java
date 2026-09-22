@@ -142,4 +142,65 @@ class PieceTest {
                                 IllegalStateException.class,
                                 () -> piece.moveTo(30));
         }
+
+        @Test
+        void shouldStartWithZeroCaptures() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                assertEquals(0, piece.getCaptureCount());
+        }
+
+        @Test
+        void shouldRecordCapture() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.recordCapture();
+
+                assertEquals(1, piece.getCaptureCount());
+        }
+
+        @Test
+        void shouldRecordMultipleCaptures() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.recordCapture();
+                piece.recordCapture();
+
+                assertEquals(2, piece.getCaptureCount());
+        }
+
+        @Test
+        void shouldResetCaptureCountWhenPieceIsReset() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.recordCapture();
+                piece.recordCapture();
+
+                piece.reset();
+
+                assertEquals(0, piece.getCaptureCount());
+                assertEquals(PieceState.BASE, piece.getState());
+        }
+
+        @Test
+        void shouldReportNoCaptureInitially() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                assertFalse(piece.hasCaptured());
+        }
+
+        @Test
+        void shouldReportCaptureAfterRecordingCapture() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.recordCapture();
+
+                assertTrue(piece.hasCaptured());
+        }
 }
