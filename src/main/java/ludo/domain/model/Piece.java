@@ -84,6 +84,14 @@ public class Piece {
         return captureCount > 0;
     }
 
+    public void recordApproachPass() {
+        approachPassCount++;
+    }
+
+    public boolean hasPassedApproachTwice() {
+        return approachPassCount >= 2;
+    }
+
     public Colour getColour() {
         return colour;
     }
