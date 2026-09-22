@@ -141,40 +141,115 @@ class MoveExecutorTest {
                 () -> moveExecutor.moveFromBase(null, 6));
     }
 
-    public boolean moveOnStandardPath(Piece piece, int distance) {
+    @Test
+    void shouldMoveClockwiseOnStandardPath() {
 
-        if (piece == null) {
-            throw new IllegalArgumentException(
-                    "Piece cannot be null.");
-        }
+        Piece piece = new Piece(Colour.YELLOW, 1);
 
-        if (piece.getState() != PieceState.STANDARD_PATH) {
-            return false;
-        }
+        piece.enterBoard(
+                0,
+                Direction.CLOCKWISE);
 
-        if (distance <= 0) {
-            throw new IllegalArgumentException(
-                    "Movement distance must be greater than zero.");
-        }
+        boolean moved = moveExecutor.moveOnStandardPath(piece, 4);
 
-        int currentPosition = piece.getPosition();
+        assertTrue(moved);
+        assertEquals(4, piece.getPosition());
+    }
 
-        int newPosition;
+    @Test
+    void shouldMoveCounterclockwiseOnStandardPath() {
 
-        if (piece.getDirection() == Direction.CLOCKWISE) {
+        Piece piece = new Piece(Colour.YELLOW, 1);
 
-            newPosition = (currentPosition + distance)
-                    % Board.STANDARD_PATH_SIZE;
+        piece.enterBoard(
+                0,
+                Direction.COUNTERCLOCKWISE);
 
-        } else {
+        boolean moved = moveExecutor.moveOnStandardPath(piece, 4);
 
-            newPosition = Math.floorMod(
-                    currentPosition - distance,
-                    Board.STANDARD_PATH_SIZE);
-        }
+        assertTrue(moved);
+        assertEquals(48, piece.getPosition());
+    }
 
-        piece.moveTo(newPosition);
+    @Test
+    void shouldWrapAroundWhenMovingClockwisePastEndOfStandardPath() {
 
-        return true;
+        Piece piece = new Piece(Colour.RED, 1);
+
+        piece.enterBoard(
+                26,
+                Direction.CLOCKWISE);
+
+        piece.moveTo(50);
+
+        boolean moved = moveExecutor.moveOnStandardPath(piece, 4);
+
+        assertTrue(moved);
+        assertEquals(2, piece.getPosition());
+    }
+
+    @Test
+    void shouldWrapAroundWhenMovingCounterclockwisePastStartOfStandardPath() {
+
+        Piece piece = new Piece(Colour.BLUE, 1);
+
+        piece.enterBoard(
+                13,
+                Direction.COUNTERCLOCKWISE);
+
+        piece.moveTo(2);
+
+        boolean moved = moveExecutor.moveOnStandardPath(piece, 4);
+
+        assertTrue(moved);
+        assertEquals(50, piece.getPosition());
+    }
+
+    @Test
+    void shouldNotMoveBasePieceOnStandardPath() {
+
+        Piece piece = new Piece(Colour.GREEN, 1);
+
+        boolean moved = moveExecutor.moveOnStandardPath(piece, 4);
+
+        assertFalse(moved);
+
+        assertEquals(
+                PieceState.BASE,
+                piece.getState());
+
+        assertNull(piece.getPosition());
+    }
+
+    @Test
+    void shouldRejectNoMovementDistance() {
+
+        Piece piece = new Piece(Colour.RED, 1);
+
+        piece.enterBoard(
+                26,
+                Direction.CLOCKWISE);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> moveExecutor.moveOnStandardPath(
+                        piece,
+                        0));
+    }
+
+    @Test
+    void shouldRejectNegativeMovementDistance() {
+
+        Piece piece = new Piece(Colour.RED, 1);
+
+        piece.enterBoard(
+                26,
+                Direction.CLOCKWISE);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> moveExecutor.moveOnStandardPath(
+                        piece,
+                        -1));
     }
 }
