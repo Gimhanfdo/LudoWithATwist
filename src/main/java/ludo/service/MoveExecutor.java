@@ -55,9 +55,7 @@ public class MoveExecutor {
         return true;
     }
 
-    private void validateStandardPathMovement(
-            Piece piece,
-            int distance) {
+    private void validateMovement(Piece piece, int distance) {
         if (piece == null) {
             throw new IllegalArgumentException(
                     "Piece cannot be null.");
@@ -78,6 +76,7 @@ public class MoveExecutor {
     }
 
     private boolean enterHomeStraight(Piece piece, int distance) {
+
         int distanceToApproach = board.getDistanceToApproach(
                 piece.getPosition(),
                 piece.getColour(),
@@ -87,14 +86,23 @@ public class MoveExecutor {
 
         int homeStraightPosition = remainingDistance - 1;
 
-        if (homeStraightPosition >= Board.HOME_STRAIGHT_SIZE) {
-            return false;
+        if (homeStraightPosition < Board.HOME_STRAIGHT_SIZE) {
+
+            piece.enterHomeStraight(homeStraightPosition);
+
+            return true;
         }
 
-        piece.enterHomeStraight(
-                homeStraightPosition);
+        if (homeStraightPosition == Board.HOME_STRAIGHT_SIZE) {
 
-        return true;
+            piece.enterHomeStraight(Board.HOME_STRAIGHT_SIZE - 1);
+
+            piece.reachHome();
+
+            return true;
+        }
+
+        return false;
     }
 
     private void moveAlongStandardPath(Piece piece, int distance) {
@@ -119,7 +127,7 @@ public class MoveExecutor {
     }
 
     public boolean moveOnStandardPath(Piece piece, int distance) {
-        validateStandardPathMovement(piece, distance);
+        validateMovement(piece, distance);
 
         if (piece.getState() != PieceState.STANDARD_PATH) {
             return false;
@@ -151,5 +159,35 @@ public class MoveExecutor {
         }
 
         return piece.getApproachPassCount() >= 1;
+    }
+
+    public boolean moveOnHomeStraight(Piece piece, int distance) {
+
+        validateMovement(piece, distance);
+
+        if (piece.getState() != PieceState.HOME_STRAIGHT) {
+            return false;
+        }
+
+        int currentPosition = piece.getPosition();
+
+        int targetPosition = currentPosition + distance;
+
+        if (targetPosition < Board.HOME_STRAIGHT_SIZE) {
+
+            piece.moveWithinHomeStraight(
+                    targetPosition);
+
+            return true;
+        }
+
+        if (targetPosition == Board.HOME_STRAIGHT_SIZE) {
+
+            piece.reachHome();
+
+            return true;
+        }
+
+        return false;
     }
 }
