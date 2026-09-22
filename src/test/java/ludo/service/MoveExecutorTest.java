@@ -411,4 +411,148 @@ class MoveExecutorTest {
 
                 assertEquals(25, piece.getPosition());
         }
+
+        @Test
+        void shouldMoveWithinHomeStraight() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(
+                                26,
+                                Direction.CLOCKWISE);
+
+                piece.enterHomeStraight(1);
+
+                boolean moved = moveExecutor.moveOnHomeStraight(
+                                piece,
+                                2);
+
+                assertTrue(moved);
+
+                assertEquals(
+                                PieceState.HOME_STRAIGHT,
+                                piece.getState());
+
+                assertEquals(3, piece.getPosition());
+        }
+
+        @Test
+        void shouldReachHomeWithExactMovement() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(
+                                26,
+                                Direction.CLOCKWISE);
+
+                piece.enterHomeStraight(2);
+
+                boolean moved = moveExecutor.moveOnHomeStraight(
+                                piece,
+                                3);
+
+                assertTrue(moved);
+
+                assertEquals(
+                                PieceState.HOME,
+                                piece.getState());
+
+                assertNull(piece.getPosition());
+        }
+
+        @Test
+        void shouldRejectMovementThatOvershootsHome() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(
+                                26,
+                                Direction.CLOCKWISE);
+
+                piece.enterHomeStraight(2);
+
+                boolean moved = moveExecutor.moveOnHomeStraight(
+                                piece,
+                                4);
+
+                assertFalse(moved);
+
+                assertEquals(
+                                PieceState.HOME_STRAIGHT,
+                                piece.getState());
+
+                assertEquals(2, piece.getPosition());
+        }
+
+        @Test
+        void shouldReachHomeFromLastHomeStraightCellWithOneStep() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(26, Direction.CLOCKWISE);
+
+                piece.enterHomeStraight(4);
+
+                boolean moved = moveExecutor.moveOnHomeStraight(piece, 1);
+
+                assertTrue(moved);
+
+                assertEquals(
+                                PieceState.HOME,
+                                piece.getState());
+
+                assertNull(piece.getPosition());
+        }
+
+        @Test
+        void shouldRejectTwoStepsFromLastHomeStraightCell() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(
+                                26,
+                                Direction.CLOCKWISE);
+
+                piece.enterHomeStraight(4);
+
+                boolean moved = moveExecutor.moveOnHomeStraight(
+                                piece,
+                                2);
+
+                assertFalse(moved);
+
+                assertEquals(
+                                PieceState.HOME_STRAIGHT,
+                                piece.getState());
+
+                assertEquals(4, piece.getPosition());
+        }
+
+        @Test
+        void shouldReachHomeDirectlyFromApproachWithExactMovement() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(
+                                26,
+                                Direction.CLOCKWISE);
+
+                piece.moveTo(
+                                board.getApproachPosition(
+                                                Colour.RED));
+
+                piece.recordCapture();
+
+                boolean moved = moveExecutor.moveOnStandardPath(
+                                piece,
+                                6);
+
+                assertTrue(moved);
+
+                assertEquals(
+                                PieceState.HOME,
+                                piece.getState());
+
+                assertNull(piece.getPosition());
+        }
 }
