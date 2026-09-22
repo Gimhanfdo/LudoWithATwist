@@ -76,6 +76,14 @@ public class Piece {
         position = newPosition;
     }
 
+    public void recordCapture() {
+        captureCount++;
+    }
+
+    public boolean hasCaptured() {
+        return captureCount > 0;
+    }
+
     public Colour getColour() {
         return colour;
     }
