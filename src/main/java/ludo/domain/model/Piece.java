@@ -92,6 +92,24 @@ public class Piece {
         return approachPassCount >= 2;
     }
 
+    public void enterHomeStraight(int homeStraightPosition) {
+
+        if (state != PieceState.STANDARD_PATH) {
+            throw new IllegalStateException(
+                    "Only a piece on the standard path can enter the Home Straight.");
+        }
+
+        if (homeStraightPosition < 0
+                || homeStraightPosition >= Board.HOME_STRAIGHT_SIZE) {
+
+            throw new IllegalArgumentException(
+                    "Invalid Home Straight position.");
+        }
+
+        state = PieceState.HOME_STRAIGHT;
+        position = homeStraightPosition;
+    }
+
     public Colour getColour() {
         return colour;
     }
