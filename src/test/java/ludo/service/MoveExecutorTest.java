@@ -374,15 +374,11 @@ class MoveExecutorTest {
 
                 piece.recordApproachPass();
 
-                boolean moved = moveExecutor.moveOnStandardPath(
-                                piece,
-                                5);
+                boolean moved = moveExecutor.moveOnStandardPath(piece, 5);
 
                 assertTrue(moved);
 
-                assertEquals(
-                                PieceState.HOME_STRAIGHT,
-                                piece.getState());
+                assertEquals(PieceState.HOME_STRAIGHT, piece.getState());
 
                 assertEquals(1, piece.getPosition());
         }
@@ -392,22 +388,16 @@ class MoveExecutorTest {
 
                 Piece piece = new Piece(Colour.RED, 1);
 
-                piece.enterBoard(
-                                26,
-                                Direction.CLOCKWISE);
+                piece.enterBoard(26, Direction.CLOCKWISE);
 
                 piece.moveTo(22);
                 piece.recordCapture();
 
-                boolean moved = moveExecutor.moveOnStandardPath(
-                                piece,
-                                3);
+                boolean moved = moveExecutor.moveOnStandardPath(piece, 3);
 
                 assertTrue(moved);
 
-                assertEquals(
-                                PieceState.STANDARD_PATH,
-                                piece.getState());
+                assertEquals(PieceState.STANDARD_PATH, piece.getState());
 
                 assertEquals(25, piece.getPosition());
         }
@@ -441,9 +431,7 @@ class MoveExecutorTest {
 
                 Piece piece = new Piece(Colour.RED, 1);
 
-                piece.enterBoard(
-                                26,
-                                Direction.CLOCKWISE);
+                piece.enterBoard(26, Direction.CLOCKWISE);
 
                 piece.enterHomeStraight(2);
 
@@ -497,9 +485,7 @@ class MoveExecutorTest {
 
                 assertTrue(moved);
 
-                assertEquals(
-                                PieceState.HOME,
-                                piece.getState());
+                assertEquals(PieceState.HOME, piece.getState());
 
                 assertNull(piece.getPosition());
         }
@@ -509,21 +495,15 @@ class MoveExecutorTest {
 
                 Piece piece = new Piece(Colour.RED, 1);
 
-                piece.enterBoard(
-                                26,
-                                Direction.CLOCKWISE);
+                piece.enterBoard(26, Direction.CLOCKWISE);
 
                 piece.enterHomeStraight(4);
 
-                boolean moved = moveExecutor.moveOnHomeStraight(
-                                piece,
-                                2);
+                boolean moved = moveExecutor.moveOnHomeStraight(piece, 2);
 
                 assertFalse(moved);
 
-                assertEquals(
-                                PieceState.HOME_STRAIGHT,
-                                piece.getState());
+                assertEquals(PieceState.HOME_STRAIGHT, piece.getState());
 
                 assertEquals(4, piece.getPosition());
         }
@@ -533,26 +513,77 @@ class MoveExecutorTest {
 
                 Piece piece = new Piece(Colour.RED, 1);
 
-                piece.enterBoard(
-                                26,
-                                Direction.CLOCKWISE);
+                piece.enterBoard(26, Direction.CLOCKWISE);
 
-                piece.moveTo(
-                                board.getApproachPosition(
-                                                Colour.RED));
+                piece.moveTo(board.getApproachPosition(Colour.RED));
 
                 piece.recordCapture();
 
-                boolean moved = moveExecutor.moveOnStandardPath(
-                                piece,
-                                6);
+                boolean moved = moveExecutor.moveOnStandardPath(piece, 6);
 
                 assertTrue(moved);
 
-                assertEquals(
-                                PieceState.HOME,
-                                piece.getState());
+                assertEquals(PieceState.HOME, piece.getState());
 
                 assertNull(piece.getPosition());
+        }
+
+        @Test
+        void shouldIntegrateClockwiseMovementIntoHomeStraight() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(26, Direction.CLOCKWISE);
+
+                piece.moveTo(22);
+                piece.recordCapture();
+
+                boolean moved = moveExecutor.moveOnStandardPath(piece, 5);
+
+                assertTrue(moved);
+
+                assertEquals(PieceState.HOME_STRAIGHT, piece.getState());
+
+                assertEquals(1, piece.getPosition());
+        }
+
+        @Test
+        void shouldContinueStandardPathWhenPieceHasNotCaptured() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(26, Direction.CLOCKWISE);
+
+                piece.moveTo(22);
+
+                boolean moved = moveExecutor.moveOnStandardPath(piece, 5);
+
+                assertTrue(moved);
+
+                assertEquals(PieceState.STANDARD_PATH, piece.getState());
+
+                assertEquals(27, piece.getPosition());
+
+                assertEquals(1, piece.getApproachPassCount());
+        }
+
+        @Test
+        void shouldRejectStandardPathMovementThatOvershootsHome() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(26, Direction.CLOCKWISE);
+
+                piece.moveTo(board.getApproachPosition(Colour.RED));
+
+                piece.recordCapture();
+
+                boolean moved = moveExecutor.moveOnStandardPath(piece, 7);
+
+                assertFalse(moved);
+
+                assertEquals(PieceState.STANDARD_PATH, piece.getState());
+
+                assertEquals(board.getApproachPosition(Colour.RED),piece.getPosition());
         }
 }
