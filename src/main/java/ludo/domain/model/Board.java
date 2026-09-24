@@ -56,8 +56,7 @@ public class Board {
         validateColour(colour);
 
         if (direction == null) {
-            throw new IllegalArgumentException(
-                    "Direction cannot be null.");
+            throw new IllegalArgumentException("Direction cannot be null.");
         }
 
         int approachPosition = getApproachPosition(colour);
