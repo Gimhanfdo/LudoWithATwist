@@ -75,40 +75,38 @@ public class MoveExecutor {
                 piece.getDirection());
     }
 
-    private boolean enterHomeStraight(Piece piece, int distance) {
+    // private boolean enterHomeStraight(Piece piece, int distance) {
 
-        int distanceToApproach = board.getDistanceToApproach(
-                piece.getPosition(),
-                piece.getColour(),
-                piece.getDirection());
+    //     int distanceToApproach = board.getDistanceToApproach(
+    //             piece.getPosition(),
+    //             piece.getColour(),
+    //             piece.getDirection());
 
-        int remainingDistance = distance - distanceToApproach;
+    //     int remainingDistance = distance - distanceToApproach;
 
-        int homeStraightPosition = remainingDistance - 1;
+    //     int homeStraightPosition = remainingDistance - 1;
 
-        if (homeStraightPosition < Board.HOME_STRAIGHT_SIZE) {
+    //     if (homeStraightPosition < Board.HOME_STRAIGHT_SIZE) {
 
-            piece.enterHomeStraight(homeStraightPosition);
+    //         piece.enterHomeStraight(homeStraightPosition);
 
-            return true;
-        }
+    //         return true;
+    //     }
 
-        if (homeStraightPosition == Board.HOME_STRAIGHT_SIZE) {
+    //     if (homeStraightPosition == Board.HOME_STRAIGHT_SIZE) {
 
-            piece.enterHomeStraight(Board.HOME_STRAIGHT_SIZE - 1);
+    //         piece.enterHomeStraight(Board.HOME_STRAIGHT_SIZE - 1);
 
-            piece.reachHome();
+    //         piece.reachHome();
 
-            return true;
-        }
+    //         return true;
+    //     }
 
-        return false;
-    }
+    //     return false;
+    // }
 
     private void moveAlongStandardPath(Piece piece, int distance) {
-        int newPosition = calculateStandardPathPosition(
-                piece,
-                distance);
+        int newPosition = calculateStandardPathPosition(piece, distance);
 
         piece.moveTo(newPosition);
     }
@@ -117,8 +115,9 @@ public class MoveExecutor {
         int currentPosition = piece.getPosition();
 
         if (piece.getDirection() == Direction.CLOCKWISE) {
-            return (currentPosition + distance)
-                    % Board.STANDARD_PATH_SIZE;
+            return Math.floorMod(
+                    currentPosition + distance,
+                    Board.STANDARD_PATH_SIZE);
         }
 
         return Math.floorMod(
@@ -136,7 +135,7 @@ public class MoveExecutor {
         if (movesBeyondApproach(piece, distance)) {
 
             if (canEnterHomeStraight(piece)) {
-                return enterHomeStraight(piece, distance);
+                return moveBeyondApproach(piece, distance);
             }
 
             piece.recordApproachPass();
@@ -145,6 +144,38 @@ public class MoveExecutor {
         moveAlongStandardPath(piece, distance);
 
         return true;
+    }
+
+    private boolean moveBeyondApproach(Piece piece, int distance) {
+
+        int distanceToApproach = board.getDistanceToApproach(
+                piece.getPosition(),
+                piece.getColour(),
+                piece.getDirection());
+
+        int remainingDistance = distance - distanceToApproach;
+
+        int homeStraightPosition = remainingDistance - 1;
+
+        if (homeStraightPosition < Board.HOME_STRAIGHT_SIZE) {
+
+            piece.enterHomeStraight(
+                    homeStraightPosition);
+
+            return true;
+        }
+
+        if (homeStraightPosition == Board.HOME_STRAIGHT_SIZE) {
+
+            piece.enterHomeStraight(
+                    Board.HOME_STRAIGHT_SIZE - 1);
+
+            piece.reachHome();
+
+            return true;
+        }
+
+        return false;
     }
 
     private boolean canEnterHomeStraight(Piece piece) {
