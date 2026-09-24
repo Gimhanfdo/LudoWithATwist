@@ -121,19 +121,15 @@ public class Piece {
         position = null;
     }
 
-    public void moveWithinHomeStraight(
-            int newPosition) {
+    public void moveWithinHomeStraight(int newPosition) {
 
         if (state != PieceState.HOME_STRAIGHT) {
-            throw new IllegalStateException(
-                    "Only a piece in the Home Straight can move within it.");
+            throw new IllegalStateException("Only a piece in the Home Straight can move within it.");
         }
 
-        if (newPosition < 0
-                || newPosition >= Board.HOME_STRAIGHT_SIZE) {
+        if (newPosition < 0|| newPosition >= Board.HOME_STRAIGHT_SIZE) {
 
-            throw new IllegalArgumentException(
-                    "Invalid Home Straight position.");
+            throw new IllegalArgumentException("Invalid Home Straight position.");
         }
 
         position = newPosition;
