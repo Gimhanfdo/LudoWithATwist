@@ -167,4 +167,114 @@ class BlockServiceTest {
         assertThrows(IllegalArgumentException.class,
                 () -> new BlockService(null));
     }
+
+    @Test
+    void shouldStopBeforeOpponentBlockWhenMovingClockwise() {
+
+        Piece redPiece = redPlayer.getPieces().get(0);
+        Piece bluePieceOne = bluePlayer.getPieces().get(0);
+        Piece bluePieceTwo = bluePlayer.getPieces().get(1);
+
+        redPiece.enterBoard(26, Direction.CLOCKWISE);
+        bluePieceOne.enterBoard(13, Direction.CLOCKWISE);
+        bluePieceTwo.enterBoard(13, Direction.CLOCKWISE);
+
+        redPiece.moveTo(10);
+        bluePieceOne.moveTo(14);
+        bluePieceTwo.moveTo(14);
+
+        int allowedDistance = blockService.getAllowedMovementDistance(redPiece, 6);
+
+        assertEquals(3, allowedDistance);
+    }
+
+    @Test
+    void shouldStopBeforeOpponentBlockWhenMovingCounterclockwise() {
+
+        Piece redPiece = redPlayer.getPieces().get(0);
+        Piece bluePieceOne = bluePlayer.getPieces().get(0);
+        Piece bluePieceTwo = bluePlayer.getPieces().get(1);
+
+        redPiece.enterBoard(26, Direction.COUNTERCLOCKWISE);
+        bluePieceOne.enterBoard(13, Direction.CLOCKWISE);
+        bluePieceTwo.enterBoard(13, Direction.CLOCKWISE);
+
+        redPiece.moveTo(20);
+        bluePieceOne.moveTo(16);
+        bluePieceTwo.moveTo(16);
+
+        int allowedDistance = blockService.getAllowedMovementDistance(redPiece, 6);
+
+        assertEquals(3, allowedDistance);
+    }
+
+    @Test
+    void shouldAllowFullDistanceWhenNoOpponentBlockExists() {
+
+        Piece redPiece = redPlayer.getPieces().get(0);
+
+        redPiece.enterBoard(26, Direction.CLOCKWISE);
+        redPiece.moveTo(10);
+
+        int allowedDistance = blockService.getAllowedMovementDistance(redPiece, 6);
+
+        assertEquals(6, allowedDistance);
+    }
+
+    @Test
+    void shouldAllowPassingSingleOpponentPiece() {
+
+        Piece redPiece = redPlayer.getPieces().get(0);
+        Piece bluePiece = bluePlayer.getPieces().get(0);
+
+        redPiece.enterBoard(26, Direction.CLOCKWISE);
+        bluePiece.enterBoard(13, Direction.CLOCKWISE);
+
+        redPiece.moveTo(10);
+        bluePiece.moveTo(14);
+
+        int allowedDistance = blockService.getAllowedMovementDistance(redPiece, 6);
+
+        assertEquals(6, allowedDistance);
+    }
+
+    @Test
+    void shouldDetectOpponentBlockAcrossBoardBoundary() {
+
+        Piece redPiece = redPlayer.getPieces().get(0);
+        Piece bluePieceOne = bluePlayer.getPieces().get(0);
+        Piece bluePieceTwo = bluePlayer.getPieces().get(1);
+
+        redPiece.enterBoard(26, Direction.CLOCKWISE);
+        bluePieceOne.enterBoard(13, Direction.CLOCKWISE);
+        bluePieceTwo.enterBoard(13, Direction.CLOCKWISE);
+
+        redPiece.moveTo(50);
+        bluePieceOne.moveTo(2);
+        bluePieceTwo.moveTo(2);
+
+        int allowedDistance = blockService.getAllowedMovementDistance(redPiece, 6);
+
+        assertEquals(3, allowedDistance);
+    }
+
+    @Test
+    void shouldAllowZeroMovementWhenOpponentBlockIsImmediatelyAhead() {
+        
+        Piece redPiece = redPlayer.getPieces().get(0);
+        Piece bluePieceOne = bluePlayer.getPieces().get(0);
+        Piece bluePieceTwo = bluePlayer.getPieces().get(1);
+
+        redPiece.enterBoard(26, Direction.CLOCKWISE);
+        bluePieceOne.enterBoard(13, Direction.CLOCKWISE);
+        bluePieceTwo.enterBoard(13, Direction.CLOCKWISE);
+
+        redPiece.moveTo(10);
+        bluePieceOne.moveTo(11);
+        bluePieceTwo.moveTo(11);
+
+        int allowedDistance = blockService.getAllowedMovementDistance(redPiece, 6);
+
+        assertEquals(0, allowedDistance);
+    }
 }
