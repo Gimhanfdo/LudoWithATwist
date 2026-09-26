@@ -4,6 +4,7 @@ import ludo.domain.enums.Colour;
 import ludo.domain.enums.Direction;
 import ludo.domain.model.GameState;
 import ludo.domain.model.Piece;
+import ludo.domain.model.MovementResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -41,9 +42,9 @@ class MovementServiceTest {
                     return true;
                 });
 
-        boolean moved = movementService.moveOnStandardPath(piece, 4);
+        MovementResult result = movementService.moveOnStandardPath(piece, 4);
 
-        assertTrue(moved);
+        assertEquals(MovementResult.MOVED, result);
 
         verify(captureService).resolveCapture(piece, gameState);
     }
@@ -56,9 +57,9 @@ class MovementServiceTest {
 
         when(moveExecutor.moveOnStandardPath(piece, 4)).thenReturn(false);
 
-        boolean moved = movementService.moveOnStandardPath(piece, 4);
+        MovementResult result = movementService.moveOnStandardPath(piece, 4);
 
-        assertFalse(moved);
+        assertEquals(MovementResult.NOT_MOVED, result);
         verifyNoInteractions(captureService);
     }
 
@@ -74,10 +75,29 @@ class MovementServiceTest {
             return true;
         });
 
-        boolean moved = movementService.moveOnStandardPath(piece, 5);
+        MovementResult result = movementService.moveOnStandardPath(piece, 5);
 
-        assertTrue(moved);
+        assertEquals(MovementResult.MOVED, result);
         verifyNoInteractions(captureService);
+    }
+
+    @Test
+    void shouldReturnCapturedWhenMovementCapturesOpponent() {
+        
+        Piece attacker = new Piece(Colour.RED, 1);
+        attacker.enterBoard(26, Direction.CLOCKWISE);
+
+        when(moveExecutor.moveOnStandardPath(attacker, 4)).thenAnswer(invocation -> {
+            attacker.moveTo(30);
+            return true;
+        });
+
+        when(captureService.resolveCapture(attacker, gameState)).thenReturn(true);
+
+        MovementResult result = movementService.moveOnStandardPath(attacker, 4);
+
+        assertEquals(MovementResult.CAPTURED, result);
+        verify(captureService).resolveCapture(attacker, gameState);
     }
 
     @Test
