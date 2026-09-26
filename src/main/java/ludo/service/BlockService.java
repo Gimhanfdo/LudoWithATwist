@@ -173,4 +173,32 @@ public class BlockService {
 
         return true;
     }
+
+    public boolean breakBlockAfterThreeSixes(int position, Colour colour) {
+        List<Piece> block = getBlockAt(position, colour);
+
+        if (block.isEmpty()) {
+            return false;
+        }
+
+        int totalMovement = 6;
+
+        for (int i = 0; i < block.size() - 1; i++) {
+            Piece piece = block.get(i);
+            int remainingPiecesToMove = block.size() - 1 - i;
+            int movementDistance = totalMovement / remainingPiecesToMove;
+
+            moveInOriginalDirection(piece, movementDistance);
+
+            totalMovement -= movementDistance;
+        }
+
+        return true;
+    }
+
+    private void moveInOriginalDirection(Piece piece, int distance) {
+        int destination = calculatePosition(piece.getPosition(), distance, piece.getDirection());
+
+        piece.moveTo(destination);
+    }
 }
