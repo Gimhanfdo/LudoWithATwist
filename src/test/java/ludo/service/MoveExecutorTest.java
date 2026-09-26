@@ -23,9 +23,7 @@ class MoveExecutorTest {
                 board = new Board();
                 coin = mock(Coin.class);
 
-                moveExecutor = new MoveExecutor(
-                                board,
-                                coin);
+                moveExecutor = new MoveExecutor(board, coin);
         }
 
         @Test
@@ -432,19 +430,12 @@ class MoveExecutorTest {
                 Piece piece = new Piece(Colour.RED, 1);
 
                 piece.enterBoard(26, Direction.CLOCKWISE);
-
                 piece.enterHomeStraight(2);
 
-                boolean moved = moveExecutor.moveOnHomeStraight(
-                                piece,
-                                3);
+                boolean moved = moveExecutor.moveOnHomeStraight(piece, 3);
 
                 assertTrue(moved);
-
-                assertEquals(
-                                PieceState.HOME,
-                                piece.getState());
-
+                assertEquals(PieceState.HOME, piece.getState());
                 assertNull(piece.getPosition());
         }
 
@@ -453,22 +444,13 @@ class MoveExecutorTest {
 
                 Piece piece = new Piece(Colour.RED, 1);
 
-                piece.enterBoard(
-                                26,
-                                Direction.CLOCKWISE);
-
+                piece.enterBoard(26, Direction.CLOCKWISE);
                 piece.enterHomeStraight(2);
 
-                boolean moved = moveExecutor.moveOnHomeStraight(
-                                piece,
-                                4);
+                boolean moved = moveExecutor.moveOnHomeStraight(piece, 4);
 
                 assertFalse(moved);
-
-                assertEquals(
-                                PieceState.HOME_STRAIGHT,
-                                piece.getState());
-
+                assertEquals(PieceState.HOME_STRAIGHT, piece.getState());
                 assertEquals(2, piece.getPosition());
         }
 
@@ -478,15 +460,12 @@ class MoveExecutorTest {
                 Piece piece = new Piece(Colour.RED, 1);
 
                 piece.enterBoard(26, Direction.CLOCKWISE);
-
                 piece.enterHomeStraight(4);
 
                 boolean moved = moveExecutor.moveOnHomeStraight(piece, 1);
 
                 assertTrue(moved);
-
                 assertEquals(PieceState.HOME, piece.getState());
-
                 assertNull(piece.getPosition());
         }
 
@@ -496,15 +475,12 @@ class MoveExecutorTest {
                 Piece piece = new Piece(Colour.RED, 1);
 
                 piece.enterBoard(26, Direction.CLOCKWISE);
-
                 piece.enterHomeStraight(4);
 
                 boolean moved = moveExecutor.moveOnHomeStraight(piece, 2);
 
                 assertFalse(moved);
-
                 assertEquals(PieceState.HOME_STRAIGHT, piece.getState());
-
                 assertEquals(4, piece.getPosition());
         }
 
@@ -514,7 +490,6 @@ class MoveExecutorTest {
                 Piece piece = new Piece(Colour.RED, 1);
 
                 piece.enterBoard(26, Direction.CLOCKWISE);
-
                 piece.moveTo(board.getApproachPosition(Colour.RED));
 
                 piece.recordCapture();
@@ -522,9 +497,7 @@ class MoveExecutorTest {
                 boolean moved = moveExecutor.moveOnStandardPath(piece, 6);
 
                 assertTrue(moved);
-
                 assertEquals(PieceState.HOME, piece.getState());
-
                 assertNull(piece.getPosition());
         }
 
@@ -541,9 +514,7 @@ class MoveExecutorTest {
                 boolean moved = moveExecutor.moveOnStandardPath(piece, 5);
 
                 assertTrue(moved);
-
                 assertEquals(PieceState.HOME_STRAIGHT, piece.getState());
-
                 assertEquals(1, piece.getPosition());
         }
 
@@ -553,17 +524,13 @@ class MoveExecutorTest {
                 Piece piece = new Piece(Colour.RED, 1);
 
                 piece.enterBoard(26, Direction.CLOCKWISE);
-
                 piece.moveTo(22);
 
                 boolean moved = moveExecutor.moveOnStandardPath(piece, 5);
 
                 assertTrue(moved);
-
                 assertEquals(PieceState.STANDARD_PATH, piece.getState());
-
                 assertEquals(27, piece.getPosition());
-
                 assertEquals(1, piece.getApproachPassCount());
         }
 
@@ -573,17 +540,43 @@ class MoveExecutorTest {
                 Piece piece = new Piece(Colour.RED, 1);
 
                 piece.enterBoard(26, Direction.CLOCKWISE);
-
                 piece.moveTo(board.getApproachPosition(Colour.RED));
-
                 piece.recordCapture();
 
                 boolean moved = moveExecutor.moveOnStandardPath(piece, 7);
 
                 assertFalse(moved);
-
                 assertEquals(PieceState.STANDARD_PATH, piece.getState());
+                assertEquals(board.getApproachPosition(Colour.RED), piece.getPosition());
+        }
 
-                assertEquals(board.getApproachPosition(Colour.RED),piece.getPosition());
+        @Test
+        void shouldResumeOriginalClockwiseDirectionAfterLeavingBlock() {
+
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(26, Direction.CLOCKWISE);
+                piece.moveTo(17);
+
+                boolean moved = moveExecutor.moveOnStandardPath(piece, 2);
+
+                assertTrue(moved);
+                assertEquals(19, piece.getPosition());
+                assertEquals(Direction.CLOCKWISE, piece.getDirection());
+        }
+
+        @Test
+        void shouldResumeOriginalCounterclockwiseDirectionAfterLeavingBlock() {
+                
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(26, Direction.COUNTERCLOCKWISE);
+                piece.moveTo(17);
+
+                boolean moved = moveExecutor.moveOnStandardPath(piece, 2);
+
+                assertTrue(moved);
+                assertEquals(15, piece.getPosition());
+                assertEquals(Direction.COUNTERCLOCKWISE, piece.getDirection());
         }
 }
