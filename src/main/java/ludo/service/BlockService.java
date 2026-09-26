@@ -150,4 +150,27 @@ public class BlockService {
 
         return diceValue / blockSize;
     }
+
+    public boolean moveBlock(int position, Colour colour, int diceValue) {
+        List<Piece> block = getBlockAt(position, colour);
+
+        if (block.isEmpty()) {
+            return false;
+        }
+
+        Direction blockDirection = getBlockMovementDirection(position, colour);
+        int movementDistance = getBlockMovementDistance(diceValue, block.size());
+
+        if (movementDistance == 0) {
+            return false;
+        }
+
+        int destination = calculatePosition(position, movementDistance, blockDirection);
+
+        for (Piece piece : block) {
+            piece.moveTo(destination);
+        }
+
+        return true;
+    }
 }
