@@ -172,7 +172,13 @@ public class BlockService {
             return false;
         }
 
-        int destination = calculatePosition(position, movementDistance, blockDirection);
+        int allowedDistance = getAllowedBlockMovementDistance(position, colour, movementDistance);
+
+        if (allowedDistance == 0) {
+            return false;
+        }
+
+        int destination = calculatePosition(position, allowedDistance, blockDirection);
 
         for (Piece piece : block) {
             piece.moveTo(destination);
@@ -215,5 +221,58 @@ public class BlockService {
     private void moveInOriginalDirection(Piece piece, int distance) {
         int destination = calculatePosition(piece.getPosition(), distance, piece.getDirection());
         piece.moveTo(destination);
+    }
+
+    public int getAllowedBlockMovementDistance(int position, Colour colour, int requestedDistance) {
+
+        List<Piece> block = getBlockAt(position, colour);
+
+        if (block.isEmpty()) {
+            return 0;
+        }
+
+        if (requestedDistance <= 0) {
+            throw new IllegalArgumentException("Requested distance must be greater than zero.");
+        }
+
+        Direction direction = getBlockMovementDirection(position, colour);
+        int blockSize = block.size();
+
+        for (int step = 1; step <= requestedDistance; step++) {
+            int nextPosition = calculatePosition(position, step, direction);
+            List<Piece> opponentBlock = getOpponentBlockAt(nextPosition, colour);
+
+            if (opponentBlock.isEmpty()) {
+                continue;
+            }
+
+            boolean isDestination = step == requestedDistance;
+            boolean equalSize = opponentBlock.size() == blockSize;
+
+            if (isDestination && equalSize) {
+                return requestedDistance;
+            }
+
+            return step - 1;
+        }
+
+        return requestedDistance;
+    }
+
+    private List<Piece> getOpponentBlockAt(int position, Colour movingColour) {
+
+        for (Colour colour : Colour.values()) {
+            if (colour == movingColour) {
+                continue;
+            }
+
+            List<Piece> block = getBlockAt(position, colour);
+
+            if (!block.isEmpty()) {
+                return block;
+            }
+        }
+
+        return Collections.emptyList();
     }
 }
