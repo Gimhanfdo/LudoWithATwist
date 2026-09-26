@@ -70,7 +70,7 @@ public class MovementService {
     }
 
     public MovementResult moveBlock(int position, Colour colour, int diceValue) {
-        
+
         List<Piece> movingBlock = blockService.getBlockAt(position, colour);
 
         if (movingBlock.isEmpty()) {
@@ -87,4 +87,6 @@ public class MovementService {
 
         return captured ? MovementResult.CAPTURED : MovementResult.MOVED;
     }
+
+    //
 }
