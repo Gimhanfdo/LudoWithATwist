@@ -6,12 +6,16 @@ import ludo.domain.model.GameState;
 import ludo.domain.model.Piece;
 import ludo.domain.model.Player;
 import ludo.domain.model.Board;
+import ludo.random.MovementDistributor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 class BlockServiceTest {
 
@@ -20,6 +24,7 @@ class BlockServiceTest {
     private Board board;
     private GameState gameState;
     private BlockService blockService;
+    private MovementDistributor movementDistributor;
 
     @BeforeEach
     void setUp() {
@@ -28,7 +33,9 @@ class BlockServiceTest {
 
         gameState = new GameState(List.of(redPlayer, bluePlayer));
         board = new Board();
-        blockService = new BlockService(gameState, board);
+
+        movementDistributor = mock(MovementDistributor.class);
+        blockService = new BlockService(gameState, board, movementDistributor);
     }
 
     @Test
@@ -167,13 +174,21 @@ class BlockServiceTest {
     @Test
     void shouldRejectNullGameState() {
         assertThrows(IllegalArgumentException.class,
-                () -> new BlockService(null, board));
+                () -> new BlockService(null, board, movementDistributor));
     }
 
     @Test
     void shouldRejectNullBoard() {
         assertThrows(IllegalArgumentException.class,
-                () -> new BlockService(gameState, null));
+                () -> new BlockService(gameState, null, movementDistributor));
+    }
+
+    @Test
+    void shouldRejectNullMovementDistributor() {
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new BlockService(gameState, board, null));
     }
 
     @Test
@@ -512,6 +527,7 @@ class BlockServiceTest {
 
     @Test
     void shouldRetainOriginalDirectionsWhenBlockBreaks() {
+
         Piece clockwisePiece = redPlayer.getPieces().get(0);
         Piece counterclockwisePiece = redPlayer.getPieces().get(1);
 
@@ -527,5 +543,138 @@ class BlockServiceTest {
         assertFalse(blockService.hasBlockAt(17, Colour.RED));
         assertEquals(Direction.CLOCKWISE, clockwisePiece.getDirection());
         assertEquals(Direction.COUNTERCLOCKWISE, counterclockwisePiece.getDirection());
+    }
+
+    @Test
+    void shouldBreakTwoPieceBlockUsingSixMovementUnits() {
+
+        Piece movingPiece = redPlayer.getPieces().get(0);
+        Piece remainingPiece = redPlayer.getPieces().get(1);
+
+        movingPiece.enterBoard(26, Direction.CLOCKWISE);
+        remainingPiece.enterBoard(26, Direction.COUNTERCLOCKWISE);
+
+        movingPiece.moveTo(20);
+        remainingPiece.moveTo(20);
+
+        when(movementDistributor.distribute(6, 1)).thenReturn(List.of(6));
+
+        boolean broken = blockService.breakBlockAfterThreeSixes(20, Colour.RED, remainingPiece);
+
+        assertTrue(broken);
+        assertEquals(26, movingPiece.getPosition());
+        assertEquals(20, remainingPiece.getPosition());
+        assertFalse(blockService.hasBlockAt(20, Colour.RED));
+    }
+
+    @Test
+    void shouldRandomlyDistributeSixUnitsWhenBreakingThreePieceBlock() {
+
+        Piece firstMovingPiece = redPlayer.getPieces().get(0);
+        Piece secondMovingPiece = redPlayer.getPieces().get(1);
+        Piece remainingPiece = redPlayer.getPieces().get(2);
+
+        firstMovingPiece.enterBoard(26, Direction.CLOCKWISE);
+        secondMovingPiece.enterBoard(26, Direction.COUNTERCLOCKWISE);
+        remainingPiece.enterBoard(26, Direction.CLOCKWISE);
+
+        firstMovingPiece.moveTo(20);
+        secondMovingPiece.moveTo(20);
+        remainingPiece.moveTo(20);
+
+        when(movementDistributor.distribute(6, 2)).thenReturn(List.of(2, 4));
+
+        boolean broken = blockService.breakBlockAfterThreeSixes(20, Colour.RED, remainingPiece);
+
+        assertTrue(broken);
+        assertEquals(22, firstMovingPiece.getPosition());
+        assertEquals(16, secondMovingPiece.getPosition());
+        assertEquals(20, remainingPiece.getPosition());
+    }
+
+    @Test
+    void shouldRandomlyDistributeSixUnitsWhenBreakingFourPieceBlock() {
+
+        Piece firstPiece = redPlayer.getPieces().get(0);
+        Piece secondPiece = redPlayer.getPieces().get(1);
+        Piece thirdPiece = redPlayer.getPieces().get(2);
+        Piece remainingPiece = redPlayer.getPieces().get(3);
+
+        firstPiece.enterBoard(26, Direction.CLOCKWISE);
+        secondPiece.enterBoard(26, Direction.COUNTERCLOCKWISE);
+        thirdPiece.enterBoard(26, Direction.CLOCKWISE);
+        remainingPiece.enterBoard(26, Direction.COUNTERCLOCKWISE);
+
+        firstPiece.moveTo(20);
+        secondPiece.moveTo(20);
+        thirdPiece.moveTo(20);
+        remainingPiece.moveTo(20);
+
+        when(movementDistributor.distribute(6, 3)).thenReturn(List.of(1, 2, 3));
+
+        boolean broken = blockService.breakBlockAfterThreeSixes(20, Colour.RED, remainingPiece);
+
+        assertTrue(broken);
+        assertEquals(21, firstPiece.getPosition());
+        assertEquals(18, secondPiece.getPosition());
+        assertEquals(23, thirdPiece.getPosition());
+        assertEquals(20, remainingPiece.getPosition());
+    }
+
+    @Test
+    void shouldPreserveOriginalDirectionsDuringForcedBlockBreak() {
+
+        Piece clockwisePiece = redPlayer.getPieces().get(0);
+        Piece counterclockwisePiece = redPlayer.getPieces().get(1);
+        Piece remainingPiece = redPlayer.getPieces().get(2);
+
+        clockwisePiece.enterBoard(26, Direction.CLOCKWISE);
+        counterclockwisePiece.enterBoard(26, Direction.COUNTERCLOCKWISE);
+        remainingPiece.enterBoard(26, Direction.CLOCKWISE);
+
+        clockwisePiece.moveTo(20);
+        counterclockwisePiece.moveTo(20);
+        remainingPiece.moveTo(20);
+
+        when(movementDistributor.distribute(6, 2)).thenReturn(List.of(2, 4));
+
+        blockService.breakBlockAfterThreeSixes(20, Colour.RED, remainingPiece);
+
+        assertEquals(Direction.CLOCKWISE, clockwisePiece.getDirection());
+        assertEquals(Direction.COUNTERCLOCKWISE, counterclockwisePiece.getDirection());
+    }
+
+    @Test
+    void shouldRejectRemainingPieceOutsideBlock() {
+
+        Piece firstRed = redPlayer.getPieces().get(0);
+        Piece secondRed = redPlayer.getPieces().get(1);
+        Piece bluePiece = bluePlayer.getPieces().get(0);
+
+        firstRed.enterBoard(26, Direction.CLOCKWISE);
+        secondRed.enterBoard(26, Direction.COUNTERCLOCKWISE);
+        bluePiece.enterBoard(13, Direction.CLOCKWISE);
+
+        firstRed.moveTo(20);
+        secondRed.moveTo(20);
+        bluePiece.moveTo(10);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> blockService.breakBlockAfterThreeSixes(20, Colour.RED, bluePiece));
+    }
+
+    @Test
+    void shouldNotBreakWhenNoBlockExists() {
+        
+        Piece piece = redPlayer.getPieces().get(0);
+
+        piece.enterBoard(26, Direction.CLOCKWISE);
+        piece.moveTo(20);
+
+        boolean broken = blockService.breakBlockAfterThreeSixes(20, Colour.RED, piece);
+
+        assertFalse(broken);
+        assertEquals(20, piece.getPosition());
+        verifyNoInteractions(movementDistributor);
     }
 }
