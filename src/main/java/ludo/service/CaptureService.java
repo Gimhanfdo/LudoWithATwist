@@ -61,19 +61,33 @@ public class CaptureService {
             return false;
         }
 
-        for (Piece occupant : gameState.getPiecesAtStandardPosition(
-                attacker.getPosition())) {
+        List<Piece> occupants = gameState.getPiecesAtStandardPosition(attacker.getPosition());
 
+        for (Piece occupant : occupants) {
             if (occupant == attacker) {
                 continue;
             }
 
-            if (canCapture(attacker, occupant)) {
-                return capture(attacker, occupant);
+            if (!canCapture(attacker, occupant)) {
+                continue;
             }
+
+            if (isPartOfBlock(occupant, occupants)) {
+                continue;
+            }
+
+            return capture(attacker, occupant);
         }
 
         return false;
+    }
+
+    private boolean isPartOfBlock(Piece piece, List<Piece> occupants) {
+        long sameColourCount = occupants.stream()
+                .filter(occupant -> occupant.getColour() == piece.getColour())
+                .count();
+
+        return sameColourCount >= 2;
     }
 
     public boolean captureBlock(List<Piece> attackingBlock, List<Piece> defendingBlock) {
@@ -152,5 +166,64 @@ public class CaptureService {
 
     private boolean allPiecesHaveColour(List<Piece> pieces, Colour colour) {
         return pieces.stream().allMatch(piece -> piece.getColour() == colour);
+    }
+
+    public boolean resolveBlockCapture(List<Piece> attackingBlock, GameState gameState) {
+
+        validateBlock(attackingBlock);
+
+        if (gameState == null) {
+            throw new IllegalArgumentException("Game state cannot be null.");
+        }
+
+        if (!formsBlock(attackingBlock)) {
+            return false;
+        }
+
+        int position = attackingBlock.get(0).getPosition();
+        List<Piece> occupants = gameState.getPiecesAtStandardPosition(position);
+        Colour attackingColour = attackingBlock.get(0).getColour();
+
+        for (Colour colour : Colour.values()) {
+            if (colour == attackingColour) {
+                continue;
+            }
+
+            List<Piece> defendingBlock = getPiecesOfColour(occupants, colour);
+
+            if (defendingBlock.size() != attackingBlock.size()) {
+                continue;
+            }
+
+            if (captureBlock(attackingBlock, defendingBlock)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private List<Piece> getPiecesOfColour(List<Piece> pieces, Colour colour) {
+        return pieces.stream()
+                .filter(piece -> piece.getColour() == colour)
+                .toList();
+    }
+
+    private boolean formsBlock(List<Piece> pieces) {
+
+        Piece firstPiece = pieces.get(0);
+
+        if (firstPiece.getState() != PieceState.STANDARD_PATH || firstPiece.getPosition() == null) {
+            return false;
+        }
+
+        Colour colour = firstPiece.getColour();
+        int position = firstPiece.getPosition();
+
+        return pieces.stream()
+                .allMatch(piece -> piece.getColour() == colour
+                        && piece.getState() == PieceState.STANDARD_PATH
+                        && piece.getPosition() != null
+                        && piece.getPosition() == position);
     }
 }
