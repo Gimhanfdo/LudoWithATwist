@@ -358,4 +358,135 @@ class BlockServiceTest {
         assertThrows(IllegalArgumentException.class,
                 () -> blockService.getBlockMovementDirection(20, Colour.RED));
     }
+
+    @Test
+    void shouldMoveSameDirectionBlockAsUnit() {
+
+        Piece firstPiece = redPlayer.getPieces().get(0);
+        Piece secondPiece = redPlayer.getPieces().get(1);
+
+        firstPiece.enterBoard(26, Direction.CLOCKWISE);
+        secondPiece.enterBoard(26, Direction.CLOCKWISE);
+
+        firstPiece.moveTo(20);
+        secondPiece.moveTo(20);
+
+        boolean moved = blockService.moveBlock(20, Colour.RED, 6);
+
+        assertTrue(moved);
+        assertEquals(23, firstPiece.getPosition());
+        assertEquals(23, secondPiece.getPosition());
+    }
+
+    @Test
+    void shouldMoveOppositeDirectionBlockUsingPieceFurthestFromHome() {
+
+        Piece clockwisePiece = redPlayer.getPieces().get(0);
+        Piece counterclockwisePiece = redPlayer.getPieces().get(1);
+
+        clockwisePiece.enterBoard(26, Direction.CLOCKWISE);
+        counterclockwisePiece.enterBoard(26, Direction.COUNTERCLOCKWISE);
+
+        clockwisePiece.moveTo(20);
+        counterclockwisePiece.moveTo(20);
+
+        boolean moved = blockService.moveBlock(20, Colour.RED, 6);
+
+        assertTrue(moved);
+        assertEquals(17, clockwisePiece.getPosition());
+        assertEquals(17, counterclockwisePiece.getPosition());
+    }
+
+    @Test
+    void shouldPreserveOriginalDirectionsAfterBlockMovement() {
+
+        Piece clockwisePiece = redPlayer.getPieces().get(0);
+        Piece counterclockwisePiece = redPlayer.getPieces().get(1);
+
+        clockwisePiece.enterBoard(26, Direction.CLOCKWISE);
+        counterclockwisePiece.enterBoard(26, Direction.COUNTERCLOCKWISE);
+
+        clockwisePiece.moveTo(20);
+        counterclockwisePiece.moveTo(20);
+
+        blockService.moveBlock(20, Colour.RED, 6);
+
+        assertEquals(Direction.CLOCKWISE, clockwisePiece.getDirection());
+        assertEquals(Direction.COUNTERCLOCKWISE, counterclockwisePiece.getDirection());
+    }
+
+    @Test
+    void shouldMoveThreePieceBlockUsingDividedDistance() {
+
+        Piece firstPiece = redPlayer.getPieces().get(0);
+        Piece secondPiece = redPlayer.getPieces().get(1);
+        Piece thirdPiece = redPlayer.getPieces().get(2);
+
+        firstPiece.enterBoard(26, Direction.CLOCKWISE);
+        secondPiece.enterBoard(26, Direction.CLOCKWISE);
+        thirdPiece.enterBoard(26, Direction.CLOCKWISE);
+
+        firstPiece.moveTo(20);
+        secondPiece.moveTo(20);
+        thirdPiece.moveTo(20);
+
+        boolean moved = blockService.moveBlock(20, Colour.RED, 6);
+
+        assertTrue(moved);
+        assertEquals(22, firstPiece.getPosition());
+        assertEquals(22, secondPiece.getPosition());
+        assertEquals(22, thirdPiece.getPosition());
+    }
+
+    @Test
+    void shouldNotMoveBlockWhenCalculatedDistanceIsZero() {
+
+        Piece firstPiece = redPlayer.getPieces().get(0);
+        Piece secondPiece = redPlayer.getPieces().get(1);
+
+        firstPiece.enterBoard(26, Direction.CLOCKWISE);
+        secondPiece.enterBoard(26, Direction.CLOCKWISE);
+
+        firstPiece.moveTo(20);
+        secondPiece.moveTo(20);
+
+        boolean moved = blockService.moveBlock(20, Colour.RED, 1);
+
+        assertFalse(moved);
+        assertEquals(20, firstPiece.getPosition());
+        assertEquals(20, secondPiece.getPosition());
+    }
+
+    @Test
+    void shouldNotMoveWhenNoBlockExists() {
+
+        Piece redPiece = redPlayer.getPieces().get(0);
+
+        redPiece.enterBoard(26, Direction.CLOCKWISE);
+        redPiece.moveTo(20);
+
+        boolean moved = blockService.moveBlock(20, Colour.RED, 6);
+
+        assertFalse(moved);
+        assertEquals(20, redPiece.getPosition());
+    }
+
+    @Test
+    void shouldMoveBlockAcrossStandardPathBoundary() {
+        
+        Piece firstPiece = redPlayer.getPieces().get(0);
+        Piece secondPiece = redPlayer.getPieces().get(1);
+
+        firstPiece.enterBoard(26, Direction.CLOCKWISE);
+        secondPiece.enterBoard(26, Direction.CLOCKWISE);
+
+        firstPiece.moveTo(50);
+        secondPiece.moveTo(50);
+
+        boolean moved = blockService.moveBlock(50, Colour.RED, 6);
+
+        assertTrue(moved);
+        assertEquals(1, firstPiece.getPosition());
+        assertEquals(1, secondPiece.getPosition());
+    }
 }
