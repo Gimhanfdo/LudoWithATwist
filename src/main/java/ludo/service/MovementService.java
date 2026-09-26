@@ -2,6 +2,7 @@ package ludo.service;
 
 import ludo.domain.enums.PieceState;
 import ludo.domain.model.GameState;
+import ludo.domain.model.MovementResult;
 import ludo.domain.model.Piece;
 
 public class MovementService {
@@ -13,8 +14,7 @@ public class MovementService {
     public MovementService(
             MoveExecutor moveExecutor,
             CaptureService captureService,
-            GameState gameState
-    ) {
+            GameState gameState) {
         if (moveExecutor == null) {
             throw new IllegalArgumentException("Move executor cannot be null.");
         }
@@ -32,18 +32,24 @@ public class MovementService {
         this.gameState = gameState;
     }
 
-    public boolean moveOnStandardPath(Piece piece, int distance) {
+    public MovementResult moveOnStandardPath(Piece piece, int distance) {
+
         boolean moved = moveExecutor.moveOnStandardPath(piece, distance);
 
         if (!moved) {
-            return false;
+            return MovementResult.NOT_MOVED;
         }
 
-        if (piece.getState() == PieceState.STANDARD_PATH) {
-
-            captureService.resolveCapture(piece, gameState);
+        if (piece.getState() != PieceState.STANDARD_PATH) {
+            return MovementResult.MOVED;
         }
 
-        return true;
+        boolean captured = captureService.resolveCapture(piece, gameState);
+
+        if (captured) {
+            return MovementResult.CAPTURED;
+        }
+
+        return MovementResult.MOVED;
     }
 }
