@@ -20,8 +20,10 @@ public class GameState {
             throw new IllegalArgumentException("Players cannot be empty.");
         }
 
-        if (players.contains(null)) {
-            throw new IllegalArgumentException("Players cannot contain null.");
+        for (Player player : players) {
+            if (player == null) {
+                throw new IllegalArgumentException("Players cannot contain null.");
+            }
         }
 
         this.players = new ArrayList<>(players);
