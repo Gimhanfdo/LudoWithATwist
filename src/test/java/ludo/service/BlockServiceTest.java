@@ -665,7 +665,7 @@ class BlockServiceTest {
 
     @Test
     void shouldNotBreakWhenNoBlockExists() {
-        
+
         Piece piece = redPlayer.getPieces().get(0);
 
         piece.enterBoard(26, Direction.CLOCKWISE);
@@ -676,5 +676,127 @@ class BlockServiceTest {
         assertFalse(broken);
         assertEquals(20, piece.getPosition());
         verifyNoInteractions(movementDistributor);
+    }
+
+    @Test
+    void shouldStopBlockBeforeOpponentBlock() {
+
+        Piece redOne = redPlayer.getPieces().get(0);
+        Piece redTwo = redPlayer.getPieces().get(1);
+        Piece blueOne = bluePlayer.getPieces().get(0);
+        Piece blueTwo = bluePlayer.getPieces().get(1);
+
+        redOne.enterBoard(26, Direction.CLOCKWISE);
+        redTwo.enterBoard(26, Direction.CLOCKWISE);
+        blueOne.enterBoard(13, Direction.CLOCKWISE);
+        blueTwo.enterBoard(13, Direction.CLOCKWISE);
+
+        redOne.moveTo(20);
+        redTwo.moveTo(20);
+        blueOne.moveTo(23);
+        blueTwo.moveTo(23);
+
+        int allowedDistance = blockService.getAllowedBlockMovementDistance(20, Colour.RED, 5);
+
+        assertEquals(2, allowedDistance);
+    }
+
+    @Test
+    void shouldAllowEqualSizedOpponentBlockAtDestination() {
+
+        Piece redOne = redPlayer.getPieces().get(0);
+        Piece redTwo = redPlayer.getPieces().get(1);
+        Piece blueOne = bluePlayer.getPieces().get(0);
+        Piece blueTwo = bluePlayer.getPieces().get(1);
+
+        redOne.enterBoard(26, Direction.CLOCKWISE);
+        redTwo.enterBoard(26, Direction.CLOCKWISE);
+        blueOne.enterBoard(13, Direction.CLOCKWISE);
+        blueTwo.enterBoard(13, Direction.CLOCKWISE);
+
+        redOne.moveTo(20);
+        redTwo.moveTo(20);
+        blueOne.moveTo(23);
+        blueTwo.moveTo(23);
+
+        int allowedDistance = blockService.getAllowedBlockMovementDistance(20, Colour.RED, 3);
+
+        assertEquals(3, allowedDistance);
+    }
+
+    @Test
+    void shouldStopBeforeDifferentSizedOpponentBlockAtDestination() {
+
+        Piece redOne = redPlayer.getPieces().get(0);
+        Piece redTwo = redPlayer.getPieces().get(1);
+        Piece blueOne = bluePlayer.getPieces().get(0);
+        Piece blueTwo = bluePlayer.getPieces().get(1);
+        Piece blueThree = bluePlayer.getPieces().get(2);
+
+        redOne.enterBoard(26, Direction.CLOCKWISE);
+        redTwo.enterBoard(26, Direction.CLOCKWISE);
+        blueOne.enterBoard(13, Direction.CLOCKWISE);
+        blueTwo.enterBoard(13, Direction.CLOCKWISE);
+        blueThree.enterBoard(13, Direction.CLOCKWISE);
+
+        redOne.moveTo(20);
+        redTwo.moveTo(20);
+        blueOne.moveTo(23);
+        blueTwo.moveTo(23);
+        blueThree.moveTo(23);
+
+        int allowedDistance = blockService.getAllowedBlockMovementDistance(20, Colour.RED, 3);
+
+        assertEquals(2, allowedDistance);
+    }
+
+    @Test
+    void shouldReturnZeroWhenOpponentBlockIsImmediatelyAhead() {
+
+        Piece redOne = redPlayer.getPieces().get(0);
+        Piece redTwo = redPlayer.getPieces().get(1);
+        Piece blueOne = bluePlayer.getPieces().get(0);
+        Piece blueTwo = bluePlayer.getPieces().get(1);
+
+        redOne.enterBoard(26, Direction.CLOCKWISE);
+        redTwo.enterBoard(26, Direction.CLOCKWISE);
+        blueOne.enterBoard(13, Direction.CLOCKWISE);
+        blueTwo.enterBoard(13, Direction.CLOCKWISE);
+
+        redOne.moveTo(20);
+        redTwo.moveTo(20);
+        blueOne.moveTo(21);
+        blueTwo.moveTo(21);
+
+        int allowedDistance = blockService.getAllowedBlockMovementDistance(20, Colour.RED, 3);
+
+        assertEquals(0, allowedDistance);
+    }
+
+    @Test
+    void shouldMoveBlockOnlyUpToCellBeforeOpponentBlock() {
+
+        Piece redOne = redPlayer.getPieces().get(0);
+        Piece redTwo = redPlayer.getPieces().get(1);
+        Piece blueOne = bluePlayer.getPieces().get(0);
+        Piece blueTwo = bluePlayer.getPieces().get(1);
+
+        redOne.enterBoard(26, Direction.CLOCKWISE);
+        redTwo.enterBoard(26, Direction.CLOCKWISE);
+        blueOne.enterBoard(13, Direction.CLOCKWISE);
+        blueTwo.enterBoard(13, Direction.CLOCKWISE);
+
+        redOne.moveTo(20);
+        redTwo.moveTo(20);
+        blueOne.moveTo(22);
+        blueTwo.moveTo(22);
+
+        boolean moved = blockService.moveBlock(20, Colour.RED, 6);
+
+        assertTrue(moved);
+        assertEquals(21, redOne.getPosition());
+        assertEquals(21, redTwo.getPosition());
+        assertEquals(22, blueOne.getPosition());
+        assertEquals(22, blueTwo.getPosition());
     }
 }
