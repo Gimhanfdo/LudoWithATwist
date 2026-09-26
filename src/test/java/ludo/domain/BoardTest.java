@@ -76,10 +76,7 @@ class BoardTest {
 
         Board board = new Board();
 
-        int distance = board.getDistanceToApproach(
-                22,
-                Colour.RED,
-                Direction.CLOCKWISE);
+        int distance = board.getDistanceToApproach(22, Colour.RED, Direction.CLOCKWISE);
 
         assertEquals(3, distance);
     }
@@ -89,10 +86,7 @@ class BoardTest {
 
         Board board = new Board();
 
-        int distance = board.getDistanceToApproach(
-                28,
-                Colour.RED,
-                Direction.COUNTERCLOCKWISE);
+        int distance = board.getDistanceToApproach(28, Colour.RED, Direction.COUNTERCLOCKWISE);
 
         assertEquals(3, distance);
     }
@@ -102,10 +96,7 @@ class BoardTest {
 
         Board board = new Board();
 
-        int distance = board.getDistanceToApproach(
-                50,
-                Colour.BLUE,
-                Direction.CLOCKWISE);
+        int distance = board.getDistanceToApproach(50, Colour.BLUE, Direction.CLOCKWISE);
 
         assertEquals(14, distance);
     }
@@ -115,10 +106,7 @@ class BoardTest {
 
         Board board = new Board();
 
-        int distance = board.getDistanceToApproach(
-                2,
-                Colour.BLUE,
-                Direction.COUNTERCLOCKWISE);
+        int distance = board.getDistanceToApproach(2, Colour.BLUE, Direction.COUNTERCLOCKWISE);
 
         assertEquals(42, distance);
     }
@@ -128,10 +116,7 @@ class BoardTest {
 
         Board board = new Board();
 
-        int distance = board.getDistanceToApproach(
-                25,
-                Colour.RED,
-                Direction.CLOCKWISE);
+        int distance = board.getDistanceToApproach(25, Colour.RED, Direction.CLOCKWISE);
 
         assertEquals(0, distance);
     }
@@ -176,5 +161,26 @@ class BoardTest {
                 Direction.CLOCKWISE);
 
         assertFalse(movesBeyond);
+    }
+
+    @Test
+    void shouldCalculateClockwiseDistanceToHome() {
+        int distance = board.getDistanceToHome(22, Colour.RED, Direction.CLOCKWISE);
+
+        assertEquals(9, distance);
+    }
+
+    @Test
+    void shouldCalculateCounterclockwiseDistanceToHome() {
+        int distance = board.getDistanceToHome(28, Colour.RED, Direction.COUNTERCLOCKWISE);
+
+        assertEquals(9, distance);
+    }
+
+    @Test
+    void shouldCalculateDistanceToHomeFromApproach() {
+        int distance = board.getDistanceToHome(25, Colour.RED, Direction.CLOCKWISE);
+
+        assertEquals(6, distance);
     }
 }
