@@ -38,19 +38,14 @@ public class Board {
 
     private void validateColour(Colour colour) {
         if (colour == null) {
-            throw new IllegalArgumentException(
-                    "Colour cannot be null.");
+            throw new IllegalArgumentException("Colour cannot be null.");
         }
     }
 
-    public int getDistanceToApproach(
-            int currentPosition,
-            Colour colour,
-            Direction direction) {
+    public int getDistanceToApproach(int currentPosition, Colour colour, Direction direction) {
 
         if (!isValidStandardPosition(currentPosition)) {
-            throw new IllegalArgumentException(
-                    "Current position must be on the standard path.");
+            throw new IllegalArgumentException("Current position must be on the standard path.");
         }
 
         validateColour(colour);
@@ -63,14 +58,10 @@ public class Board {
 
         if (direction == Direction.CLOCKWISE) {
 
-            return Math.floorMod(
-                    approachPosition - currentPosition,
-                    STANDARD_PATH_SIZE);
+            return Math.floorMod(approachPosition - currentPosition, STANDARD_PATH_SIZE);
         }
 
-        return Math.floorMod(
-                currentPosition - approachPosition,
-                STANDARD_PATH_SIZE);
+        return Math.floorMod(currentPosition - approachPosition, STANDARD_PATH_SIZE);
     }
 
     public boolean movesBeyondApproach(
@@ -80,15 +71,17 @@ public class Board {
             Direction direction) {
 
         if (movementDistance <= 0) {
-            throw new IllegalArgumentException(
-                    "Movement distance must be greater than zero.");
+            throw new IllegalArgumentException("Movement distance must be greater than zero.");
         }
 
-        int distanceToApproach = getDistanceToApproach(
-                currentPosition,
-                colour,
-                direction);
+        int distanceToApproach = getDistanceToApproach(currentPosition, colour, direction);
 
         return movementDistance > distanceToApproach;
+    }
+
+    public int getDistanceToHome(int currentPosition, Colour colour, Direction direction) {
+        int distanceToApproach = getDistanceToApproach(currentPosition, colour, direction);
+
+        return distanceToApproach + HOME_STRAIGHT_SIZE + 1;
     }
 }
