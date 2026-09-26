@@ -9,7 +9,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+
+import java.util.List;
 
 class MovementServiceTest {
 
@@ -79,7 +83,7 @@ class MovementServiceTest {
         piece.recordCapture();
 
         when(blockService.getAllowedMovementDistance(piece, 5))
-            .thenReturn(5);
+                .thenReturn(5);
 
         when(moveExecutor.moveOnStandardPath(piece, 5)).thenAnswer(invocation -> {
             piece.enterHomeStraight(1);
@@ -99,7 +103,7 @@ class MovementServiceTest {
         attacker.enterBoard(26, Direction.CLOCKWISE);
 
         when(blockService.getAllowedMovementDistance(attacker, 4))
-            .thenReturn(4);
+                .thenReturn(4);
 
         when(moveExecutor.moveOnStandardPath(attacker, 4)).thenAnswer(invocation -> {
             attacker.moveTo(30);
@@ -223,5 +227,60 @@ class MovementServiceTest {
     void shouldRejectNullGameState() {
         assertThrows(IllegalArgumentException.class,
                 () -> new MovementService(moveExecutor, captureService, blockService, null));
+    }
+
+    @Test
+    void shouldReturnCapturedWhenMovedBlockCapturesOpponentBlock() {
+
+        Piece firstPiece = new Piece(Colour.RED, 1);
+        Piece secondPiece = new Piece(Colour.RED, 2);
+
+        firstPiece.enterBoard(26, Direction.CLOCKWISE);
+        secondPiece.enterBoard(26, Direction.CLOCKWISE);
+
+        firstPiece.moveTo(20);
+        secondPiece.moveTo(20);
+
+        List<Piece> block = List.of(firstPiece, secondPiece);
+
+        when(blockService.getBlockAt(20, Colour.RED)).thenReturn(block);
+        when(blockService.moveBlock(20, Colour.RED, 6)).thenReturn(true);
+        when(captureService.resolveBlockCapture(block, gameState)).thenReturn(true);
+
+        MovementResult result = movementService.moveBlock(20, Colour.RED, 6);
+
+        assertEquals(MovementResult.CAPTURED, result);
+    }
+
+    @Test
+    void shouldReturnMovedWhenBlockMovesWithoutCapture() {
+
+        Piece firstPiece = new Piece(Colour.RED, 1);
+        Piece secondPiece = new Piece(Colour.RED, 2);
+        List<Piece> block = List.of(firstPiece, secondPiece);
+
+        when(blockService.getBlockAt(20, Colour.RED)).thenReturn(block);
+        when(blockService.moveBlock(20, Colour.RED, 6)).thenReturn(true);
+        when(captureService.resolveBlockCapture(block, gameState)).thenReturn(false);
+
+        MovementResult result = movementService.moveBlock(20, Colour.RED, 6);
+
+        assertEquals(MovementResult.MOVED, result);
+    }
+
+    @Test
+    void shouldReturnNotMovedWhenBlockCannotMove() {
+
+        Piece firstPiece = new Piece(Colour.RED, 1);
+        Piece secondPiece = new Piece(Colour.RED, 2);
+        List<Piece> block = List.of(firstPiece, secondPiece);
+
+        when(blockService.getBlockAt(20, Colour.RED)).thenReturn(block);
+        when(blockService.moveBlock(20, Colour.RED, 6)).thenReturn(false);
+
+        MovementResult result = movementService.moveBlock(20, Colour.RED, 6);
+
+        assertEquals(MovementResult.NOT_MOVED, result);
+        verify(captureService, never()).resolveBlockCapture(anyList(), eq(gameState));
     }
 }
