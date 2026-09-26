@@ -1,5 +1,8 @@
 package ludo.service;
 
+import java.util.List;
+
+import ludo.domain.enums.Colour;
 import ludo.domain.enums.PieceState;
 import ludo.domain.model.GameState;
 import ludo.domain.model.MovementResult;
@@ -40,7 +43,7 @@ public class MovementService {
     }
 
     public MovementResult moveOnStandardPath(Piece piece, int distance) {
-        
+
         int allowedDistance = blockService.getAllowedMovementDistance(piece, distance);
 
         if (allowedDistance == 0) {
@@ -64,5 +67,24 @@ public class MovementService {
         }
 
         return MovementResult.MOVED;
+    }
+
+    public MovementResult moveBlock(int position, Colour colour, int diceValue) {
+        
+        List<Piece> movingBlock = blockService.getBlockAt(position, colour);
+
+        if (movingBlock.isEmpty()) {
+            return MovementResult.NOT_MOVED;
+        }
+
+        boolean moved = blockService.moveBlock(position, colour, diceValue);
+
+        if (!moved) {
+            return MovementResult.NOT_MOVED;
+        }
+
+        boolean captured = captureService.resolveBlockCapture(movingBlock, gameState);
+
+        return captured ? MovementResult.CAPTURED : MovementResult.MOVED;
     }
 }
