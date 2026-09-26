@@ -16,11 +16,18 @@ public class BlockService {
     private static final int MINIMUM_BLOCK_SIZE = 2;
 
     private final GameState gameState;
+    private final Board board;
 
-    public BlockService(GameState gameState) {
+    public BlockService(GameState gameState, Board board) {
         if (gameState == null) {
             throw new IllegalArgumentException("Game state cannot be null.");
         }
+
+        if (board == null) {
+            throw new IllegalArgumentException("Board cannot be null.");
+        }
+
+        this.board = board;
 
         this.gameState = gameState;
     }
@@ -103,5 +110,44 @@ public class BlockService {
         if (requestedDistance <= 0) {
             throw new IllegalArgumentException("Movement distance must be greater than zero.");
         }
+    }
+
+    public Direction getBlockMovementDirection(int position, Colour colour) {
+        List<Piece> block = getBlockAt(position, colour);
+
+        if (block.isEmpty()) {
+            throw new IllegalArgumentException("No block exists at the specified position.");
+        }
+
+        Piece furthestFromHome = block.get(0);
+        int longestDistance = getDistanceToHome(furthestFromHome);
+
+        for (int i = 1; i < block.size(); i++) {
+            Piece piece = block.get(i);
+            int distance = getDistanceToHome(piece);
+
+            if (distance > longestDistance) {
+                furthestFromHome = piece;
+                longestDistance = distance;
+            }
+        }
+
+        return furthestFromHome.getDirection();
+    }
+
+    private int getDistanceToHome(Piece piece) {
+        return board.getDistanceToHome(piece.getPosition(), piece.getColour(), piece.getDirection());
+    }
+
+    public int getBlockMovementDistance(int diceValue, int blockSize) {
+        if (diceValue <= 0) {
+            throw new IllegalArgumentException("Dice value must be greater than zero.");
+        }
+
+        if (blockSize < MINIMUM_BLOCK_SIZE) {
+            throw new IllegalArgumentException("Block must contain at least two pieces.");
+        }
+
+        return diceValue / blockSize;
     }
 }
