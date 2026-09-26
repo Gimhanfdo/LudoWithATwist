@@ -473,7 +473,7 @@ class BlockServiceTest {
 
     @Test
     void shouldMoveBlockAcrossStandardPathBoundary() {
-        
+
         Piece firstPiece = redPlayer.getPieces().get(0);
         Piece secondPiece = redPlayer.getPieces().get(1);
 
@@ -488,5 +488,44 @@ class BlockServiceTest {
         assertTrue(moved);
         assertEquals(1, firstPiece.getPosition());
         assertEquals(1, secondPiece.getPosition());
+    }
+
+    @Test
+    void shouldBreakBlockWhenOnePieceMovesAway() {
+
+        Piece firstPiece = redPlayer.getPieces().get(0);
+        Piece secondPiece = redPlayer.getPieces().get(1);
+
+        firstPiece.enterBoard(26, Direction.CLOCKWISE);
+        secondPiece.enterBoard(26, Direction.COUNTERCLOCKWISE);
+
+        firstPiece.moveTo(20);
+        secondPiece.moveTo(20);
+
+        assertTrue(blockService.hasBlockAt(20, Colour.RED));
+
+        firstPiece.moveTo(23);
+
+        assertFalse(blockService.hasBlockAt(20, Colour.RED));
+        assertTrue(blockService.getBlockAt(20, Colour.RED).isEmpty());
+    }
+
+    @Test
+    void shouldRetainOriginalDirectionsWhenBlockBreaks() {
+        Piece clockwisePiece = redPlayer.getPieces().get(0);
+        Piece counterclockwisePiece = redPlayer.getPieces().get(1);
+
+        clockwisePiece.enterBoard(26, Direction.CLOCKWISE);
+        counterclockwisePiece.enterBoard(26, Direction.COUNTERCLOCKWISE);
+
+        clockwisePiece.moveTo(20);
+        counterclockwisePiece.moveTo(20);
+
+        blockService.moveBlock(20, Colour.RED, 6);
+        clockwisePiece.moveTo(18);
+
+        assertFalse(blockService.hasBlockAt(17, Colour.RED));
+        assertEquals(Direction.CLOCKWISE, clockwisePiece.getDirection());
+        assertEquals(Direction.COUNTERCLOCKWISE, counterclockwisePiece.getDirection());
     }
 }
