@@ -276,4 +276,202 @@ class CaptureServiceTest {
         assertThrows(IllegalArgumentException.class,
                 () -> captureService.resolveCapture(attacker, null));
     }
+
+    @Test
+    void shouldCaptureEqualSizedOpponentBlock() {
+
+        Piece redOne = new Piece(Colour.RED, 1);
+        Piece redTwo = new Piece(Colour.RED, 2);
+        Piece blueOne = new Piece(Colour.BLUE, 1);
+        Piece blueTwo = new Piece(Colour.BLUE, 2);
+
+        redOne.enterBoard(26, Direction.CLOCKWISE);
+        redTwo.enterBoard(26, Direction.COUNTERCLOCKWISE);
+        blueOne.enterBoard(13, Direction.CLOCKWISE);
+        blueTwo.enterBoard(13, Direction.COUNTERCLOCKWISE);
+
+        redOne.moveTo(20);
+        redTwo.moveTo(20);
+        blueOne.moveTo(20);
+        blueTwo.moveTo(20);
+
+        boolean captured = captureService.captureBlock(
+                List.of(redOne, redTwo),
+                List.of(blueOne, blueTwo));
+
+        assertTrue(captured);
+        assertEquals(PieceState.BASE, blueOne.getState());
+        assertEquals(PieceState.BASE, blueTwo.getState());
+        assertEquals(1, redOne.getCaptureCount());
+        assertEquals(1, redTwo.getCaptureCount());
+    }
+
+    @Test
+    void shouldResetCapturedBlockPiecesCompletely() {
+
+        Piece redOne = new Piece(Colour.RED, 1);
+        Piece redTwo = new Piece(Colour.RED, 2);
+        Piece blueOne = new Piece(Colour.BLUE, 1);
+        Piece blueTwo = new Piece(Colour.BLUE, 2);
+
+        redOne.enterBoard(26, Direction.CLOCKWISE);
+        redTwo.enterBoard(26, Direction.CLOCKWISE);
+        blueOne.enterBoard(13, Direction.COUNTERCLOCKWISE);
+        blueTwo.enterBoard(13, Direction.COUNTERCLOCKWISE);
+
+        redOne.moveTo(20);
+        redTwo.moveTo(20);
+        blueOne.moveTo(20);
+        blueTwo.moveTo(20);
+
+        blueOne.recordCapture();
+        blueOne.recordApproachPass();
+
+        captureService.captureBlock(
+                List.of(redOne, redTwo),
+                List.of(blueOne, blueTwo));
+
+        assertEquals(PieceState.BASE, blueOne.getState());
+        assertNull(blueOne.getPosition());
+        assertNull(blueOne.getDirection());
+        assertEquals(0, blueOne.getCaptureCount());
+        assertEquals(0, blueOne.getApproachPassCount());
+    }
+
+    @Test
+    void shouldNotCaptureDifferentSizedBlock() {
+
+        Piece redOne = new Piece(Colour.RED, 1);
+        Piece redTwo = new Piece(Colour.RED, 2);
+        Piece blueOne = new Piece(Colour.BLUE, 1);
+        Piece blueTwo = new Piece(Colour.BLUE, 2);
+        Piece blueThree = new Piece(Colour.BLUE, 3);
+
+        redOne.enterBoard(26, Direction.CLOCKWISE);
+        redTwo.enterBoard(26, Direction.CLOCKWISE);
+        blueOne.enterBoard(13, Direction.CLOCKWISE);
+        blueTwo.enterBoard(13, Direction.CLOCKWISE);
+        blueThree.enterBoard(13, Direction.CLOCKWISE);
+
+        redOne.moveTo(20);
+        redTwo.moveTo(20);
+        blueOne.moveTo(20);
+        blueTwo.moveTo(20);
+        blueThree.moveTo(20);
+
+        boolean captured = captureService.captureBlock(
+                List.of(redOne, redTwo),
+                List.of(blueOne, blueTwo, blueThree));
+
+        assertFalse(captured);
+        assertEquals(PieceState.STANDARD_PATH, blueOne.getState());
+        assertEquals(PieceState.STANDARD_PATH, blueTwo.getState());
+        assertEquals(PieceState.STANDARD_PATH, blueThree.getState());
+        assertEquals(0, redOne.getCaptureCount());
+        assertEquals(0, redTwo.getCaptureCount());
+    }
+
+    @Test
+    void shouldNotCaptureSameColourBlock() {
+
+        Piece redOne = new Piece(Colour.RED, 1);
+        Piece redTwo = new Piece(Colour.RED, 2);
+        Piece redThree = new Piece(Colour.RED, 3);
+        Piece redFour = new Piece(Colour.RED, 4);
+
+        redOne.enterBoard(26, Direction.CLOCKWISE);
+        redTwo.enterBoard(26, Direction.CLOCKWISE);
+        redThree.enterBoard(26, Direction.COUNTERCLOCKWISE);
+        redFour.enterBoard(26, Direction.COUNTERCLOCKWISE);
+
+        redOne.moveTo(20);
+        redTwo.moveTo(20);
+        redThree.moveTo(20);
+        redFour.moveTo(20);
+
+        boolean captured = captureService.captureBlock(
+                List.of(redOne, redTwo),
+                List.of(redThree, redFour));
+
+        assertFalse(captured);
+    }
+
+    @Test
+    void shouldNotCaptureBlockAtDifferentPosition() {
+
+        Piece redOne = new Piece(Colour.RED, 1);
+        Piece redTwo = new Piece(Colour.RED, 2);
+        Piece blueOne = new Piece(Colour.BLUE, 1);
+        Piece blueTwo = new Piece(Colour.BLUE, 2);
+
+        redOne.enterBoard(26, Direction.CLOCKWISE);
+        redTwo.enterBoard(26, Direction.CLOCKWISE);
+        blueOne.enterBoard(13, Direction.CLOCKWISE);
+        blueTwo.enterBoard(13, Direction.CLOCKWISE);
+
+        redOne.moveTo(20);
+        redTwo.moveTo(20);
+        blueOne.moveTo(21);
+        blueTwo.moveTo(21);
+
+        boolean captured = captureService.captureBlock(
+                List.of(redOne, redTwo),
+                List.of(blueOne, blueTwo));
+
+        assertFalse(captured);
+    }
+
+    @Test
+    void shouldCaptureEqualThreePieceOpponentBlock() {
+
+        Piece redOne = new Piece(Colour.RED, 1);
+        Piece redTwo = new Piece(Colour.RED, 2);
+        Piece redThree = new Piece(Colour.RED, 3);
+
+        Piece blueOne = new Piece(Colour.BLUE, 1);
+        Piece blueTwo = new Piece(Colour.BLUE, 2);
+        Piece blueThree = new Piece(Colour.BLUE, 3);
+
+        List<Piece> attackers = List.of(redOne, redTwo, redThree);
+        List<Piece> defenders = List.of(blueOne, blueTwo, blueThree);
+
+        for (Piece attacker : attackers) {
+            attacker.enterBoard(26, Direction.CLOCKWISE);
+            attacker.moveTo(20);
+        }
+
+        for (Piece defender : defenders) {
+            defender.enterBoard(13, Direction.CLOCKWISE);
+            defender.moveTo(20);
+        }
+
+        boolean captured = captureService.captureBlock(attackers, defenders);
+
+        assertTrue(captured);
+        assertTrue(defenders.stream()
+                .allMatch(piece -> piece.getState() == PieceState.BASE));
+        assertTrue(attackers.stream()
+                .allMatch(piece -> piece.getCaptureCount() == 1));
+    }
+
+    @Test
+    void shouldRejectNullAttackingBlock() {
+
+        Piece blueOne = new Piece(Colour.BLUE, 1);
+        Piece blueTwo = new Piece(Colour.BLUE, 2);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> captureService.captureBlock(null, List.of(blueOne, blueTwo)));
+    }
+
+    @Test
+    void shouldRejectGroupThatIsNotABlock() {
+        
+        Piece redPiece = new Piece(Colour.RED, 1);
+        Piece blueOne = new Piece(Colour.BLUE, 1);
+        Piece blueTwo = new Piece(Colour.BLUE, 2);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> captureService.captureBlock(List.of(redPiece), List.of(blueOne, blueTwo)));
+    }
 }
