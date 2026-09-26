@@ -6,6 +6,7 @@ import ludo.domain.model.Piece;
 import ludo.domain.model.Board;
 import ludo.domain.enums.Direction;
 import ludo.domain.enums.PieceState;
+import ludo.random.MovementDistributor;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,11 +15,13 @@ import java.util.List;
 public class BlockService {
 
     private static final int MINIMUM_BLOCK_SIZE = 2;
+    private static final int FORCED_BREAK_MOVEMENT = 6;
 
     private final GameState gameState;
     private final Board board;
+    private final MovementDistributor movementDistributor;
 
-    public BlockService(GameState gameState, Board board) {
+    public BlockService(GameState gameState, Board board, MovementDistributor movementDistributor) {
         if (gameState == null) {
             throw new IllegalArgumentException("Game state cannot be null.");
         }
@@ -27,8 +30,12 @@ public class BlockService {
             throw new IllegalArgumentException("Board cannot be null.");
         }
 
-        this.board = board;
+        if (movementDistributor == null) {
+            throw new IllegalArgumentException("Movement distributor cannot be null.");
+        }
 
+        this.board = board;
+        this.movementDistributor = movementDistributor;
         this.gameState = gameState;
     }
 
@@ -174,31 +181,39 @@ public class BlockService {
         return true;
     }
 
-    public boolean breakBlockAfterThreeSixes(int position, Colour colour) {
+    public boolean breakBlockAfterThreeSixes(int position, Colour colour, Piece pieceToRemain) {
         List<Piece> block = getBlockAt(position, colour);
 
         if (block.isEmpty()) {
             return false;
         }
 
-        int totalMovement = 6;
-
-        for (int i = 0; i < block.size() - 1; i++) {
-            Piece piece = block.get(i);
-            int remainingPiecesToMove = block.size() - 1 - i;
-            int movementDistance = totalMovement / remainingPiecesToMove;
-
-            moveInOriginalDirection(piece, movementDistance);
-
-            totalMovement -= movementDistance;
+        if (!block.contains(pieceToRemain)) {
+            throw new IllegalArgumentException("Remaining piece must belong to the block.");
         }
+
+        List<Piece> piecesToMove = getPiecesToMove(block, pieceToRemain);
+        List<Integer> distribution = movementDistributor.distribute(FORCED_BREAK_MOVEMENT, piecesToMove.size());
+
+        movePiecesInOriginalDirections(piecesToMove, distribution);
 
         return true;
     }
 
+    private List<Piece> getPiecesToMove(List<Piece> block, Piece pieceToRemain) {
+        List<Piece> piecesToMove = new ArrayList<>(block);
+        piecesToMove.remove(pieceToRemain);
+        return piecesToMove;
+    }
+
+    private void movePiecesInOriginalDirections(List<Piece> pieces, List<Integer> distribution) {
+        for (int i = 0; i < pieces.size(); i++) {
+            moveInOriginalDirection(pieces.get(i), distribution.get(i));
+        }
+    }
+
     private void moveInOriginalDirection(Piece piece, int distance) {
         int destination = calculatePosition(piece.getPosition(), distance, piece.getDirection());
-
         piece.moveTo(destination);
     }
 }
