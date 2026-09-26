@@ -5,6 +5,7 @@ import ludo.domain.enums.Direction;
 import ludo.domain.model.GameState;
 import ludo.domain.model.Piece;
 import ludo.domain.model.Player;
+import ludo.domain.model.Board;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +17,7 @@ class BlockServiceTest {
 
     private Player redPlayer;
     private Player bluePlayer;
-
+    private Board board;
     private GameState gameState;
     private BlockService blockService;
 
@@ -26,7 +27,8 @@ class BlockServiceTest {
         bluePlayer = new Player(Colour.BLUE);
 
         gameState = new GameState(List.of(redPlayer, bluePlayer));
-        blockService = new BlockService(gameState);
+        board = new Board();
+        blockService = new BlockService(gameState, board);
     }
 
     @Test
@@ -165,7 +167,13 @@ class BlockServiceTest {
     @Test
     void shouldRejectNullGameState() {
         assertThrows(IllegalArgumentException.class,
-                () -> new BlockService(null));
+                () -> new BlockService(null, board));
+    }
+
+    @Test
+    void shouldRejectNullBoard() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new BlockService(gameState, null));
     }
 
     @Test
@@ -260,7 +268,7 @@ class BlockServiceTest {
 
     @Test
     void shouldAllowZeroMovementWhenOpponentBlockIsImmediatelyAhead() {
-        
+
         Piece redPiece = redPlayer.getPieces().get(0);
         Piece bluePieceOne = bluePlayer.getPieces().get(0);
         Piece bluePieceTwo = bluePlayer.getPieces().get(1);
@@ -276,5 +284,78 @@ class BlockServiceTest {
         int allowedDistance = blockService.getAllowedMovementDistance(redPiece, 6);
 
         assertEquals(0, allowedDistance);
+    }
+
+    @Test
+    void shouldMoveBlockInDirectionOfPieceFurthestFromHome() {
+
+        Piece clockwisePiece = redPlayer.getPieces().get(0);
+        Piece counterclockwisePiece = redPlayer.getPieces().get(1);
+
+        clockwisePiece.enterBoard(26, Direction.CLOCKWISE);
+        counterclockwisePiece.enterBoard(26, Direction.COUNTERCLOCKWISE);
+
+        clockwisePiece.moveTo(20);
+        counterclockwisePiece.moveTo(20);
+
+        Direction direction = blockService.getBlockMovementDirection(20, Colour.RED);
+
+        assertEquals(Direction.COUNTERCLOCKWISE, direction);
+    }
+
+    @Test
+    void shouldUseSharedDirectionWhenBlockPiecesMoveSameDirection() {
+
+        Piece firstPiece = redPlayer.getPieces().get(0);
+        Piece secondPiece = redPlayer.getPieces().get(1);
+
+        firstPiece.enterBoard(26, Direction.CLOCKWISE);
+        secondPiece.enterBoard(26, Direction.CLOCKWISE);
+
+        firstPiece.moveTo(20);
+        secondPiece.moveTo(20);
+
+        Direction direction = blockService.getBlockMovementDirection(20, Colour.RED);
+
+        assertEquals(Direction.CLOCKWISE, direction);
+    }
+
+    @Test
+    void shouldDivideDiceValueByNumberOfPiecesInBlock() {
+        int distance = blockService.getBlockMovementDistance(6, 2);
+
+        assertEquals(3, distance);
+    }
+
+    @Test
+    void shouldCalculateMovementForThreePieceBlock() {
+        int distance = blockService.getBlockMovementDistance(6, 3);
+
+        assertEquals(2, distance);
+    }
+
+    @Test
+    void shouldReturnZeroWhenDiceValueIsTooSmallToMoveBlock() {
+        int distance = blockService.getBlockMovementDistance(1, 2);
+
+        assertEquals(0, distance);
+    }
+
+    @Test
+    void shouldRejectMovementDistanceForInvalidBlockSize() {
+        assertThrows(IllegalArgumentException.class,
+                () -> blockService.getBlockMovementDistance(6, 1));
+    }
+
+    @Test
+    void shouldRejectNonPositiveDiceValueForBlockMovement() {
+        assertThrows(IllegalArgumentException.class,
+                () -> blockService.getBlockMovementDistance(0, 2));
+    }
+
+    @Test
+    void shouldRejectDirectionRequestWhenNoBlockExists() {
+        assertThrows(IllegalArgumentException.class,
+                () -> blockService.getBlockMovementDirection(20, Colour.RED));
     }
 }
