@@ -105,4 +105,34 @@ class MysteryPositionSelectorTest {
                         gameState,
                         null));
     }
+
+    @Test
+    void shouldExcludePreviousMysteryCellPosition() {
+        when(positionGenerator.nextPosition(51)).thenReturn(20);
+
+        int position = selector.selectPosition(20);
+
+        assertEquals(21, position);
+        assertNotEquals(20, position);
+    }
+
+    @Test
+    void shouldExcludeOccupiedAndPreviousPositions() {
+        Player redPlayer = gameState.getPlayers().stream()
+                .filter(player -> player.getColour() == Colour.RED)
+                .findFirst()
+                .orElseThrow();
+
+        redPlayer.getPieces().get(0).enterBoard(26, Direction.CLOCKWISE);
+        redPlayer.getPieces().get(0).moveTo(10);
+
+        // Position 10 is occupied. Position 20 is the previous Mystery Cell. Therefore, 50 positions remain.
+        when(positionGenerator.nextPosition(50)).thenReturn(19);
+
+        int position = selector.selectPosition(20);
+
+        assertEquals(21, position);
+        assertNotEquals(10, position);
+        assertNotEquals(20, position);
+    }
 }
