@@ -1,6 +1,8 @@
 package ludo.service;
 
+import ludo.domain.model.GameState;
 import ludo.domain.model.MysteryCell;
+import ludo.domain.enums.PieceState;
 
 public class MysteryCellService {
 
@@ -9,10 +11,11 @@ public class MysteryCellService {
 
     private final MysteryCell mysteryCell;
     private final MysteryPositionSelector positionSelector;
+    private final GameState gameState;
 
     private int completedRounds;
 
-    public MysteryCellService(MysteryCell mysteryCell, MysteryPositionSelector positionSelector) {
+    public MysteryCellService(MysteryCell mysteryCell, MysteryPositionSelector positionSelector, GameState gameState) {
         if (mysteryCell == null) {
             throw new IllegalArgumentException("Mystery Cell cannot be null.");
         }
@@ -21,12 +24,21 @@ public class MysteryCellService {
             throw new IllegalArgumentException("Position selector cannot be null.");
         }
 
+        if (gameState == null) {
+            throw new IllegalArgumentException("Game state cannot be null.");
+        }
+
         this.mysteryCell = mysteryCell;
         this.positionSelector = positionSelector;
+        this.gameState = gameState;
         this.completedRounds = 0;
     }
 
     public void completeRound() {
+        if (!hasPieceOnStandardPath() && !mysteryCell.isActive()) {
+            return;
+        }
+
         completedRounds++;
 
         if (shouldActivateMysteryCell()) {
@@ -37,6 +49,12 @@ public class MysteryCellService {
         if (mysteryCell.isActive()) {
             updateActiveMysteryCell();
         }
+    }
+
+    private boolean hasPieceOnStandardPath() {
+        return gameState.getPlayers().stream()
+                .flatMap(player -> player.getPieces().stream())
+                .anyMatch(piece -> piece.getState() == PieceState.STANDARD_PATH);
     }
 
     private void updateActiveMysteryCell() {
