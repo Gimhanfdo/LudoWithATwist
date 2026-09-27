@@ -26,22 +26,34 @@ public class MysteryPositionSelector {
     }
 
     public int selectPosition() {
-        List<Integer> availablePositions = getAvailablePositions();
+        return selectPosition(null);
+    }
+
+    public int selectPosition(Integer excludedPosition) {
+        List<Integer> availablePositions = getAvailablePositions(excludedPosition);
         int selectedIndex = positionGenerator.nextPosition(availablePositions.size());
 
         return availablePositions.get(selectedIndex);
     }
 
-    private List<Integer> getAvailablePositions() {
+    private List<Integer> getAvailablePositions(Integer excludedPosition) {
         List<Integer> availablePositions = new ArrayList<>();
 
         for (int position = 0; position < Board.STANDARD_PATH_SIZE; position++) {
-            if (!isOccupied(position)) {
+            if (isAvailable(position, excludedPosition)) {
                 availablePositions.add(position);
             }
         }
 
         return availablePositions;
+    }
+
+    private boolean isAvailable(int position, Integer excludedPosition) {
+        return !isOccupied(position) && !isExcluded(position, excludedPosition);
+    }
+
+    private boolean isExcluded(int position, Integer excludedPosition) {
+        return excludedPosition != null && position == excludedPosition;
     }
 
     private boolean isOccupied(int position) {
