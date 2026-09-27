@@ -109,7 +109,8 @@ class MysteryCellServiceTest {
 
     @Test
     void shouldNotRelocateBeforeFourActiveRounds() {
-        when(positionSelector.selectPosition()).thenReturn(20, 30);
+        when(positionSelector.selectPosition()).thenReturn(20);
+        when(positionSelector.selectPosition(20)).thenReturn(30);
 
         // Round 1
         mysteryCellService.completeRound();
@@ -134,7 +135,8 @@ class MysteryCellServiceTest {
     @Test
     void shouldRelocateAfterFourActiveRounds() {
 
-        when(positionSelector.selectPosition()).thenReturn(20, 30);
+        when(positionSelector.selectPosition()).thenReturn(20);
+        when(positionSelector.selectPosition(20)).thenReturn(30);
 
         // Round 1
         mysteryCellService.completeRound();
@@ -151,12 +153,14 @@ class MysteryCellServiceTest {
         assertEquals(30, mysteryCell.getPosition());
         assertEquals(0, mysteryCell.getRoundsActive());
 
-        verify(positionSelector, times(2)).selectPosition();
+        verify(positionSelector, times(1)).selectPosition();
+        verify(positionSelector, times(1)).selectPosition(20);
     }
 
     @Test
     void shouldRestartActiveRoundCountAfterRelocation() {
-        when(positionSelector.selectPosition()).thenReturn(20, 30);
+        when(positionSelector.selectPosition()).thenReturn(20);
+        when(positionSelector.selectPosition(20)).thenReturn(30);
 
         mysteryCellService.completeRound();
         mysteryCellService.completeRound();
@@ -178,7 +182,9 @@ class MysteryCellServiceTest {
 
     @Test
     void shouldRelocateEveryFourActiveRounds() {
-        when(positionSelector.selectPosition()).thenReturn(10, 20, 30);
+        when(positionSelector.selectPosition()).thenReturn(10);
+        when(positionSelector.selectPosition(10)).thenReturn(20);
+        when(positionSelector.selectPosition(20)).thenReturn(30);
 
         // Initial two rounds
         mysteryCellService.completeRound();
@@ -199,7 +205,9 @@ class MysteryCellServiceTest {
         }
 
         assertEquals(30, mysteryCell.getPosition());
-        verify(positionSelector, times(3)).selectPosition();
+        verify(positionSelector, times(1)).selectPosition();
+        verify(positionSelector, times(1)).selectPosition(10);
+        verify(positionSelector, times(1)).selectPosition(20);
     }
 
     @Test
@@ -212,5 +220,21 @@ class MysteryCellServiceTest {
     void shouldRejectNullPositionSelector() {
         assertThrows(IllegalArgumentException.class,
                 () -> new MysteryCellService(mysteryCell, null));
+    }
+
+    @Test
+    void shouldExcludeCurrentPositionWhenRelocating() {
+        when(positionSelector.selectPosition()).thenReturn(20);
+        when(positionSelector.selectPosition(20)).thenReturn(30);
+
+        mysteryCellService.completeRound();
+        mysteryCellService.completeRound();
+
+        for (int i = 0; i < 4; i++) {
+            mysteryCellService.completeRound();
+        }
+
+        assertEquals(30, mysteryCell.getPosition());
+        verify(positionSelector).selectPosition(20);
     }
 }
