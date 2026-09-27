@@ -53,7 +53,8 @@ public class MysteryCellService {
     }
 
     private void relocateMysteryCell() {
-        int newPosition = positionSelector.selectPosition();
+        int currentPosition = mysteryCell.getPosition();
+        int newPosition = positionSelector.selectPosition(currentPosition);
 
         mysteryCell.activate(newPosition);
     }
