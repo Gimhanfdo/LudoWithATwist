@@ -10,6 +10,7 @@ public class Board {
     public static final int STANDARD_PATH_SIZE = 52;
     public static final int HOME_STRAIGHT_SIZE = 5;
     public static final int ALPHA_POSITION = 8;
+    public static final int BETA_POSITION = 26;
 
     private static final Map<Colour, Integer> START_POSITIONS = Map.of(
             Colour.YELLOW, 0,
