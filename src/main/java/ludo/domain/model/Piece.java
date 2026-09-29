@@ -76,6 +76,24 @@ public class Piece {
         position = newPosition;
     }
 
+    public void applyEffect(PieceEffect effect, int rounds) {
+        
+        if (effect == null) {
+            throw new IllegalArgumentException("Piece effect cannot be null.");
+        }
+
+        if (effect == PieceEffect.NONE) {
+            throw new IllegalArgumentException("Cannot apply NONE as an active effect.");
+        }
+
+        if (rounds <= 0) {
+            throw new IllegalArgumentException("Effect rounds must be positive.");
+        }
+
+        this.effect = effect;
+        this.effectRoundsRemaining = rounds;
+    }
+
     public void recordCapture() {
         captureCount++;
     }
