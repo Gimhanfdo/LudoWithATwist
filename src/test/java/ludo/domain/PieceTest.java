@@ -513,4 +513,30 @@ class PieceTest {
                 assertEquals(PieceEffect.NONE, piece.getEffect());
                 assertEquals(0, piece.getEffectRoundsRemaining());
         }
+
+        @Test
+        void shouldChangeDirectionOnStandardPath() {
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(26, Direction.CLOCKWISE);
+                piece.changeDirection(Direction.COUNTERCLOCKWISE);
+
+                assertEquals(Direction.COUNTERCLOCKWISE, piece.getDirection());
+        }
+
+        @Test
+        void shouldRejectNullDirectionChange() {
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(26, Direction.CLOCKWISE);
+
+                assertThrows(IllegalArgumentException.class, () -> piece.changeDirection(null));
+        }
+
+        @Test
+        void shouldRejectDirectionChangeWhenPieceIsInBase() {
+                Piece piece = new Piece(Colour.RED, 1);
+
+                assertThrows(IllegalStateException.class, () -> piece.changeDirection(Direction.COUNTERCLOCKWISE));
+        }
 }
