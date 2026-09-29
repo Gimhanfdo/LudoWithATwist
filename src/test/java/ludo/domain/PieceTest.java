@@ -439,4 +439,35 @@ class PieceTest {
 
                 assertThrows(IllegalArgumentException.class, () -> piece.teleportToStandardPath(-1));
         }
+
+        @Test
+        void shouldApplyPieceEffect() {
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.applyEffect(PieceEffect.ENERGISED, 4);
+
+                assertEquals(PieceEffect.ENERGISED, piece.getEffect());
+                assertEquals(4, piece.getEffectRoundsRemaining());
+        }
+
+        @Test
+        void shouldRejectNullPieceEffect() {
+                Piece piece = new Piece(Colour.RED, 1);
+
+                assertThrows(IllegalArgumentException.class, () -> piece.applyEffect(null, 4));
+        }
+
+        @Test
+        void shouldRejectNoneAsActiveEffect() {
+                Piece piece = new Piece(Colour.RED, 1);
+
+                assertThrows(IllegalArgumentException.class, () -> piece.applyEffect(PieceEffect.NONE, 4));
+        }
+
+        @Test
+        void shouldRejectNonPositiveEffectRounds() {
+                Piece piece = new Piece(Colour.RED, 1);
+
+                assertThrows(IllegalArgumentException.class, () -> piece.applyEffect(PieceEffect.ENERGISED, 0));
+        }
 }
