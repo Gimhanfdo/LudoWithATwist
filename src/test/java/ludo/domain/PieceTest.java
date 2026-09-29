@@ -4,6 +4,7 @@ import ludo.domain.enums.Colour;
 import ludo.domain.enums.Direction;
 import ludo.domain.enums.PieceEffect;
 import ludo.domain.enums.PieceState;
+import ludo.domain.model.Board;
 import ludo.domain.model.Piece;
 import org.junit.jupiter.api.Test;
 
@@ -410,5 +411,32 @@ class PieceTest {
                 assertThrows(
                                 IllegalArgumentException.class,
                                 () -> piece.moveWithinHomeStraight(5));
+        }
+
+        @Test
+        void shouldTeleportPieceToStandardPath() {
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.enterBoard(26, Direction.CLOCKWISE);
+                piece.moveTo(30);
+                piece.teleportToStandardPath(10);
+
+                assertEquals(PieceState.STANDARD_PATH, piece.getState());
+                assertEquals(10, piece.getPosition());
+        }
+
+        @Test
+        void shouldRejectInvalidStandardPathTeleportPosition() {
+                Piece piece = new Piece(Colour.RED, 1);
+
+                assertThrows(IllegalArgumentException.class,
+                                () -> piece.teleportToStandardPath(Board.STANDARD_PATH_SIZE));
+        }
+
+        @Test
+        void shouldRejectNegativeStandardPathTeleportPosition() {
+                Piece piece = new Piece(Colour.RED, 1);
+
+                assertThrows(IllegalArgumentException.class, () -> piece.teleportToStandardPath(-1));
         }
 }
