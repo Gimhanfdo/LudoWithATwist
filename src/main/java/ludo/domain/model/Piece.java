@@ -127,11 +127,20 @@ public class Piece {
             throw new IllegalStateException("Only a piece in the Home Straight can move within it.");
         }
 
-        if (newPosition < 0|| newPosition >= Board.HOME_STRAIGHT_SIZE) {
+        if (newPosition < 0 || newPosition >= Board.HOME_STRAIGHT_SIZE) {
 
             throw new IllegalArgumentException("Invalid Home Straight position.");
         }
 
+        position = newPosition;
+    }
+
+    public void teleportToStandardPath(int newPosition) {
+        if (newPosition < 0 || newPosition >= Board.STANDARD_PATH_SIZE) {
+            throw new IllegalArgumentException("Teleport position must be on the standard path.");
+        }
+
+        state = PieceState.STANDARD_PATH;
         position = newPosition;
     }
 
