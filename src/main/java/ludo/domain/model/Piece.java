@@ -180,6 +180,18 @@ public class Piece {
         effectRoundsRemaining = 0;
     }
 
+    public void changeDirection(Direction newDirection) {
+        if (newDirection == null) {
+            throw new IllegalArgumentException("Direction cannot be null.");
+        }
+
+        if (state != PieceState.STANDARD_PATH) {
+            throw new IllegalStateException("Only pieces on the standard path can change direction.");
+        }
+
+        direction = newDirection;
+    }
+
     public Colour getColour() {
         return colour;
     }
