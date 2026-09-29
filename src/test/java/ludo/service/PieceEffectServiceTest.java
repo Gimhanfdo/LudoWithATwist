@@ -118,4 +118,43 @@ class PieceEffectServiceTest {
 
         assertThrows(IllegalArgumentException.class, () -> new PieceEffectService(strategies));
     }
+
+    @Test
+    void shouldPreventMovementDuringBriefing() {
+        Piece piece = new Piece(Colour.RED, 1);
+
+        piece.applyEffect(PieceEffect.BRIEFING, 4);
+
+        assertFalse(service.canMove(piece));
+    }
+
+    @Test
+    void shouldAllowMovementWithoutBriefing() {
+        Piece piece = new Piece(Colour.RED, 1);
+
+        assertTrue(service.canMove(piece));
+    }
+
+    @Test
+    void shouldAllowMovementWhenEnergised() {
+        Piece piece = new Piece(Colour.RED, 1);
+
+        piece.applyEffect(PieceEffect.ENERGISED, 4);
+
+        assertTrue(service.canMove(piece));
+    }
+
+    @Test
+    void shouldAllowMovementAfterBriefingExpires() {
+        Piece piece = new Piece(Colour.RED, 1);
+
+        piece.applyEffect(PieceEffect.BRIEFING, 4);
+
+        for (int round = 0; round < 4; round++) {
+            service.completeRound(piece);
+        }
+
+        assertEquals(PieceEffect.NONE, piece.getEffect());
+        assertTrue(service.canMove(piece));
+    }
 }
