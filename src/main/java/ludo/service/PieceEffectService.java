@@ -86,4 +86,10 @@ public class PieceEffectService {
             throw new IllegalArgumentException("Roll must be positive.");
         }
     }
+
+    public boolean canMove(Piece piece) {
+        validatePiece(piece);
+
+        return piece.getEffect() != PieceEffect.BRIEFING;
+    }
 }
