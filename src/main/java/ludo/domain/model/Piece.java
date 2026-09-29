@@ -77,7 +77,7 @@ public class Piece {
     }
 
     public void applyEffect(PieceEffect effect, int rounds) {
-        
+
         if (effect == null) {
             throw new IllegalArgumentException("Piece effect cannot be null.");
         }
@@ -160,6 +160,24 @@ public class Piece {
 
         state = PieceState.STANDARD_PATH;
         position = newPosition;
+    }
+
+    public void completeEffectRound() {
+
+        if (effect == PieceEffect.NONE) {
+            return;
+        }
+
+        effectRoundsRemaining--;
+
+        if (effectRoundsRemaining == 0) {
+            clearEffect();
+        }
+    }
+
+    public void clearEffect() {
+        effect = PieceEffect.NONE;
+        effectRoundsRemaining = 0;
     }
 
     public Colour getColour() {
