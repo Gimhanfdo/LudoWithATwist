@@ -470,4 +470,47 @@ class PieceTest {
 
                 assertThrows(IllegalArgumentException.class, () -> piece.applyEffect(PieceEffect.ENERGISED, 0));
         }
+
+        @Test
+        void shouldDecreaseRemainingEffectRounds() {
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.applyEffect(PieceEffect.ENERGISED, 4);
+                piece.completeEffectRound();
+
+                assertEquals(PieceEffect.ENERGISED, piece.getEffect());
+                assertEquals(3, piece.getEffectRoundsRemaining());
+        }
+
+        @Test
+        void shouldClearEffectAfterFinalRound() {
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.applyEffect(PieceEffect.SICK, 1);
+                piece.completeEffectRound();
+
+                assertEquals(PieceEffect.NONE, piece.getEffect());
+                assertEquals(0, piece.getEffectRoundsRemaining());
+        }
+
+        @Test
+        void shouldIgnoreEffectRoundWhenNoEffectIsActive() {
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.completeEffectRound();
+
+                assertEquals(PieceEffect.NONE, piece.getEffect());
+                assertEquals(0, piece.getEffectRoundsRemaining());
+        }
+
+        @Test
+        void shouldClearActiveEffect() {
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.applyEffect(PieceEffect.ENERGISED, 4);
+                piece.clearEffect();
+
+                assertEquals(PieceEffect.NONE, piece.getEffect());
+                assertEquals(0, piece.getEffectRoundsRemaining());
+        }
 }
