@@ -15,8 +15,9 @@ public class LegalActionGenerator {
 
     private final PieceEffectService pieceEffectService;
     private final BlockService blockService;
+    private final MoveValidator moveValidator;
 
-    public LegalActionGenerator(PieceEffectService pieceEffectService, BlockService blockService) {
+    public LegalActionGenerator(PieceEffectService pieceEffectService, BlockService blockService, MoveValidator moveValidator) {
         if (pieceEffectService == null) {
             throw new IllegalArgumentException("Piece effect service cannot be null.");
         }
@@ -25,8 +26,13 @@ public class LegalActionGenerator {
             throw new IllegalArgumentException("Block service cannot be null.");
         }
 
+        if (moveValidator == null) {
+            throw new IllegalArgumentException("Move validator cannot be null.");
+        }
+
         this.pieceEffectService = pieceEffectService;
         this.blockService = blockService;
+        this.moveValidator = moveValidator;
     }
 
     public List<GameAction> generateActions(Player player, int roll) {
@@ -44,6 +50,12 @@ public class LegalActionGenerator {
         return List.copyOf(actions);
     }
 
+    private void addIfValid(List<GameAction> actions, GameAction action) {
+        if (moveValidator.isValid(action)) {
+            actions.add(action);
+        }
+    }
+
     private void addLegalAction(List<GameAction> actions, Piece piece, int roll) {
         if (piece.getState() == PieceState.BASE) {
             addEnterBoardAction(actions, piece, roll);
@@ -59,7 +71,7 @@ public class LegalActionGenerator {
         }
 
         if (piece.getState() == PieceState.STANDARD_PATH || piece.getState() == PieceState.HOME_STRAIGHT) {
-            actions.add(new GameAction(ActionType.MOVE_PIECE, List.of(piece), roll));
+            addIfValid(actions, new GameAction(ActionType.MOVE_PIECE, List.of(piece), roll));
         }
     }
 
@@ -107,7 +119,7 @@ public class LegalActionGenerator {
                 continue;
             }
 
-            actions.add(new GameAction(ActionType.MOVE_BLOCK, block, roll));
+            addIfValid(actions, new GameAction(ActionType.MOVE_BLOCK, block, roll));
         }
     }
 

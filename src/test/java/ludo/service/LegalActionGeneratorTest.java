@@ -20,6 +20,7 @@ class LegalActionGeneratorTest {
 
     private PieceEffectService pieceEffectService;
     private BlockService blockService;
+    private MoveValidator moveValidator;
     private LegalActionGenerator generator;
     private Player player;
 
@@ -27,7 +28,8 @@ class LegalActionGeneratorTest {
     void setUp() {
         pieceEffectService = mock(PieceEffectService.class);
         blockService = mock(BlockService.class);
-        generator = new LegalActionGenerator(pieceEffectService, blockService);
+        moveValidator = mock(MoveValidator.class);
+        generator = new LegalActionGenerator(pieceEffectService, blockService, moveValidator);
         player = new Player(Colour.RED);
     }
 
@@ -54,6 +56,8 @@ class LegalActionGeneratorTest {
 
         when(pieceEffectService.canMove(piece)).thenReturn(true);
 
+        when(moveValidator.isValid(any(GameAction.class))).thenReturn(true);
+
         List<GameAction> actions = generator.generateActions(player, 4);
 
         assertEquals(1, actions.size());
@@ -68,6 +72,7 @@ class LegalActionGeneratorTest {
         movingPiece.enterBoard(26, Direction.CLOCKWISE);
 
         when(pieceEffectService.canMove(movingPiece)).thenReturn(true);
+        when(moveValidator.isValid(any(GameAction.class))).thenReturn(true);
 
         List<GameAction> actions = generator.generateActions(player, 6);
 
@@ -105,6 +110,8 @@ class LegalActionGeneratorTest {
 
         when(pieceEffectService.canMove(piece)).thenReturn(true);
 
+        when(moveValidator.isValid(any(GameAction.class))).thenReturn(true);
+
         List<GameAction> actions = generator.generateActions(player, 2);
 
         assertEquals(1, actions.size());
@@ -138,6 +145,7 @@ class LegalActionGeneratorTest {
         when(pieceEffectService.canMove(any(Piece.class))).thenReturn(true);
         when(blockService.hasBlockAt(20, Colour.RED)).thenReturn(true);
         when(blockService.getBlockAt(20, Colour.RED)).thenReturn(List.of(firstPiece, secondPiece));
+        when(moveValidator.isValid(any(GameAction.class))).thenReturn(true);
 
         List<GameAction> actions = generator.generateActions(player, 4);
 
@@ -162,6 +170,7 @@ class LegalActionGeneratorTest {
         when(pieceEffectService.canMove(any(Piece.class))).thenReturn(true);
         when(blockService.hasBlockAt(20, Colour.RED)).thenReturn(true);
         when(blockService.getBlockAt(20, Colour.RED)).thenReturn(List.of(firstPiece, secondPiece));
+        when(moveValidator.isValid(any(GameAction.class))).thenReturn(true);
 
         long blockActions = generator.generateActions(player, 4).stream()
                 .filter(action -> action.getType() == ActionType.MOVE_BLOCK)
@@ -199,6 +208,7 @@ class LegalActionGeneratorTest {
         when(pieceEffectService.canMove(any(Piece.class))).thenReturn(true);
         when(blockService.hasBlockAt(20, Colour.RED)).thenReturn(true);
         when(blockService.getBlockAt(20, Colour.RED)).thenReturn(List.of(firstPiece, secondPiece, thirdPiece));
+        when(moveValidator.isValid(any(GameAction.class))).thenReturn(true);
 
         GameAction blockAction = generator.generateActions(player, 6).stream()
                 .filter(action -> action.getType() == ActionType.MOVE_BLOCK)
@@ -229,6 +239,20 @@ class LegalActionGeneratorTest {
     }
 
     @Test
+    void shouldNotGenerateInvalidMoveAction() {
+        Piece piece = player.getPieces().get(0);
+
+        piece.enterBoard(26, Direction.CLOCKWISE);
+
+        when(pieceEffectService.canMove(piece)).thenReturn(true);
+        when(moveValidator.isValid(any(GameAction.class))).thenReturn(false);
+
+        List<GameAction> actions = generator.generateActions(player, 4);
+
+        assertTrue(actions.stream().noneMatch(action -> action.getType() == ActionType.MOVE_PIECE));
+    }
+
+    @Test
     void shouldReturnUnmodifiableActions() {
         List<GameAction> actions = generator.generateActions(player, 6);
 
@@ -247,11 +271,18 @@ class LegalActionGeneratorTest {
 
     @Test
     void shouldRejectNullPieceEffectService() {
-        assertThrows(IllegalArgumentException.class, () -> new LegalActionGenerator(null, blockService));
+        assertThrows(IllegalArgumentException.class, () -> new LegalActionGenerator(null, blockService, moveValidator));
     }
 
     @Test
     void shouldRejectNullBlockService() {
-        assertThrows(IllegalArgumentException.class, () -> new LegalActionGenerator(pieceEffectService, null));
+        assertThrows(IllegalArgumentException.class,
+                () -> new LegalActionGenerator(pieceEffectService, null, moveValidator));
+    }
+
+    @Test
+    void shouldRejectNullMoveValidator() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new LegalActionGenerator(pieceEffectService, blockService, null));
     }
 }
