@@ -13,18 +13,21 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class LegalActionGeneratorTest {
 
     private PieceEffectService pieceEffectService;
+    private BlockService blockService;
     private LegalActionGenerator generator;
     private Player player;
 
     @BeforeEach
     void setUp() {
         pieceEffectService = mock(PieceEffectService.class);
-        generator = new LegalActionGenerator(pieceEffectService);
+        blockService = mock(BlockService.class);
+        generator = new LegalActionGenerator(pieceEffectService, blockService);
         player = new Player(Colour.RED);
     }
 
@@ -123,6 +126,109 @@ class LegalActionGeneratorTest {
     }
 
     @Test
+    void shouldGenerateMoveBlockAction() {
+        Piece firstPiece = player.getPieces().get(0);
+        Piece secondPiece = player.getPieces().get(1);
+
+        firstPiece.enterBoard(26, Direction.CLOCKWISE);
+        secondPiece.enterBoard(26, Direction.CLOCKWISE);
+        firstPiece.moveTo(20);
+        secondPiece.moveTo(20);
+
+        when(pieceEffectService.canMove(any(Piece.class))).thenReturn(true);
+        when(blockService.hasBlockAt(20, Colour.RED)).thenReturn(true);
+        when(blockService.getBlockAt(20, Colour.RED)).thenReturn(List.of(firstPiece, secondPiece));
+
+        List<GameAction> actions = generator.generateActions(player, 4);
+
+        List<GameAction> blockActions = actions.stream()
+                .filter(action -> action.getType() == ActionType.MOVE_BLOCK)
+                .toList();
+
+        assertEquals(1, blockActions.size());
+        assertEquals(List.of(firstPiece, secondPiece), blockActions.get(0).getPieces());
+    }
+
+    @Test
+    void shouldGenerateBlockActionOnlyOnce() {
+        Piece firstPiece = player.getPieces().get(0);
+        Piece secondPiece = player.getPieces().get(1);
+
+        firstPiece.enterBoard(26, Direction.CLOCKWISE);
+        secondPiece.enterBoard(26, Direction.CLOCKWISE);
+        firstPiece.moveTo(20);
+        secondPiece.moveTo(20);
+
+        when(pieceEffectService.canMove(any(Piece.class))).thenReturn(true);
+        when(blockService.hasBlockAt(20, Colour.RED)).thenReturn(true);
+        when(blockService.getBlockAt(20, Colour.RED)).thenReturn(List.of(firstPiece, secondPiece));
+
+        long blockActions = generator.generateActions(player, 4).stream()
+                .filter(action -> action.getType() == ActionType.MOVE_BLOCK)
+                .count();
+
+        assertEquals(1, blockActions);
+    }
+
+    @Test
+    void shouldNotGenerateBlockActionForSinglePiece() {
+        Piece piece = player.getPieces().get(0);
+
+        piece.enterBoard(26, Direction.CLOCKWISE);
+        piece.moveTo(20);
+
+        when(pieceEffectService.canMove(piece)).thenReturn(true);
+        when(blockService.hasBlockAt(20, Colour.RED)).thenReturn(false);
+
+        List<GameAction> actions = generator.generateActions(player, 4);
+
+        assertTrue(actions.stream().noneMatch(action -> action.getType() == ActionType.MOVE_BLOCK));
+    }
+
+    @Test
+    void shouldGenerateBlockActionForMoreThanTwoPieces() {
+        Piece firstPiece = player.getPieces().get(0);
+        Piece secondPiece = player.getPieces().get(1);
+        Piece thirdPiece = player.getPieces().get(2);
+
+        for (Piece piece : List.of(firstPiece, secondPiece, thirdPiece)) {
+            piece.enterBoard(26, Direction.CLOCKWISE);
+            piece.moveTo(20);
+        }
+
+        when(pieceEffectService.canMove(any(Piece.class))).thenReturn(true);
+        when(blockService.hasBlockAt(20, Colour.RED)).thenReturn(true);
+        when(blockService.getBlockAt(20, Colour.RED)).thenReturn(List.of(firstPiece, secondPiece, thirdPiece));
+
+        GameAction blockAction = generator.generateActions(player, 6).stream()
+                .filter(action -> action.getType() == ActionType.MOVE_BLOCK)
+                .findFirst()
+                .orElseThrow();
+
+        assertEquals(3, blockAction.getPieces().size());
+    }
+
+    @Test
+    void shouldNotGenerateBlockActionWhenMemberCannotMove() {
+        Piece firstPiece = player.getPieces().get(0);
+        Piece secondPiece = player.getPieces().get(1);
+
+        firstPiece.enterBoard(26, Direction.CLOCKWISE);
+        secondPiece.enterBoard(26, Direction.CLOCKWISE);
+        firstPiece.moveTo(20);
+        secondPiece.moveTo(20);
+
+        when(blockService.hasBlockAt(20, Colour.RED)).thenReturn(true);
+        when(blockService.getBlockAt(20, Colour.RED)).thenReturn(List.of(firstPiece, secondPiece));
+        when(pieceEffectService.canMove(firstPiece)).thenReturn(true);
+        when(pieceEffectService.canMove(secondPiece)).thenReturn(false);
+
+        List<GameAction> actions = generator.generateActions(player, 4);
+
+        assertTrue(actions.stream().noneMatch(action -> action.getType() == ActionType.MOVE_BLOCK));
+    }
+
+    @Test
     void shouldReturnUnmodifiableActions() {
         List<GameAction> actions = generator.generateActions(player, 6);
 
@@ -141,6 +247,11 @@ class LegalActionGeneratorTest {
 
     @Test
     void shouldRejectNullPieceEffectService() {
-        assertThrows(IllegalArgumentException.class, () -> new LegalActionGenerator(null));
+        assertThrows(IllegalArgumentException.class, () -> new LegalActionGenerator(null, blockService));
+    }
+
+    @Test
+    void shouldRejectNullBlockService() {
+        assertThrows(IllegalArgumentException.class, () -> new LegalActionGenerator(pieceEffectService, null));
     }
 }
