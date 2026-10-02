@@ -1,5 +1,6 @@
 package ludo.command;
 
+import ludo.domain.enums.ActionResult;
 import ludo.domain.enums.ActionType;
 import ludo.domain.enums.Colour;
 import ludo.domain.model.GameAction;
@@ -30,9 +31,24 @@ class EnterBoardCommandTest {
         Piece piece = new Piece(Colour.RED, 1);
         GameAction action = new GameAction(ActionType.ENTER_BOARD, List.of(piece), 6);
 
-        command.execute(action);
+        when(moveExecutor.moveFromBase(piece, 6)).thenReturn(true);
 
+        ActionResult result = command.execute(action);
+
+        assertEquals(ActionResult.MOVED, result);
         verify(moveExecutor).moveFromBase(piece, 6);
+    }
+
+    @Test
+    void shouldReturnNotMovedWhenPieceCannotEnterBoard() {
+        Piece piece = new Piece(Colour.RED, 1);
+        GameAction action = new GameAction(ActionType.ENTER_BOARD, List.of(piece), 6);
+
+        when(moveExecutor.moveFromBase(piece, 6)).thenReturn(false);
+
+        ActionResult result = command.execute(action);
+
+        assertEquals(ActionResult.NOT_MOVED, result);
     }
 
     @Test

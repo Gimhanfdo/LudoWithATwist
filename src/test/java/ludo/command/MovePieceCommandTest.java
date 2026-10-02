@@ -1,8 +1,10 @@
 package ludo.command;
 
+import ludo.domain.enums.ActionResult;
 import ludo.domain.enums.ActionType;
 import ludo.domain.enums.Colour;
 import ludo.domain.model.GameAction;
+import ludo.domain.model.MovementResult;
 import ludo.domain.model.Piece;
 import ludo.service.MovementCoordinator;
 
@@ -26,13 +28,39 @@ class MovePieceCommandTest {
     }
 
     @Test
-    void shouldExecutePieceMovement() {
+    void shouldReturnMovedWhenPieceMoves() {
         Piece piece = new Piece(Colour.YELLOW, 1);
         GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
 
-        command.execute(action);
+        when(movementCoordinator.move(piece, 4)).thenReturn(MovementResult.MOVED);
 
-        verify(movementCoordinator).move(piece, 4);
+        ActionResult result = command.execute(action);
+
+        assertEquals(ActionResult.MOVED, result);
+    }
+
+    @Test
+    void shouldReturnCapturedWhenMovementCapturesOpponent() {
+        Piece piece = new Piece(Colour.YELLOW, 1);
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
+
+        when(movementCoordinator.move(piece, 4)).thenReturn(MovementResult.CAPTURED);
+
+        ActionResult result = command.execute(action);
+
+        assertEquals(ActionResult.CAPTURED, result);
+    }
+
+    @Test
+    void shouldReturnNotMovedWhenMovementFails() {
+        Piece piece = new Piece(Colour.YELLOW, 1);
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
+
+        when(movementCoordinator.move(piece, 4)).thenReturn(MovementResult.NOT_MOVED);
+
+        ActionResult result = command.execute(action);
+
+        assertEquals(ActionResult.NOT_MOVED, result);
     }
 
     @Test
