@@ -75,36 +75,6 @@ public class MoveExecutor {
                 piece.getDirection());
     }
 
-    // private boolean enterHomeStraight(Piece piece, int distance) {
-
-    //     int distanceToApproach = board.getDistanceToApproach(
-    //             piece.getPosition(),
-    //             piece.getColour(),
-    //             piece.getDirection());
-
-    //     int remainingDistance = distance - distanceToApproach;
-
-    //     int homeStraightPosition = remainingDistance - 1;
-
-    //     if (homeStraightPosition < Board.HOME_STRAIGHT_SIZE) {
-
-    //         piece.enterHomeStraight(homeStraightPosition);
-
-    //         return true;
-    //     }
-
-    //     if (homeStraightPosition == Board.HOME_STRAIGHT_SIZE) {
-
-    //         piece.enterHomeStraight(Board.HOME_STRAIGHT_SIZE - 1);
-
-    //         piece.reachHome();
-
-    //         return true;
-    //     }
-
-    //     return false;
-    // }
-
     private void moveAlongStandardPath(Piece piece, int distance) {
         int newPosition = calculateStandardPathPosition(piece, distance);
 
