@@ -1,6 +1,7 @@
 package ludo.service;
 
 import ludo.command.GameActionCommand;
+import ludo.domain.enums.ActionResult;
 import ludo.domain.model.GameAction;
 import ludo.factory.GameActionCommandFactory;
 
@@ -16,13 +17,13 @@ public class GameActionExecutor {
         this.commandFactory = commandFactory;
     }
 
-    public void execute(GameAction action) {
+    public ActionResult execute(GameAction action) {
         if (action == null) {
             throw new IllegalArgumentException("Game action cannot be null.");
         }
 
         GameActionCommand command = commandFactory.getCommand(action.getType());
 
-        command.execute(action);
+        return command.execute(action);
     }
 }
