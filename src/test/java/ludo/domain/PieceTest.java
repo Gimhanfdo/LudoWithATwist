@@ -472,21 +472,59 @@ class PieceTest {
         }
 
         @Test
-        void shouldDecreaseRemainingEffectRounds() {
+        void shouldNotReduceEffectDuringRoundItWasApplied() {
                 Piece piece = new Piece(Colour.RED, 1);
 
                 piece.applyEffect(PieceEffect.ENERGISED, 4);
                 piece.completeEffectRound();
 
                 assertEquals(PieceEffect.ENERGISED, piece.getEffect());
+                assertEquals(4, piece.getEffectRoundsRemaining());
+        }
+
+        @Test
+        void shouldReduceEffectOnFollowingRound() {
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.applyEffect(PieceEffect.ENERGISED, 4);
+                piece.completeEffectRound();
+                piece.completeEffectRound();
+
                 assertEquals(3, piece.getEffectRoundsRemaining());
         }
 
         @Test
-        void shouldClearEffectAfterFinalRound() {
+        void shouldDecreaseRemainingEffectRounds() {
                 Piece piece = new Piece(Colour.RED, 1);
 
-                piece.applyEffect(PieceEffect.SICK, 1);
+                piece.applyEffect(PieceEffect.ENERGISED, 4);
+                piece.completeEffectRound();
+                piece.completeEffectRound();
+
+                assertEquals(3, piece.getEffectRoundsRemaining());
+        }
+
+        @Test
+        void shouldClearEffectAfterFourFollowingRounds() {
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.applyEffect(PieceEffect.ENERGISED, 4);
+                piece.completeEffectRound();
+
+                assertEquals(4, piece.getEffectRoundsRemaining());
+
+                piece.completeEffectRound();
+
+                assertEquals(3, piece.getEffectRoundsRemaining());
+
+                piece.completeEffectRound();
+
+                assertEquals(2, piece.getEffectRoundsRemaining());
+
+                piece.completeEffectRound();
+
+                assertEquals(1, piece.getEffectRoundsRemaining());
+
                 piece.completeEffectRound();
 
                 assertEquals(PieceEffect.NONE, piece.getEffect());
@@ -504,14 +542,34 @@ class PieceTest {
         }
 
         @Test
-        void shouldClearActiveEffect() {
+        void shouldClearEffectCompletely() {
                 Piece piece = new Piece(Colour.RED, 1);
 
-                piece.applyEffect(PieceEffect.ENERGISED, 4);
+                piece.applyEffect(PieceEffect.SICK, 4);
                 piece.clearEffect();
 
                 assertEquals(PieceEffect.NONE, piece.getEffect());
                 assertEquals(0, piece.getEffectRoundsRemaining());
+        }
+
+        @Test
+        void shouldRestartDurationWhenEffectIsReapplied() {
+                Piece piece = new Piece(Colour.RED, 1);
+
+                piece.applyEffect(PieceEffect.SICK, 4);
+                piece.completeEffectRound();
+                piece.completeEffectRound();
+
+                assertEquals(3, piece.getEffectRoundsRemaining());
+
+                piece.applyEffect(PieceEffect.ENERGISED, 4);
+
+                assertEquals(PieceEffect.ENERGISED, piece.getEffect());
+                assertEquals(4, piece.getEffectRoundsRemaining());
+
+                piece.completeEffectRound();
+
+                assertEquals(4, piece.getEffectRoundsRemaining());
         }
 
         @Test

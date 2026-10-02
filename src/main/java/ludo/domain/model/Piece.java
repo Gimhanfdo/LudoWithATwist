@@ -18,6 +18,7 @@ public class Piece {
     private int captureCount;
     private int approachPassCount;
     private int effectRoundsRemaining;
+    private boolean effectAppliedThisRound;
 
     public Piece(Colour colour, int number) {
 
@@ -47,6 +48,7 @@ public class Piece {
         captureCount = 0;
         approachPassCount = 0;
         effectRoundsRemaining = 0;
+        effectAppliedThisRound = false;
     }
 
     public void enterBoard(int startPosition, Direction direction) {
@@ -92,6 +94,7 @@ public class Piece {
 
         this.effect = effect;
         this.effectRoundsRemaining = rounds;
+        this.effectAppliedThisRound = true;
     }
 
     public void recordCapture() {
@@ -168,6 +171,11 @@ public class Piece {
             return;
         }
 
+        if (effectAppliedThisRound) {
+            effectAppliedThisRound = false;
+            return;
+        }
+
         effectRoundsRemaining--;
 
         if (effectRoundsRemaining == 0) {
@@ -178,6 +186,7 @@ public class Piece {
     public void clearEffect() {
         effect = PieceEffect.NONE;
         effectRoundsRemaining = 0;
+        effectAppliedThisRound = false;
     }
 
     public void changeDirection(Direction newDirection) {
