@@ -7,6 +7,7 @@ import ludo.domain.model.GameAction;
 import ludo.domain.model.GameState;
 import ludo.domain.model.Piece;
 import ludo.domain.model.Board;
+import ludo.domain.model.MysteryCell;
 
 import java.util.List;
 
@@ -17,11 +18,12 @@ public class ActionAnalyzer {
     private final BlockService blockService;
     private final MoveDestinationCalculator destinationCalculator;
     private final Board board;
+    private final MysteryCell mysteryCell;
 
     public ActionAnalyzer(GameState gameState, PieceEffectService pieceEffectService, BlockService blockService,
-            MoveDestinationCalculator destinationCalculator, Board board) {
+            MoveDestinationCalculator destinationCalculator, Board board, MysteryCell mysteryCell) {
         if (gameState == null || pieceEffectService == null || blockService == null || destinationCalculator == null
-                || board == null) {
+                || board == null || mysteryCell == null) {
             throw new IllegalArgumentException("Action analyzer dependencies cannot be null.");
         }
 
@@ -30,10 +32,11 @@ public class ActionAnalyzer {
         this.blockService = blockService;
         this.destinationCalculator = destinationCalculator;
         this.board = board;
+        this.mysteryCell = mysteryCell;
     }
 
     private ActionAnalysis neutralAnalysis(GameAction action) {
-        return new ActionAnalysis(action, null, false, 0, false);
+        return new ActionAnalysis(action, null, false, 0, false, false);
     }
 
     public ActionAnalysis analyze(GameAction action) {
@@ -71,7 +74,11 @@ public class ActionAnalyzer {
         int distanceToHome = calculateDistanceToHome(piece, destination);
 
         return new ActionAnalysis(action, findCapturedPiece(piece, destination), wouldCreateBlock(piece, destination),
-                distanceToHome, true);
+                distanceToHome, true, isMysteryDestination(destination));
+    }
+
+    private boolean isMysteryDestination(int destination) {
+        return mysteryCell.isActive() && mysteryCell.getPosition() == destination;
     }
 
     private ActionAnalysis analyzeHomeStraightMove(GameAction action, Piece piece) {
@@ -89,7 +96,7 @@ public class ActionAnalyzer {
 
         int distanceToHome = Board.HOME_STRAIGHT_SIZE - destination;
 
-        return new ActionAnalysis(action, null, false, distanceToHome, true);
+        return new ActionAnalysis(action, null, false, distanceToHome, true, false);
     }
 
     private Piece findCapturedPiece(Piece movingPiece, int destination) {

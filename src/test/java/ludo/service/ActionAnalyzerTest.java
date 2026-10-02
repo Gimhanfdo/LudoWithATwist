@@ -6,6 +6,7 @@ import ludo.domain.enums.Direction;
 import ludo.domain.model.ActionAnalysis;
 import ludo.domain.model.GameAction;
 import ludo.domain.model.GameState;
+import ludo.domain.model.MysteryCell;
 import ludo.domain.model.Piece;
 import ludo.domain.model.Player;
 import ludo.domain.model.Board;
@@ -24,6 +25,7 @@ class ActionAnalyzerTest {
     private Player bluePlayer;
     private GameState gameState;
     private Board board;
+    private MysteryCell mysteryCell;
 
     private PieceEffectService pieceEffectService;
     private BlockService blockService;
@@ -37,12 +39,14 @@ class ActionAnalyzerTest {
         bluePlayer = new Player(Colour.BLUE);
         gameState = new GameState(List.of(redPlayer, bluePlayer));
         board = new Board();
+        mysteryCell = new MysteryCell();
 
         pieceEffectService = mock(PieceEffectService.class);
         blockService = mock(BlockService.class);
         destinationCalculator = new MoveDestinationCalculator();
 
-        analyzer = new ActionAnalyzer(gameState, pieceEffectService, blockService, destinationCalculator, board);
+        analyzer = new ActionAnalyzer(gameState, pieceEffectService, blockService, destinationCalculator, board,
+                mysteryCell);
     }
 
     @Test
@@ -288,5 +292,40 @@ class ActionAnalyzerTest {
         ActionAnalysis analysis = analyzer.analyze(action);
 
         assertFalse(analysis.isProgressKnown());
+    }
+
+    @Test
+    void shouldIdentifyLandingOnMysteryCell() {
+        Piece piece = bluePlayer.getPieces().get(0);
+
+        piece.enterBoard(13, Direction.COUNTERCLOCKWISE);
+        piece.moveTo(20);
+        mysteryCell.activate(17);
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 3);
+
+        when(pieceEffectService.calculateMovement(piece, 3)).thenReturn(3);
+        when(blockService.getAllowedMovementDistance(piece, 3)).thenReturn(3);
+
+        ActionAnalysis analysis = analyzer.analyze(action);
+
+        assertTrue(analysis.landsOnMystery());
+    }
+
+    @Test
+    void shouldNotIdentifyDifferentCellAsMystery() {
+        Piece piece = bluePlayer.getPieces().get(0);
+
+        piece.enterBoard(13, Direction.COUNTERCLOCKWISE);
+        mysteryCell.activate(9);
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 3);
+
+        when(pieceEffectService.calculateMovement(piece, 3)).thenReturn(3);
+        when(blockService.getAllowedMovementDistance(piece, 3)).thenReturn(3);
+
+        ActionAnalysis analysis = analyzer.analyze(action);
+
+        assertFalse(analysis.landsOnMystery());
     }
 }
