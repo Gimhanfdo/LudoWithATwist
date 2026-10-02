@@ -1,7 +1,8 @@
 package ludo.service;
 
-import ludo.domain.model.Piece;
+import ludo.domain.enums.PieceState;
 import ludo.domain.model.MovementResult;
+import ludo.domain.model.Piece;
 
 public class MovementCoordinator {
 
@@ -42,13 +43,21 @@ public class MovementCoordinator {
             return MovementResult.NOT_MOVED;
         }
 
-        MovementResult result = movementService.moveOnStandardPath(piece, movementDistance);
+        MovementResult result = moveByState(piece, movementDistance);
 
-        if (result != MovementResult.NOT_MOVED) {
+        if (result != MovementResult.NOT_MOVED && piece.getState() == PieceState.STANDARD_PATH) {
             mysteryLandingService.resolveLanding(piece);
         }
 
         return result;
+    }
+
+    private MovementResult moveByState(Piece piece, int movementDistance) {
+        return switch (piece.getState()) {
+            case STANDARD_PATH -> movementService.moveOnStandardPath(piece, movementDistance);
+            case HOME_STRAIGHT -> movementService.moveOnHomeStraight(piece, movementDistance);
+            default -> MovementResult.NOT_MOVED;
+        };
     }
 
     private void validatePiece(Piece piece) {

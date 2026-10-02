@@ -37,6 +37,14 @@ class MovementCoordinatorTest {
         return piece;
     }
 
+    private Piece createHomeStraightPiece() {
+        Piece piece = createPiece();
+        piece.recordCapture();
+        piece.enterHomeStraight(0);
+
+        return piece;
+    }
+
     @Test
     void shouldMoveUsingCalculatedMovementDistance() {
         Piece piece = createPiece();
@@ -126,6 +134,47 @@ class MovementCoordinatorTest {
         when(movementService.moveOnStandardPath(piece, 4)).thenReturn(MovementResult.NOT_MOVED);
 
         coordinator.move(piece, 4);
+
+        verify(mysteryLandingService, never()).resolveLanding(any());
+    }
+
+    @Test
+    void shouldMoveHomeStraightPieceUsingHomeStraightMovement() {
+        Piece piece = createHomeStraightPiece();
+
+        when(pieceEffectService.canMove(piece)).thenReturn(true);
+        when(pieceEffectService.calculateMovement(piece, 3)).thenReturn(3);
+        when(movementService.moveOnHomeStraight(piece, 3)).thenReturn(MovementResult.MOVED);
+
+        MovementResult result = coordinator.move(piece, 3);
+
+        assertEquals(MovementResult.MOVED, result);
+        verify(movementService).moveOnHomeStraight(piece, 3);
+        verify(movementService, never()).moveOnStandardPath(any(), anyInt());
+    }
+
+    @Test
+    void shouldUseModifiedMovementDistanceOnHomeStraight() {
+        Piece piece = createHomeStraightPiece();
+
+        when(pieceEffectService.canMove(piece)).thenReturn(true);
+        when(pieceEffectService.calculateMovement(piece, 2)).thenReturn(4);
+        when(movementService.moveOnHomeStraight(piece, 4)).thenReturn(MovementResult.MOVED);
+
+        coordinator.move(piece, 2);
+
+        verify(movementService).moveOnHomeStraight(piece, 4);
+    }
+
+    @Test
+    void shouldNotResolveMysteryLandingAfterHomeStraightMovement() {
+        Piece piece = createHomeStraightPiece();
+
+        when(pieceEffectService.canMove(piece)).thenReturn(true);
+        when(pieceEffectService.calculateMovement(piece, 3)).thenReturn(3);
+        when(movementService.moveOnHomeStraight(piece, 3)).thenReturn(MovementResult.MOVED);
+
+        coordinator.move(piece, 3);
 
         verify(mysteryLandingService, never()).resolveLanding(any());
     }
