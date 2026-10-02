@@ -2,6 +2,7 @@ package ludo.output;
 
 import ludo.domain.model.Piece;
 import ludo.domain.model.Player;
+import ludo.domain.enums.Direction;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -66,6 +67,23 @@ public class ConsoleGameOutput implements GameOutput {
         System.out.println(piece.getColour().name().toLowerCase() + " player moves piece " + piece.getName()
                 + " to the starting point.");
         System.out.println(piecesOnBoard + " pieces are on the board and " + piecesInBase + " pieces are in the base.");
+    }
+
+    @Override
+    public void showPieceMoved(Piece piece, int fromPosition, int toPosition, int distance, Direction direction) {
+        if (piece == null) {
+            throw new IllegalArgumentException("Piece cannot be null.");
+        }
+
+        if (direction == null) {
+            throw new IllegalArgumentException("Direction cannot be null.");
+        }
+
+        String directionName = direction == Direction.CLOCKWISE ? "clockwise" : "counterclockwise";
+
+        System.out.println(piece.getColour().name().toLowerCase() + " moves piece " + piece.getName()
+                + " from location " + fromPosition + " to " + toPosition + " by " + distance + " units in "
+                + directionName + " direction.");
     }
 
     @Override
