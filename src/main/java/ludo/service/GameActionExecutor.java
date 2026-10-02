@@ -3,6 +3,7 @@ package ludo.service;
 import ludo.command.GameActionCommand;
 import ludo.domain.enums.ActionResult;
 import ludo.domain.enums.ActionType;
+import ludo.domain.enums.Direction;
 import ludo.domain.enums.PieceState;
 import ludo.domain.model.GameAction;
 import ludo.domain.model.GameState;
@@ -39,22 +40,51 @@ public class GameActionExecutor {
             throw new IllegalArgumentException("Game action cannot be null.");
         }
 
+        Integer previousPosition = null;
+        Direction previousDirection = null;
+
+        if (action.getType() == ActionType.MOVE_PIECE) {
+            Piece piece = action.getPieces().get(0);
+            previousPosition = piece.getPosition();
+            previousDirection = piece.getDirection();
+        }
+
         GameActionCommand command = commandFactory.getCommand(action.getType());
         ActionResult result = command.execute(action);
 
-        reportAction(action, result);
+        reportAction(action, result, previousPosition, previousDirection);
 
         return result;
     }
 
-    private void reportAction(GameAction action, ActionResult result) {
+    private void reportAction(GameAction action, ActionResult result, Integer previousPosition,
+            Direction previousDirection) {
         if (result == ActionResult.NOT_MOVED) {
             return;
         }
 
         if (action.getType() == ActionType.ENTER_BOARD) {
             reportEnteredBoard(action);
+            return;
         }
+
+        if (action.getType() == ActionType.MOVE_PIECE) {
+            reportPieceMovement(action, previousPosition, previousDirection);
+        }
+    }
+
+    private void reportPieceMovement(GameAction action, Integer previousPosition, Direction previousDirection) {
+        Piece piece = action.getPieces().get(0);
+
+        if (previousPosition == null || previousDirection == null) {
+            return;
+        }
+
+        if (piece.getState() != PieceState.STANDARD_PATH) {
+            return;
+        }
+
+        gameOutput.showPieceMoved(piece, previousPosition, piece.getPosition(), action.getRoll(), previousDirection);
     }
 
     private void reportEnteredBoard(GameAction action) {

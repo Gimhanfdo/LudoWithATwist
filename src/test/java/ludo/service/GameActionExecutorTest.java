@@ -18,6 +18,8 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 class GameActionExecutorTest {
@@ -88,6 +90,56 @@ class GameActionExecutorTest {
 
         assertEquals(ActionResult.NOT_MOVED, result);
         verify(gameOutput, never()).showPieceEnteredBoard(any(Piece.class), anyInt(), anyInt());
+    }
+
+    @Test
+    void shouldReportStandardPathMovement() {
+        Piece piece = red.getPieces().get(0);
+        piece.enterBoard(26, Direction.CLOCKWISE);
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
+
+        when(commandFactory.getCommand(ActionType.MOVE_PIECE)).thenReturn(command);
+        when(command.execute(action)).thenAnswer(invocation -> {
+            piece.moveTo(30);
+            return ActionResult.MOVED;
+        });
+
+        ActionResult result = executor.execute(action);
+
+        assertEquals(ActionResult.MOVED, result);
+        verify(gameOutput).showPieceMoved(piece, 26, 30, 4, Direction.CLOCKWISE);
+    }
+
+    @Test
+    void shouldReportCounterclockwiseMovement() {
+        Piece piece = red.getPieces().get(0);
+        piece.enterBoard(26, Direction.COUNTERCLOCKWISE);
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
+
+        when(commandFactory.getCommand(ActionType.MOVE_PIECE)).thenReturn(command);
+        when(command.execute(action)).thenAnswer(invocation -> {
+            piece.moveTo(22);
+            return ActionResult.MOVED;
+        });
+
+        executor.execute(action);
+
+        verify(gameOutput).showPieceMoved(piece, 26, 22, 4, Direction.COUNTERCLOCKWISE);
+    }
+
+    @Test
+    void shouldNotReportMovementWhenPieceDoesNotMove() {
+        Piece piece = red.getPieces().get(0);
+        piece.enterBoard(26, Direction.CLOCKWISE);
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
+
+        when(commandFactory.getCommand(ActionType.MOVE_PIECE)).thenReturn(command);
+        when(command.execute(action)).thenReturn(ActionResult.NOT_MOVED);
+
+        executor.execute(action);
+
+        verify(gameOutput, never()).showPieceMoved(any(Piece.class), anyInt(), anyInt(), anyInt(),
+                any(Direction.class));
     }
 
     @Test
