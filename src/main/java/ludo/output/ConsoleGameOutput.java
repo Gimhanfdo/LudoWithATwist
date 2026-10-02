@@ -1,5 +1,6 @@
 package ludo.output;
 
+import ludo.domain.model.Piece;
 import ludo.domain.model.Player;
 
 import java.util.List;
@@ -12,9 +13,16 @@ public class ConsoleGameOutput implements GameOutput {
         validatePlayer(player);
 
         String colour = getColourName(player);
-        String pieceNames = player.getPieces().stream().map(piece -> piece.getName()).collect(Collectors.joining(", "));
+        List<String> pieceNames = player.getPieces().stream()
+                .map(piece -> piece.getName())
+                .toList();
 
-        System.out.println("The " + colour + " player has four (04) pieces named " + pieceNames + ".");
+        String formattedNames = pieceNames.get(0) + ", "
+                + pieceNames.get(1) + ", "
+                + pieceNames.get(2) + ", and "
+                + pieceNames.get(3);
+
+        System.out.println("The " + colour + " player has four (04) pieces named " + formattedNames + ".");
     }
 
     @Override
@@ -47,6 +55,17 @@ public class ConsoleGameOutput implements GameOutput {
         validateRoll(roll);
 
         System.out.println(getColourName(player) + " player rolled " + roll + ".");
+    }
+
+    @Override
+    public void showPieceEnteredBoard(Piece piece, int piecesOnBoard, int piecesInBase) {
+        if (piece == null) {
+            throw new IllegalArgumentException("Piece cannot be null.");
+        }
+
+        System.out.println(piece.getColour().name().toLowerCase() + " player moves piece " + piece.getName()
+                + " to the starting point.");
+        System.out.println(piecesOnBoard + " pieces are on the board and " + piecesInBase + " pieces are in the base.");
     }
 
     @Override
