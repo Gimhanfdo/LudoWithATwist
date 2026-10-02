@@ -45,8 +45,8 @@ class RedStrategyTest {
         GameAction ordinaryAction = new GameAction(ActionType.MOVE_PIECE, List.of(redPiece), 2);
         GameAction captureAction = new GameAction(ActionType.MOVE_PIECE, List.of(redPiece), 4);
 
-        when(actionAnalyzer.analyze(ordinaryAction)).thenReturn(new ActionAnalysis(ordinaryAction, null, false, 10));
-        when(actionAnalyzer.analyze(captureAction)).thenReturn(new ActionAnalysis(captureAction, opponent, false, 8));
+        when(actionAnalyzer.analyze(ordinaryAction)).thenReturn(new ActionAnalysis(ordinaryAction, null, false, 10, true));
+        when(actionAnalyzer.analyze(captureAction)).thenReturn(new ActionAnalysis(captureAction, opponent, false, 8, true));
 
         GameAction chosen = strategy.chooseAction(redPlayer, List.of(ordinaryAction, captureAction));
 
@@ -68,9 +68,9 @@ class RedStrategyTest {
         GameAction secondCapture = new GameAction(ActionType.MOVE_PIECE, List.of(redPiece), 4);
 
         when(actionAnalyzer.analyze(firstCapture))
-                .thenReturn(new ActionAnalysis(firstCapture, firstOpponent, false, 0));
+                .thenReturn(new ActionAnalysis(firstCapture, firstOpponent, false, 0, false));
         when(actionAnalyzer.analyze(secondCapture))
-                .thenReturn(new ActionAnalysis(secondCapture, secondOpponent, false, 0));
+                .thenReturn(new ActionAnalysis(secondCapture, secondOpponent, false, 0, false));
 
         int firstDistance = board.getDistanceToHome(firstOpponent.getPosition(), firstOpponent.getColour(),
                 firstOpponent.getDirection());
@@ -90,8 +90,8 @@ class RedStrategyTest {
         GameAction blockAction = new GameAction(ActionType.MOVE_PIECE, List.of(redPiece), 2);
         GameAction ordinaryAction = new GameAction(ActionType.MOVE_PIECE, List.of(redPiece), 4);
 
-        when(actionAnalyzer.analyze(blockAction)).thenReturn(new ActionAnalysis(blockAction, null, true, 10));
-        when(actionAnalyzer.analyze(ordinaryAction)).thenReturn(new ActionAnalysis(ordinaryAction, null, false, 8));
+        when(actionAnalyzer.analyze(blockAction)).thenReturn(new ActionAnalysis(blockAction, null, true, 10, true));
+        when(actionAnalyzer.analyze(ordinaryAction)).thenReturn(new ActionAnalysis(ordinaryAction, null, false, 8, true));
 
         GameAction chosen = strategy.chooseAction(redPlayer, List.of(blockAction, ordinaryAction));
 
@@ -108,8 +108,8 @@ class RedStrategyTest {
         GameAction enterBoardAction = new GameAction(ActionType.ENTER_BOARD, List.of(basePiece), 6);
         GameAction moveAction = new GameAction(ActionType.MOVE_PIECE, List.of(movingPiece), 6);
 
-        when(actionAnalyzer.analyze(enterBoardAction)).thenReturn(new ActionAnalysis(enterBoardAction, null, false, 0));
-        when(actionAnalyzer.analyze(moveAction)).thenReturn(new ActionAnalysis(moveAction, null, false, 10));
+        when(actionAnalyzer.analyze(enterBoardAction)).thenReturn(new ActionAnalysis(enterBoardAction, null, false, 0, false));
+        when(actionAnalyzer.analyze(moveAction)).thenReturn(new ActionAnalysis(moveAction, null, false, 10, true));
 
         GameAction chosen = strategy.chooseAction(redPlayer, List.of(enterBoardAction, moveAction));
 
@@ -130,8 +130,8 @@ class RedStrategyTest {
         GameAction ordinaryMove = new GameAction(ActionType.MOVE_PIECE, List.of(firstRedPiece), 6);
         GameAction captureMove = new GameAction(ActionType.MOVE_PIECE, List.of(secondRedPiece), 6);
 
-        when(actionAnalyzer.analyze(ordinaryMove)).thenReturn(new ActionAnalysis(ordinaryMove, null, false, 10));
-        when(actionAnalyzer.analyze(captureMove)).thenReturn(new ActionAnalysis(captureMove, opponent, false, 8));
+        when(actionAnalyzer.analyze(ordinaryMove)).thenReturn(new ActionAnalysis(ordinaryMove, null, false, 10, true));
+        when(actionAnalyzer.analyze(captureMove)).thenReturn(new ActionAnalysis(captureMove, opponent, false, 8, true));
 
         GameAction chosen = strategy.chooseAction(redPlayer, List.of(ordinaryMove, captureMove));
 
@@ -148,8 +148,8 @@ class RedStrategyTest {
         GameAction blockMove = new GameAction(ActionType.MOVE_PIECE, List.of(movingPiece), 6);
         GameAction enterBoardAction = new GameAction(ActionType.ENTER_BOARD, List.of(basePiece), 6);
 
-        when(actionAnalyzer.analyze(blockMove)).thenReturn(new ActionAnalysis(blockMove, null, true, 10));
-        when(actionAnalyzer.analyze(enterBoardAction)).thenReturn(new ActionAnalysis(enterBoardAction, null, false, 0));
+        when(actionAnalyzer.analyze(blockMove)).thenReturn(new ActionAnalysis(blockMove, null, true, 10, true));
+        when(actionAnalyzer.analyze(enterBoardAction)).thenReturn(new ActionAnalysis(enterBoardAction, null, false, 0, false));
 
         GameAction chosen = strategy.chooseAction(redPlayer, List.of(blockMove, enterBoardAction));
 
@@ -161,7 +161,7 @@ class RedStrategyTest {
         Piece basePiece = redPlayer.getPieces().get(0);
         GameAction enterBoardAction = new GameAction(ActionType.ENTER_BOARD, List.of(basePiece), 6);
 
-        when(actionAnalyzer.analyze(enterBoardAction)).thenReturn(new ActionAnalysis(enterBoardAction, null, false, 0));
+        when(actionAnalyzer.analyze(enterBoardAction)).thenReturn(new ActionAnalysis(enterBoardAction, null, false, 0, false));
 
         GameAction chosen = strategy.chooseAction(redPlayer, List.of(enterBoardAction));
 
