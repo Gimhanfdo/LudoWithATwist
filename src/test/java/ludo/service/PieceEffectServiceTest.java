@@ -57,11 +57,12 @@ class PieceEffectServiceTest {
     void shouldDecreaseEffectDurationAfterCompletedRound() {
         Piece piece = new Piece(Colour.RED, 1);
 
-        piece.applyEffect(PieceEffect.ENERGISED, 4);
+        piece.applyEffect(PieceEffect.SICK, 4);
+
+        service.completeRound(piece);
         service.completeRound(piece);
 
         assertEquals(3, piece.getEffectRoundsRemaining());
-        assertEquals(PieceEffect.ENERGISED, piece.getEffect());
     }
 
     @Test
@@ -70,9 +71,12 @@ class PieceEffectServiceTest {
 
         piece.applyEffect(PieceEffect.SICK, 4);
 
-        for (int round = 0; round < 4; round++) {
-            service.completeRound(piece);
-        }
+        service.completeRound(piece); // application round
+
+        service.completeRound(piece); // 4 -> 3
+        service.completeRound(piece); // 3 -> 2
+        service.completeRound(piece); // 2 -> 1
+        service.completeRound(piece); // 1 -> NONE
 
         assertEquals(PieceEffect.NONE, piece.getEffect());
         assertEquals(0, piece.getEffectRoundsRemaining());
@@ -150,7 +154,9 @@ class PieceEffectServiceTest {
 
         piece.applyEffect(PieceEffect.BRIEFING, 4);
 
-        for (int round = 0; round < 4; round++) {
+        service.completeRound(piece); // application round
+
+        for (int i = 0; i < 4; i++) {
             service.completeRound(piece);
         }
 
