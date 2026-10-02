@@ -153,7 +153,7 @@ public class GreenStrategy implements PlayerStrategy {
 
             Piece piece = action.getPieces().get(0);
 
-            if (!piece.hasCaptured()) {
+            if (!piece.hasCaptured() || !analysis.isProgressKnown()) {
                 continue;
             }
 
@@ -173,7 +173,7 @@ public class GreenStrategy implements PlayerStrategy {
                 continue;
             }
 
-            if (analysis.getDistanceToHome() <= 0) {
+            if (!analysis.isProgressKnown()) {
                 continue;
             }
 
