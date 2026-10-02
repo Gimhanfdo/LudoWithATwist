@@ -5,6 +5,7 @@ import ludo.domain.model.ActionAnalysis;
 import ludo.domain.model.GameAction;
 import ludo.domain.model.Piece;
 import ludo.domain.model.Player;
+import ludo.random.ActionSelector;
 import ludo.service.ActionAnalyzer;
 
 import java.util.List;
@@ -12,14 +13,20 @@ import java.util.List;
 public class BlueStrategy implements PlayerStrategy {
 
     private final ActionAnalyzer actionAnalyzer;
+    private final ActionSelector actionSelector;
     private int nextPieceIndex;
 
-    public BlueStrategy(ActionAnalyzer actionAnalyzer) {
+    public BlueStrategy(ActionAnalyzer actionAnalyzer, ActionSelector actionSelector) {
         if (actionAnalyzer == null) {
             throw new IllegalArgumentException("Action analyzer cannot be null.");
         }
 
+        if (actionSelector == null) {
+            throw new IllegalArgumentException("Action selector cannot be null.");
+        }
+
         this.actionAnalyzer = actionAnalyzer;
+        this.actionSelector = actionSelector;
         this.nextPieceIndex = 0;
     }
 
@@ -61,43 +68,49 @@ public class BlueStrategy implements PlayerStrategy {
     }
 
     private GameAction chooseForPiece(Piece piece, List<ActionAnalysis> analyses) {
-        if (piece.getDirection() == Direction.COUNTERCLOCKWISE) {
-            GameAction mysteryAction = chooseMysteryAction(analyses);
+        List<GameAction> preferredActions = getPreferredActions(piece, analyses);
 
-            if (mysteryAction != null) {
-                return mysteryAction;
+        return actionSelector.select(preferredActions);
+    }
+
+    private List<GameAction> getPreferredActions(Piece piece, List<ActionAnalysis> analyses) {
+        if (piece.getDirection() == Direction.COUNTERCLOCKWISE) {
+            List<GameAction> mysteryActions = getMysteryActions(analyses);
+
+            if (!mysteryActions.isEmpty()) {
+                return mysteryActions;
             }
         }
 
         if (piece.getDirection() == Direction.CLOCKWISE) {
-            GameAction nonMysteryAction = chooseNonMysteryAction(analyses);
+            List<GameAction> nonMysteryActions = getNonMysteryActions(analyses);
 
-            if (nonMysteryAction != null) {
-                return nonMysteryAction;
+            if (!nonMysteryActions.isEmpty()) {
+                return nonMysteryActions;
             }
         }
 
-        return analyses.get(0).getAction();
+        return getActions(analyses);
     }
 
-    private GameAction chooseMysteryAction(List<ActionAnalysis> analyses) {
-        for (ActionAnalysis analysis : analyses) {
-            if (analysis.landsOnMystery()) {
-                return analysis.getAction();
-            }
-        }
-
-        return null;
+    private List<GameAction> getMysteryActions(List<ActionAnalysis> analyses) {
+        return analyses.stream()
+                .filter(ActionAnalysis::landsOnMystery)
+                .map(ActionAnalysis::getAction)
+                .toList();
     }
 
-    private GameAction chooseNonMysteryAction(List<ActionAnalysis> analyses) {
-        for (ActionAnalysis analysis : analyses) {
-            if (!analysis.landsOnMystery()) {
-                return analysis.getAction();
-            }
-        }
+    private List<GameAction> getNonMysteryActions(List<ActionAnalysis> analyses) {
+        return analyses.stream()
+                .filter(analysis -> !analysis.landsOnMystery())
+                .map(ActionAnalysis::getAction)
+                .toList();
+    }
 
-        return null;
+    private List<GameAction> getActions(List<ActionAnalysis> analyses) {
+        return analyses.stream()
+                .map(ActionAnalysis::getAction)
+                .toList();
     }
 
     private void validatePlayer(Player player) {
