@@ -2,6 +2,7 @@ package ludo.engine;
 
 import ludo.domain.model.Player;
 import ludo.observer.RoundNotifier;
+import ludo.service.GameCompletionService;
 
 import java.util.List;
 
@@ -9,8 +10,10 @@ public class RoundManager {
 
     private final TurnManager turnManager;
     private final RoundNotifier roundNotifier;
+    private final GameCompletionService gameCompletionService;
 
-    public RoundManager(TurnManager turnManager, RoundNotifier roundNotifier) {
+    public RoundManager(TurnManager turnManager, RoundNotifier roundNotifier,
+            GameCompletionService gameCompletionService) {
         if (turnManager == null) {
             throw new IllegalArgumentException("Turn manager cannot be null.");
         }
@@ -19,18 +22,29 @@ public class RoundManager {
             throw new IllegalArgumentException("Round notifier cannot be null.");
         }
 
+        if (gameCompletionService == null) {
+            throw new IllegalArgumentException("Game completion service cannot be null.");
+        }
+
         this.turnManager = turnManager;
         this.roundNotifier = roundNotifier;
+        this.gameCompletionService = gameCompletionService;
     }
 
-    public void playRound(List<Player> players) {
+    public Player playRound(List<Player> players) {
         validatePlayers(players);
 
         for (Player player : players) {
             turnManager.takeTurn(player);
+
+            if (gameCompletionService.hasWon(player)) {
+                return player;
+            }
         }
 
         roundNotifier.notifyRoundCompleted();
+
+        return null;
     }
 
     private void validatePlayers(List<Player> players) {
