@@ -5,6 +5,7 @@ import ludo.domain.model.GameAction;
 import ludo.domain.model.Player;
 import ludo.factory.PlayerStrategyFactory;
 import ludo.random.Dice;
+import ludo.service.BetaBriefingService;
 import ludo.service.ConsecutiveSixTracker;
 import ludo.service.ForcedBlockBreakService;
 import ludo.service.GameActionExecutor;
@@ -22,12 +23,13 @@ public class TurnManager {
     private final GameActionExecutor actionExecutor;
     private final ConsecutiveSixTracker consecutiveSixTracker;
     private final ForcedBlockBreakService forcedBlockBreakService;
+    private final BetaBriefingService betaBriefingService;
 
     public TurnManager(Dice dice, LegalActionGenerator legalActionGenerator, PlayerStrategyFactory strategyFactory,
             GameActionExecutor actionExecutor, ConsecutiveSixTracker consecutiveSixTracker,
-            ForcedBlockBreakService forcedBlockBreakService) {
+            ForcedBlockBreakService forcedBlockBreakService, BetaBriefingService betaBriefingService) {
         validateDependencies(dice, legalActionGenerator, strategyFactory, actionExecutor, consecutiveSixTracker,
-                forcedBlockBreakService);
+                forcedBlockBreakService, betaBriefingService);
 
         this.dice = dice;
         this.legalActionGenerator = legalActionGenerator;
@@ -35,6 +37,7 @@ public class TurnManager {
         this.actionExecutor = actionExecutor;
         this.consecutiveSixTracker = consecutiveSixTracker;
         this.forcedBlockBreakService = forcedBlockBreakService;
+        this.betaBriefingService = betaBriefingService;
     }
 
     public void takeTurn(Player player) {
@@ -49,6 +52,9 @@ public class TurnManager {
 
     private boolean executeRoll(Player player) {
         int roll = dice.roll();
+
+        betaBriefingService.recordRoll(player, roll);
+
         boolean thirdConsecutiveSix = consecutiveSixTracker.recordRoll(player, roll);
 
         if (thirdConsecutiveSix) {
@@ -86,7 +92,8 @@ public class TurnManager {
 
     private void validateDependencies(Dice dice, LegalActionGenerator legalActionGenerator,
             PlayerStrategyFactory strategyFactory, GameActionExecutor actionExecutor,
-            ConsecutiveSixTracker consecutiveSixTracker, ForcedBlockBreakService forcedBlockBreakService) {
+            ConsecutiveSixTracker consecutiveSixTracker, ForcedBlockBreakService forcedBlockBreakService,
+            BetaBriefingService betaBriefingService) {
         if (dice == null) {
             throw new IllegalArgumentException("Dice cannot be null.");
         }
@@ -109,6 +116,10 @@ public class TurnManager {
 
         if (forcedBlockBreakService == null) {
             throw new IllegalArgumentException("Forced block break service cannot be null.");
+        }
+
+        if (betaBriefingService == null) {
+            throw new IllegalArgumentException("Beta briefing service cannot be null.");
         }
     }
 }
