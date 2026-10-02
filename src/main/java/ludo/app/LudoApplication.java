@@ -26,6 +26,8 @@ import ludo.strategy.player.GreenStrategy;
 import ludo.strategy.player.RedStrategy;
 import ludo.strategy.player.YellowStrategy;
 import ludo.strategy.teleport.*;
+import ludo.output.ConsoleGameOutput;
+import ludo.output.GameOutput;
 
 import java.util.List;
 
@@ -47,6 +49,8 @@ public class LudoApplication {
         GameState gameState = new GameState(List.of(red, green, yellow, blue));
         MysteryCell mysteryCell = new MysteryCell();
 
+        GameOutput gameOutput = new ConsoleGameOutput();
+
         // Random implementations
         Dice dice = new RandomDice();
         Coin coin = new RandomCoin();
@@ -55,6 +59,8 @@ public class LudoApplication {
         TeleportDestinationSelector destinationSelector = new RandomTeleportDestinationSelector();
         AlphaEffectSelector alphaEffectSelector = new RandomAlphaEffectSelector();
         ActionSelector actionSelector = new RandomActionSelector();
+
+        FirstPlayerSelector firstPlayerSelector = new FirstPlayerSelector(dice, gameOutput);
 
         // Movement effects
         MovementEffectStrategy energisedMovementStrategy = new EnergisedMovementStrategy();
@@ -117,7 +123,7 @@ public class LudoApplication {
         GameActionCommandFactory commandFactory = new GameActionCommandFactory(
                 enterBoardCommand, movePieceCommand, moveBlockCommand);
 
-        GameActionExecutor actionExecutor = new GameActionExecutor(commandFactory);
+        GameActionExecutor actionExecutor = new GameActionExecutor(commandFactory, gameState, gameOutput);
 
         // Turn rules
         ConsecutiveSixTracker consecutiveSixTracker = new ConsecutiveSixTracker();
@@ -127,7 +133,7 @@ public class LudoApplication {
 
         TurnManager turnManager = new TurnManager(
                 dice, legalActionGenerator, playerStrategyFactory, actionExecutor,
-                consecutiveSixTracker, forcedBlockBreakService, betaBriefingService);
+                consecutiveSixTracker, forcedBlockBreakService, betaBriefingService, gameOutput);
 
         // Round observers
         MysteryCellRoundObserver mysteryCellRoundObserver = new MysteryCellRoundObserver(mysteryCellService);
@@ -140,6 +146,6 @@ public class LudoApplication {
         GameCompletionService gameCompletionService = new GameCompletionService();
         RoundManager roundManager = new RoundManager(turnManager, roundNotifier, gameCompletionService);
 
-        return new GameEngine(gameState, roundManager);
+        return new GameEngine(gameState, roundManager, firstPlayerSelector, gameOutput);
     }
 }
