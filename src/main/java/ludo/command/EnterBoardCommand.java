@@ -1,5 +1,6 @@
 package ludo.command;
 
+import ludo.domain.enums.ActionResult;
 import ludo.domain.enums.ActionType;
 import ludo.domain.model.GameAction;
 import ludo.domain.model.Piece;
@@ -18,12 +19,13 @@ public class EnterBoardCommand implements GameActionCommand {
     }
 
     @Override
-    public void execute(GameAction action) {
+    public ActionResult execute(GameAction action) {
         validateAction(action);
 
         Piece piece = action.getPieces().get(0);
+        boolean moved = moveExecutor.moveFromBase(piece, action.getRoll());
 
-        moveExecutor.moveFromBase(piece, action.getRoll());
+        return moved ? ActionResult.MOVED : ActionResult.NOT_MOVED;
     }
 
     private void validateAction(GameAction action) {

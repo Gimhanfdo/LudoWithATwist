@@ -1,7 +1,9 @@
 package ludo.command;
 
+import ludo.domain.enums.ActionResult;
 import ludo.domain.enums.ActionType;
 import ludo.domain.model.GameAction;
+import ludo.domain.model.MovementResult;
 import ludo.domain.model.Piece;
 import ludo.service.MovementService;
 
@@ -18,12 +20,22 @@ public class MoveBlockCommand implements GameActionCommand {
     }
 
     @Override
-    public void execute(GameAction action) {
+    public ActionResult execute(GameAction action) {
         validateAction(action);
 
         Piece representative = action.getPieces().get(0);
+        MovementResult result = movementService.moveBlock(representative.getPosition(), representative.getColour(),
+                action.getRoll());
 
-        movementService.moveBlock(representative.getPosition(), representative.getColour(), action.getRoll());
+        return toActionResult(result);
+    }
+
+    private ActionResult toActionResult(MovementResult result) {
+        return switch (result) {
+            case NOT_MOVED -> ActionResult.NOT_MOVED;
+            case MOVED -> ActionResult.MOVED;
+            case CAPTURED -> ActionResult.CAPTURED;
+        };
     }
 
     private void validateAction(GameAction action) {
