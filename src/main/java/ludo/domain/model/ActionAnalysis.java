@@ -7,9 +7,10 @@ public class ActionAnalysis {
     private final boolean createsBlock;
     private final int distanceToHome;
     private final boolean progressKnown;
+    private final boolean landsOnMystery;
 
     public ActionAnalysis(GameAction action, Piece capturedPiece, boolean createsBlock, int distanceToHome,
-            boolean progressKnown) {
+            boolean progressKnown, boolean landsOnMystery) {
         if (action == null) {
             throw new IllegalArgumentException("Game action cannot be null.");
         }
@@ -23,6 +24,7 @@ public class ActionAnalysis {
         this.createsBlock = createsBlock;
         this.distanceToHome = distanceToHome;
         this.progressKnown = progressKnown;
+        this.landsOnMystery = landsOnMystery;
     }
 
     public GameAction getAction() {
@@ -47,5 +49,9 @@ public class ActionAnalysis {
 
     public boolean isProgressKnown() {
         return progressKnown;
+    }
+
+    public boolean landsOnMystery() {
+        return landsOnMystery;
     }
 }
