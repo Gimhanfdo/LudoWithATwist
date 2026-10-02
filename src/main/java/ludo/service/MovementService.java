@@ -7,6 +7,7 @@ import ludo.domain.enums.PieceState;
 import ludo.domain.model.GameState;
 import ludo.domain.model.MovementResult;
 import ludo.domain.model.Piece;
+import ludo.domain.model.MovementOutcome;
 
 public class MovementService {
 
@@ -104,5 +105,44 @@ public class MovementService {
         boolean captured = captureService.resolveBlockCapture(movingBlock, gameState);
 
         return captured ? MovementResult.CAPTURED : MovementResult.MOVED;
+    }
+
+    public MovementOutcome moveOnStandardPathDetailed(Piece piece, int distance) {
+        if (piece == null) {
+            throw new IllegalArgumentException("Piece cannot be null.");
+        }
+
+        if (distance <= 0) {
+            throw new IllegalArgumentException("Distance must be positive.");
+        }
+
+        Integer fromPosition = piece.getPosition();
+        List<Piece> blockingPieces = blockService.getFirstOpponentBlockInPath(piece, distance);
+        int allowedDistance = blockService.getAllowedMovementDistance(piece, distance);
+
+        if (allowedDistance == 0) {
+            return new MovementOutcome(MovementResult.NOT_MOVED, distance, 0, fromPosition, fromPosition,
+                    blockingPieces, List.of());
+        }
+
+        boolean moved = moveExecutor.moveOnStandardPath(piece, allowedDistance);
+
+        if (!moved) {
+            return new MovementOutcome(MovementResult.NOT_MOVED, distance, 0, fromPosition, fromPosition,
+                    blockingPieces, List.of());
+        }
+
+        Integer toPosition = piece.getPosition();
+
+        if (piece.getState() != PieceState.STANDARD_PATH) {
+            return new MovementOutcome(MovementResult.MOVED, distance, allowedDistance, fromPosition, toPosition,
+                    blockingPieces, List.of());
+        }
+
+        List<Piece> capturedPieces = captureService.getCapturablePieces(piece, gameState);
+        boolean captured = captureService.resolveCaptureForReporting(piece, gameState);
+
+        return new MovementOutcome(captured ? MovementResult.CAPTURED : MovementResult.MOVED, distance, allowedDistance,
+                fromPosition, toPosition, blockingPieces, captured ? capturedPieces : List.of());
     }
 }

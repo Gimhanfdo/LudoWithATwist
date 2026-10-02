@@ -2,7 +2,9 @@ package ludo.service;
 
 import ludo.domain.enums.Colour;
 import ludo.domain.enums.Direction;
+import ludo.domain.enums.PieceState;
 import ludo.domain.model.GameState;
+import ludo.domain.model.MovementOutcome;
 import ludo.domain.model.Piece;
 import ludo.domain.model.MovementResult;
 import org.junit.jupiter.api.BeforeEach;
@@ -312,5 +314,117 @@ class MovementServiceTest {
 
         assertEquals(MovementResult.NOT_MOVED, result);
         verify(captureService, never()).resolveBlockCapture(anyList(), eq(gameState));
+    }
+
+    @Test
+    void shouldReturnDetailedOutcomeForNormalMovement() {
+        Piece piece = new Piece(Colour.RED, 1);
+        piece.enterBoard(10, Direction.CLOCKWISE);
+
+        when(blockService.getFirstOpponentBlockInPath(piece, 4)).thenReturn(List.of());
+        when(blockService.getAllowedMovementDistance(piece, 4)).thenReturn(4);
+        when(moveExecutor.moveOnStandardPath(piece, 4)).thenAnswer(invocation -> {
+            piece.moveTo(14);
+            return true;
+        });
+        when(captureService.getCapturablePieces(piece, gameState)).thenReturn(List.of());
+        when(captureService.resolveCapture(piece, gameState)).thenReturn(false);
+
+        MovementOutcome outcome = movementService.moveOnStandardPathDetailed(piece, 4);
+
+        assertEquals(MovementResult.MOVED, outcome.getResult());
+        assertEquals(4, outcome.getRequestedDistance());
+        assertEquals(4, outcome.getActualDistance());
+        assertEquals(10, outcome.getFromPosition());
+        assertEquals(14, outcome.getToPosition());
+        assertFalse(outcome.wasBlocked());
+        assertFalse(outcome.captured());
+    }
+
+    @Test
+    void shouldReturnDetailedOutcomeWhenMovementIsShortenedByBlock() {
+        Piece piece = new Piece(Colour.RED, 1);
+        piece.enterBoard(10, Direction.CLOCKWISE);
+        Piece blueOne = new Piece(Colour.BLUE, 1);
+        Piece blueTwo = new Piece(Colour.BLUE, 2);
+        blueOne.enterBoard(14, Direction.CLOCKWISE);
+        blueTwo.enterBoard(14, Direction.CLOCKWISE);
+        List<Piece> blockingPieces = List.of(blueOne, blueTwo);
+
+        when(blockService.getFirstOpponentBlockInPath(piece, 6)).thenReturn(blockingPieces);
+        when(blockService.getAllowedMovementDistance(piece, 6)).thenReturn(3);
+        when(moveExecutor.moveOnStandardPath(piece, 3)).thenAnswer(invocation -> {
+            piece.moveTo(13);
+            return true;
+        });
+        when(captureService.getCapturablePieces(piece, gameState)).thenReturn(List.of());
+        when(captureService.resolveCapture(piece, gameState)).thenReturn(false);
+
+        MovementOutcome outcome = movementService.moveOnStandardPathDetailed(piece, 6);
+
+        assertEquals(MovementResult.MOVED, outcome.getResult());
+        assertEquals(6, outcome.getRequestedDistance());
+        assertEquals(3, outcome.getActualDistance());
+        assertEquals(10, outcome.getFromPosition());
+        assertEquals(13, outcome.getToPosition());
+        assertTrue(outcome.wasBlocked());
+        assertTrue(outcome.wasShortened());
+        assertEquals(blockingPieces, outcome.getBlockingPieces());
+        verify(moveExecutor).moveOnStandardPath(piece, 3);
+        verify(moveExecutor, never()).moveOnStandardPath(piece, 6);
+    }
+
+    @Test
+    void shouldReturnDetailedOutcomeWhenBlockIsImmediatelyAhead() {
+        Piece piece = new Piece(Colour.RED, 1);
+        piece.enterBoard(10, Direction.CLOCKWISE);
+        Piece blueOne = new Piece(Colour.BLUE, 1);
+        Piece blueTwo = new Piece(Colour.BLUE, 2);
+        blueOne.enterBoard(11, Direction.CLOCKWISE);
+        blueTwo.enterBoard(11, Direction.CLOCKWISE);
+        List<Piece> blockingPieces = List.of(blueOne, blueTwo);
+
+        when(blockService.getFirstOpponentBlockInPath(piece, 4)).thenReturn(blockingPieces);
+        when(blockService.getAllowedMovementDistance(piece, 4)).thenReturn(0);
+
+        MovementOutcome outcome = movementService.moveOnStandardPathDetailed(piece, 4);
+
+        assertEquals(MovementResult.NOT_MOVED, outcome.getResult());
+        assertEquals(0, outcome.getActualDistance());
+        assertEquals(10, outcome.getFromPosition());
+        assertEquals(10, outcome.getToPosition());
+        assertTrue(outcome.wasBlocked());
+        assertTrue(outcome.wasCompletelyBlocked());
+        assertEquals(blockingPieces, outcome.getBlockingPieces());
+        verifyNoInteractions(moveExecutor);
+        verifyNoInteractions(captureService);
+    }
+
+    @Test
+    void shouldReturnCapturedPieceInDetailedOutcome() {
+        Piece attacker = new Piece(Colour.RED, 1);
+        Piece opponent = new Piece(Colour.BLUE, 1);
+        attacker.enterBoard(10, Direction.CLOCKWISE);
+        opponent.enterBoard(14, Direction.CLOCKWISE);
+
+        when(blockService.getFirstOpponentBlockInPath(attacker, 4)).thenReturn(List.of());
+        when(blockService.getAllowedMovementDistance(attacker, 4)).thenReturn(4);
+        when(moveExecutor.moveOnStandardPath(attacker, 4)).thenAnswer(invocation -> {
+            attacker.moveTo(14);
+            return true;
+        });
+        when(captureService.getCapturablePieces(attacker, gameState)).thenReturn(List.of(opponent));
+        when(captureService.resolveCaptureForReporting(attacker, gameState)).thenAnswer(invocation -> {
+            opponent.reset();
+            attacker.recordCapture();
+            return true;
+        });
+
+        MovementOutcome outcome = movementService.moveOnStandardPathDetailed(attacker, 4);
+
+        assertEquals(MovementResult.CAPTURED, outcome.getResult());
+        assertEquals(List.of(opponent), outcome.getCapturedPieces());
+        assertTrue(outcome.captured());
+        assertEquals(PieceState.BASE, opponent.getState());
     }
 }
