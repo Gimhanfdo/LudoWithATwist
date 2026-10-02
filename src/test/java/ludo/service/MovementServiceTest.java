@@ -206,6 +206,36 @@ class MovementServiceTest {
     }
 
     @Test
+    void shouldMovePieceThroughHomeStraight() {
+        Piece piece = new Piece(Colour.RED, 1);
+        piece.enterBoard(26, Direction.CLOCKWISE);
+        piece.recordCapture();
+        piece.enterHomeStraight(0);
+
+        when(moveExecutor.moveOnHomeStraight(piece, 3)).thenReturn(true);
+
+        MovementResult result = movementService.moveOnHomeStraight(piece, 3);
+
+        assertEquals(MovementResult.MOVED, result);
+        verify(moveExecutor).moveOnHomeStraight(piece, 3);
+        verifyNoInteractions(captureService);
+    }
+
+    @Test
+    void shouldReturnNotMovedWhenHomeStraightMovementFails() {
+        Piece piece = new Piece(Colour.RED, 1);
+        piece.enterBoard(26, Direction.CLOCKWISE);
+        piece.recordCapture();
+        piece.enterHomeStraight(0);
+
+        when(moveExecutor.moveOnHomeStraight(piece, 5)).thenReturn(false);
+
+        MovementResult result = movementService.moveOnHomeStraight(piece, 5);
+
+        assertEquals(MovementResult.NOT_MOVED, result);
+    }
+
+    @Test
     void shouldRejectNullMoveExecutor() {
         assertThrows(IllegalArgumentException.class,
                 () -> new MovementService(null, captureService, blockService, gameState));

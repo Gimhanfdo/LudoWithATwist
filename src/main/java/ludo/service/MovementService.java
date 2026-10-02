@@ -69,6 +69,24 @@ public class MovementService {
         return MovementResult.MOVED;
     }
 
+    public MovementResult moveOnHomeStraight(Piece piece, int distance) {
+        if (piece == null) {
+            throw new IllegalArgumentException("Piece cannot be null.");
+        }
+
+        if (distance <= 0) {
+            throw new IllegalArgumentException("Distance must be positive.");
+        }
+
+        if (piece.getState() != PieceState.HOME_STRAIGHT) {
+            return MovementResult.NOT_MOVED;
+        }
+
+        boolean moved = moveExecutor.moveOnHomeStraight(piece, distance);
+
+        return moved ? MovementResult.MOVED : MovementResult.NOT_MOVED;
+    }
+
     public MovementResult moveBlock(int position, Colour colour, int diceValue) {
 
         List<Piece> movingBlock = blockService.getBlockAt(position, colour);
