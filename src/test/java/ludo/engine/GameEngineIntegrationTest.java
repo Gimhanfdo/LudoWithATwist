@@ -7,6 +7,8 @@ import ludo.domain.model.GameState;
 import ludo.domain.model.Piece;
 import ludo.domain.model.Player;
 import ludo.observer.RoundNotifier;
+import ludo.output.GameOutput;
+import ludo.service.FirstPlayerSelector;
 import ludo.service.GameCompletionService;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +29,8 @@ class GameEngineIntegrationTest {
     private Player blue;
     private Board board;
     private GameEngine gameEngine;
+    private FirstPlayerSelector firstPlayerSelector;
+    private GameOutput gameOutput;
 
     @BeforeEach
     void setUp() {
@@ -38,10 +42,16 @@ class GameEngineIntegrationTest {
         blue = new Player(Colour.BLUE);
         board = new Board();
 
-        GameState gameState = new GameState(List.of(red, green, yellow, blue));
+        List<Player> players = List.of(red, green, yellow, blue);
+        GameState gameState = new GameState(players);
+        firstPlayerSelector = mock(FirstPlayerSelector.class);
+        gameOutput = mock(GameOutput.class);
+
+        when(firstPlayerSelector.determineOrder(gameState.getPlayers())).thenReturn(players);
+
         GameCompletionService gameCompletionService = new GameCompletionService();
         RoundManager roundManager = new RoundManager(turnManager, roundNotifier, gameCompletionService);
-        gameEngine = new GameEngine(gameState, roundManager);
+        gameEngine = new GameEngine(gameState, roundManager, firstPlayerSelector, gameOutput);
     }
 
     @Test
@@ -56,6 +66,7 @@ class GameEngineIntegrationTest {
         verify(turnManager, never()).takeTurn(yellow);
         verify(turnManager, never()).takeTurn(blue);
         verify(roundNotifier, never()).notifyRoundCompleted();
+        verify(gameOutput).showWinner(red);
     }
 
     @Test
@@ -70,6 +81,7 @@ class GameEngineIntegrationTest {
         verify(turnManager, never()).takeTurn(yellow);
         verify(turnManager, never()).takeTurn(blue);
         verify(roundNotifier, never()).notifyRoundCompleted();
+        verify(gameOutput).showWinner(green);
     }
 
     private void makePlayerWinDuringTurn(Player player) {
