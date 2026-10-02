@@ -8,6 +8,7 @@ import ludo.domain.model.GameAction;
 import ludo.domain.model.GameState;
 import ludo.domain.model.Piece;
 import ludo.domain.model.Player;
+import ludo.domain.model.Board;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ class ActionAnalyzerTest {
     private Player redPlayer;
     private Player bluePlayer;
     private GameState gameState;
+    private Board board;
 
     private PieceEffectService pieceEffectService;
     private BlockService blockService;
@@ -34,12 +36,13 @@ class ActionAnalyzerTest {
         redPlayer = new Player(Colour.RED);
         bluePlayer = new Player(Colour.BLUE);
         gameState = new GameState(List.of(redPlayer, bluePlayer));
+        board = new Board();
 
         pieceEffectService = mock(PieceEffectService.class);
         blockService = mock(BlockService.class);
         destinationCalculator = new MoveDestinationCalculator();
 
-        analyzer = new ActionAnalyzer(gameState, pieceEffectService, blockService, destinationCalculator);
+        analyzer = new ActionAnalyzer(gameState, pieceEffectService, blockService, destinationCalculator, board);
     }
 
     @Test
@@ -135,5 +138,102 @@ class ActionAnalyzerTest {
         assertFalse(analysis.capturesOpponent());
         assertFalse(analysis.createsBlock());
         verifyNoInteractions(pieceEffectService, blockService);
+    }
+
+    @Test
+    void shouldCalculateRemainingDistanceToHome() {
+        Piece piece = redPlayer.getPieces().get(0);
+
+        piece.enterBoard(26, Direction.CLOCKWISE);
+        piece.moveTo(20);
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 2);
+
+        when(pieceEffectService.calculateMovement(piece, 2)).thenReturn(2);
+        when(blockService.getAllowedMovementDistance(piece, 2)).thenReturn(2);
+
+        ActionAnalysis analysis = analyzer.analyze(action);
+
+        int expectedDistance = board.getDistanceToHome(22, Colour.RED, Direction.CLOCKWISE);
+
+        assertEquals(expectedDistance, analysis.getDistanceToHome());
+    }
+
+    @Test
+    void shouldUseEffectAdjustedMovementForProgress() {
+        Piece piece = redPlayer.getPieces().get(0);
+
+        piece.enterBoard(26, Direction.CLOCKWISE);
+        piece.moveTo(18);
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 2);
+
+        when(pieceEffectService.calculateMovement(piece, 2)).thenReturn(4);
+        when(blockService.getAllowedMovementDistance(piece, 4)).thenReturn(4);
+
+        ActionAnalysis analysis = analyzer.analyze(action);
+
+        int expectedDistance = board.getDistanceToHome(22, Colour.RED, Direction.CLOCKWISE);
+
+        assertEquals(expectedDistance, analysis.getDistanceToHome());
+    }
+
+    @Test
+    void shouldUseBlockRestrictedMovementForProgress() {
+        Piece piece = redPlayer.getPieces().get(0);
+
+        piece.enterBoard(26, Direction.CLOCKWISE);
+        piece.moveTo(18);
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 6);
+
+        when(pieceEffectService.calculateMovement(piece, 6)).thenReturn(6);
+        when(blockService.getAllowedMovementDistance(piece, 6)).thenReturn(3);
+
+        ActionAnalysis analysis = analyzer.analyze(action);
+
+        int expectedDistance = board.getDistanceToHome(21, Colour.RED, Direction.CLOCKWISE);
+
+        assertEquals(expectedDistance, analysis.getDistanceToHome());
+    }
+
+    @Test
+    void shouldReturnNeutralAnalysisWhenMovementPassesApproach() {
+        Piece piece = redPlayer.getPieces().get(0);
+
+        piece.enterBoard(26, Direction.CLOCKWISE);
+        piece.moveTo(24);
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
+
+        when(pieceEffectService.calculateMovement(piece, 4)).thenReturn(4);
+        when(blockService.getAllowedMovementDistance(piece, 4)).thenReturn(4);
+
+        ActionAnalysis analysis = analyzer.analyze(action);
+
+        assertFalse(analysis.capturesOpponent());
+        assertFalse(analysis.createsBlock());
+        assertEquals(0, analysis.getDistanceToHome());
+    }
+
+    @Test
+    void shouldIdentifyCapturedOpponent() {
+        Piece attacker = redPlayer.getPieces().get(0);
+        Piece opponent = bluePlayer.getPieces().get(0);
+
+        attacker.enterBoard(26, Direction.CLOCKWISE);
+        attacker.moveTo(18);
+        opponent.enterBoard(13, Direction.CLOCKWISE);
+        opponent.moveTo(20);
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(attacker), 2);
+
+        when(pieceEffectService.calculateMovement(attacker, 2)).thenReturn(2);
+        when(blockService.getAllowedMovementDistance(attacker, 2)).thenReturn(2);
+
+        ActionAnalysis analysis = analyzer.analyze(action);
+
+        assertTrue(analysis.capturesOpponent());
+        assertSame(opponent, analysis.getCapturedPiece());
     }
 }
