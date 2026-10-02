@@ -236,4 +236,57 @@ class ActionAnalyzerTest {
         assertTrue(analysis.capturesOpponent());
         assertSame(opponent, analysis.getCapturedPiece());
     }
+
+    @Test
+    void shouldAnalyzeHomeStraightProgress() {
+        Piece piece = redPlayer.getPieces().get(0);
+
+        piece.enterBoard(26, Direction.CLOCKWISE);
+        piece.enterHomeStraight(1);
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 2);
+
+        when(pieceEffectService.calculateMovement(piece, 2)).thenReturn(2);
+
+        ActionAnalysis analysis = analyzer.analyze(action);
+
+        assertTrue(analysis.isProgressKnown());
+        assertEquals(2, analysis.getDistanceToHome());
+        assertFalse(analysis.capturesOpponent());
+        assertFalse(analysis.createsBlock());
+        verifyNoInteractions(blockService);
+    }
+
+    @Test
+    void shouldRecognizeExactMoveToHome() {
+        Piece piece = redPlayer.getPieces().get(0);
+
+        piece.enterBoard(26, Direction.CLOCKWISE);
+        piece.enterHomeStraight(3);
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 2);
+
+        when(pieceEffectService.calculateMovement(piece, 2)).thenReturn(2);
+
+        ActionAnalysis analysis = analyzer.analyze(action);
+
+        assertTrue(analysis.isProgressKnown());
+        assertEquals(0, analysis.getDistanceToHome());
+    }
+
+    @Test
+    void shouldReturnUnknownProgressForHomeOvershoot() {
+        Piece piece = redPlayer.getPieces().get(0);
+
+        piece.enterBoard(26, Direction.CLOCKWISE);
+        piece.enterHomeStraight(4);
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 2);
+
+        when(pieceEffectService.calculateMovement(piece, 2)).thenReturn(2);
+
+        ActionAnalysis analysis = analyzer.analyze(action);
+
+        assertFalse(analysis.isProgressKnown());
+    }
 }

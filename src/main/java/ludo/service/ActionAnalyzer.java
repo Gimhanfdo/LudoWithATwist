@@ -33,7 +33,7 @@ public class ActionAnalyzer {
     }
 
     private ActionAnalysis neutralAnalysis(GameAction action) {
-        return new ActionAnalysis(action, null, false, 0);
+        return new ActionAnalysis(action, null, false, 0, false);
     }
 
     public ActionAnalysis analyze(GameAction action) {
@@ -46,6 +46,10 @@ public class ActionAnalyzer {
         }
 
         Piece piece = action.getPieces().get(0);
+
+        if (piece.getState() == PieceState.HOME_STRAIGHT) {
+            return analyzeHomeStraightMove(action, piece);
+        }
 
         if (piece.getState() != PieceState.STANDARD_PATH) {
             return neutralAnalysis(action);
@@ -67,7 +71,25 @@ public class ActionAnalyzer {
         int distanceToHome = calculateDistanceToHome(piece, destination);
 
         return new ActionAnalysis(action, findCapturedPiece(piece, destination), wouldCreateBlock(piece, destination),
-                distanceToHome);
+                distanceToHome, true);
+    }
+
+    private ActionAnalysis analyzeHomeStraightMove(GameAction action, Piece piece) {
+        int movementDistance = pieceEffectService.calculateMovement(piece, action.getRoll());
+
+        if (movementDistance <= 0) {
+            return neutralAnalysis(action);
+        }
+
+        int destination = piece.getPosition() + movementDistance;
+
+        if (destination > Board.HOME_STRAIGHT_SIZE) {
+            return neutralAnalysis(action);
+        }
+
+        int distanceToHome = Board.HOME_STRAIGHT_SIZE - destination;
+
+        return new ActionAnalysis(action, null, false, distanceToHome, true);
     }
 
     private Piece findCapturedPiece(Piece movingPiece, int destination) {
