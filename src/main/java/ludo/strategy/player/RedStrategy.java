@@ -1,5 +1,7 @@
 package ludo.strategy.player;
 
+import ludo.domain.enums.ActionType;
+import ludo.domain.enums.PieceState;
 import ludo.domain.model.ActionAnalysis;
 import ludo.domain.model.Board;
 import ludo.domain.model.GameAction;
@@ -46,13 +48,21 @@ public class RedStrategy implements PlayerStrategy {
             return capture;
         }
 
-        GameAction nonBlockAction = chooseNonBlockAction(analyses);
+        List<ActionAnalysis> preferredActions = analyses.stream()
+                .filter(analysis -> !analysis.createsBlock())
+                .toList();
 
-        if (nonBlockAction != null) {
-            return nonBlockAction;
+        if (preferredActions.isEmpty()) {
+            preferredActions = analyses;
         }
 
-        return legalActions.get(0);
+        GameAction existingPieceMove = chooseExistingPieceOnSix(player, preferredActions);
+
+        if (existingPieceMove != null) {
+            return existingPieceMove;
+        }
+
+        return preferredActions.get(0).getAction();
     }
 
     private GameAction chooseCapture(List<ActionAnalysis> analyses) {
@@ -65,7 +75,8 @@ public class RedStrategy implements PlayerStrategy {
             }
 
             Piece opponent = analysis.getCapturedPiece();
-            int opponentDistance = board.getDistanceToHome(opponent.getPosition(), opponent.getColour(), opponent.getDirection());
+            int opponentDistance = board.getDistanceToHome(opponent.getPosition(), opponent.getColour(),
+                    opponent.getDirection());
 
             if (opponentDistance < shortestOpponentDistance) {
                 shortestOpponentDistance = opponentDistance;
@@ -76,14 +87,27 @@ public class RedStrategy implements PlayerStrategy {
         return bestCapture == null ? null : bestCapture.getAction();
     }
 
-    private GameAction chooseNonBlockAction(List<ActionAnalysis> analyses) {
+    private GameAction chooseExistingPieceOnSix(Player player, List<ActionAnalysis> analyses) {
+        if (!hasPieceOnStandardPath(player)) {
+            return null;
+        }
+
         for (ActionAnalysis analysis : analyses) {
-            if (!analysis.createsBlock()) {
-                return analysis.getAction();
+            GameAction action = analysis.getAction();
+
+            if (action.getRoll() == 6
+                    && action.getType() == ActionType.MOVE_PIECE
+                    && action.getPieces().get(0).getState() == PieceState.STANDARD_PATH) {
+                return action;
             }
         }
 
         return null;
+    }
+
+    private boolean hasPieceOnStandardPath(Player player) {
+        return player.getPieces().stream()
+                .anyMatch(piece -> piece.getState() == PieceState.STANDARD_PATH);
     }
 
     private void validatePlayer(Player player) {

@@ -99,6 +99,76 @@ class RedStrategyTest {
     }
 
     @Test
+    void shouldMoveExistingPieceInsteadOfEnteringBoardOnSix() {
+        Piece movingPiece = redPlayer.getPieces().get(0);
+        Piece basePiece = redPlayer.getPieces().get(1);
+
+        movingPiece.enterBoard(26, Direction.CLOCKWISE);
+
+        GameAction enterBoardAction = new GameAction(ActionType.ENTER_BOARD, List.of(basePiece), 6);
+        GameAction moveAction = new GameAction(ActionType.MOVE_PIECE, List.of(movingPiece), 6);
+
+        when(actionAnalyzer.analyze(enterBoardAction)).thenReturn(new ActionAnalysis(enterBoardAction, null, false, 0));
+        when(actionAnalyzer.analyze(moveAction)).thenReturn(new ActionAnalysis(moveAction, null, false, 10));
+
+        GameAction chosen = strategy.chooseAction(redPlayer, List.of(enterBoardAction, moveAction));
+
+        assertSame(moveAction, chosen);
+    }
+
+    @Test
+    void shouldPrioritizeCaptureOnSix() {
+        Piece firstRedPiece = redPlayer.getPieces().get(0);
+        Piece secondRedPiece = redPlayer.getPieces().get(1);
+        Piece opponent = new Piece(Colour.BLUE, 1);
+
+        firstRedPiece.enterBoard(26, Direction.CLOCKWISE);
+        secondRedPiece.enterBoard(26, Direction.CLOCKWISE);
+        opponent.enterBoard(13, Direction.CLOCKWISE);
+        opponent.moveTo(20);
+
+        GameAction ordinaryMove = new GameAction(ActionType.MOVE_PIECE, List.of(firstRedPiece), 6);
+        GameAction captureMove = new GameAction(ActionType.MOVE_PIECE, List.of(secondRedPiece), 6);
+
+        when(actionAnalyzer.analyze(ordinaryMove)).thenReturn(new ActionAnalysis(ordinaryMove, null, false, 10));
+        when(actionAnalyzer.analyze(captureMove)).thenReturn(new ActionAnalysis(captureMove, opponent, false, 8));
+
+        GameAction chosen = strategy.chooseAction(redPlayer, List.of(ordinaryMove, captureMove));
+
+        assertSame(captureMove, chosen);
+    }
+
+    @Test
+    void shouldAvoidCreatingBlockEvenWhenMovingExistingPieceOnSix() {
+        Piece movingPiece = redPlayer.getPieces().get(0);
+        Piece basePiece = redPlayer.getPieces().get(1);
+
+        movingPiece.enterBoard(26, Direction.CLOCKWISE);
+
+        GameAction blockMove = new GameAction(ActionType.MOVE_PIECE, List.of(movingPiece), 6);
+        GameAction enterBoardAction = new GameAction(ActionType.ENTER_BOARD, List.of(basePiece), 6);
+
+        when(actionAnalyzer.analyze(blockMove)).thenReturn(new ActionAnalysis(blockMove, null, true, 10));
+        when(actionAnalyzer.analyze(enterBoardAction)).thenReturn(new ActionAnalysis(enterBoardAction, null, false, 0));
+
+        GameAction chosen = strategy.chooseAction(redPlayer, List.of(blockMove, enterBoardAction));
+
+        assertSame(enterBoardAction, chosen);
+    }
+
+    @Test
+    void shouldChooseEnterBoardWhenNoPieceIsOnStandardPath() {
+        Piece basePiece = redPlayer.getPieces().get(0);
+        GameAction enterBoardAction = new GameAction(ActionType.ENTER_BOARD, List.of(basePiece), 6);
+
+        when(actionAnalyzer.analyze(enterBoardAction)).thenReturn(new ActionAnalysis(enterBoardAction, null, false, 0));
+
+        GameAction chosen = strategy.chooseAction(redPlayer, List.of(enterBoardAction));
+
+        assertSame(enterBoardAction, chosen);
+    }
+
+    @Test
     void shouldReturnNullWhenNoLegalActionsExist() {
         GameAction chosen = strategy.chooseAction(redPlayer, List.of());
 
