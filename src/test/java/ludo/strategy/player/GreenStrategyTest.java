@@ -155,4 +155,112 @@ class GreenStrategyTest {
     void shouldRejectNullActionAnalyzer() {
         assertThrows(IllegalArgumentException.class, () -> new GreenStrategy(null));
     }
+
+    @Test
+    void shouldCaptureWithPieceThatNeedsHomeEligibility() {
+        Piece firstPiece = greenPlayer.getPieces().get(0);
+        Piece secondPiece = greenPlayer.getPieces().get(1);
+        Piece opponent = new Piece(Colour.RED, 1);
+
+        firstPiece.enterBoard(39, Direction.CLOCKWISE);
+        secondPiece.enterBoard(39, Direction.CLOCKWISE);
+        opponent.enterBoard(26, Direction.CLOCKWISE);
+        opponent.moveTo(20);
+
+        GameAction ordinaryAction = new GameAction(ActionType.MOVE_PIECE, List.of(firstPiece), 3);
+        GameAction captureAction = new GameAction(ActionType.MOVE_PIECE, List.of(secondPiece), 3);
+
+        when(actionAnalyzer.analyze(ordinaryAction)).thenReturn(new ActionAnalysis(ordinaryAction, null, false, 5));
+        when(actionAnalyzer.analyze(captureAction)).thenReturn(new ActionAnalysis(captureAction, opponent, false, 10));
+
+        GameAction chosen = strategy.chooseAction(greenPlayer, List.of(ordinaryAction, captureAction));
+
+        assertSame(captureAction, chosen);
+    }
+
+    @Test
+    void shouldPreferHomeProgressOverUnnecessaryCapture() {
+        Piece capturePiece = greenPlayer.getPieces().get(0);
+        Piece progressingPiece = greenPlayer.getPieces().get(1);
+        Piece opponent = new Piece(Colour.RED, 1);
+
+        capturePiece.enterBoard(39, Direction.CLOCKWISE);
+        progressingPiece.enterBoard(39, Direction.CLOCKWISE);
+        capturePiece.recordCapture();
+        progressingPiece.recordCapture();
+        opponent.enterBoard(26, Direction.CLOCKWISE);
+        opponent.moveTo(20);
+
+        GameAction captureAction = new GameAction(ActionType.MOVE_PIECE, List.of(capturePiece), 3);
+        GameAction progressAction = new GameAction(ActionType.MOVE_PIECE, List.of(progressingPiece), 3);
+
+        when(actionAnalyzer.analyze(captureAction)).thenReturn(new ActionAnalysis(captureAction, opponent, false, 12));
+        when(actionAnalyzer.analyze(progressAction)).thenReturn(new ActionAnalysis(progressAction, null, false, 5));
+
+        GameAction chosen = strategy.chooseAction(greenPlayer, List.of(captureAction, progressAction));
+
+        assertSame(progressAction, chosen);
+    }
+
+    @Test
+    void shouldPreferHomeEligiblePieceClosestToHome() {
+        Piece firstPiece = greenPlayer.getPieces().get(0);
+        Piece secondPiece = greenPlayer.getPieces().get(1);
+
+        firstPiece.enterBoard(39, Direction.CLOCKWISE);
+        secondPiece.enterBoard(39, Direction.CLOCKWISE);
+        firstPiece.recordCapture();
+        secondPiece.recordCapture();
+
+        GameAction firstAction = new GameAction(ActionType.MOVE_PIECE, List.of(firstPiece), 4);
+        GameAction secondAction = new GameAction(ActionType.MOVE_PIECE, List.of(secondPiece), 4);
+
+        when(actionAnalyzer.analyze(firstAction)).thenReturn(new ActionAnalysis(firstAction, null, false, 14));
+        when(actionAnalyzer.analyze(secondAction)).thenReturn(new ActionAnalysis(secondAction, null, false, 6));
+
+        GameAction chosen = strategy.chooseAction(greenPlayer, List.of(firstAction, secondAction));
+
+        assertSame(secondAction, chosen);
+    }
+
+    @Test
+    void shouldPreferClosestPieceToHomeAsFallback() {
+        Piece firstPiece = greenPlayer.getPieces().get(0);
+        Piece secondPiece = greenPlayer.getPieces().get(1);
+
+        firstPiece.enterBoard(39, Direction.CLOCKWISE);
+        secondPiece.enterBoard(39, Direction.CLOCKWISE);
+
+        GameAction firstAction = new GameAction(ActionType.MOVE_PIECE, List.of(firstPiece), 2);
+        GameAction secondAction = new GameAction(ActionType.MOVE_PIECE, List.of(secondPiece), 2);
+
+        when(actionAnalyzer.analyze(firstAction)).thenReturn(new ActionAnalysis(firstAction, null, false, 15));
+        when(actionAnalyzer.analyze(secondAction)).thenReturn(new ActionAnalysis(secondAction, null, false, 9));
+
+        GameAction chosen = strategy.chooseAction(greenPlayer, List.of(firstAction, secondAction));
+
+        assertSame(secondAction, chosen);
+    }
+
+    @Test
+    void shouldPrioritizeBlockOverCapture() {
+        Piece blockPiece = greenPlayer.getPieces().get(0);
+        Piece capturePiece = greenPlayer.getPieces().get(1);
+        Piece opponent = new Piece(Colour.RED, 1);
+
+        blockPiece.enterBoard(39, Direction.CLOCKWISE);
+        capturePiece.enterBoard(39, Direction.CLOCKWISE);
+        opponent.enterBoard(26, Direction.CLOCKWISE);
+        opponent.moveTo(20);
+
+        GameAction captureAction = new GameAction(ActionType.MOVE_PIECE, List.of(capturePiece), 4);
+        GameAction blockAction = new GameAction(ActionType.MOVE_PIECE, List.of(blockPiece), 4);
+
+        when(actionAnalyzer.analyze(captureAction)).thenReturn(new ActionAnalysis(captureAction, opponent, false, 5));
+        when(actionAnalyzer.analyze(blockAction)).thenReturn(new ActionAnalysis(blockAction, null, true, 12));
+
+        GameAction chosen = strategy.chooseAction(greenPlayer, List.of(captureAction, blockAction));
+
+        assertSame(blockAction, chosen);
+    }
 }

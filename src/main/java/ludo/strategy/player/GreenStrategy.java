@@ -3,6 +3,7 @@ package ludo.strategy.player;
 import ludo.domain.enums.ActionType;
 import ludo.domain.model.ActionAnalysis;
 import ludo.domain.model.GameAction;
+import ludo.domain.model.Piece;
 import ludo.domain.model.Player;
 import ludo.service.ActionAnalyzer;
 
@@ -49,6 +50,24 @@ public class GreenStrategy implements PlayerStrategy {
 
         if (enterBoard != null) {
             return enterBoard;
+        }
+
+        GameAction neededCapture = chooseNeededCapture(analyses);
+
+        if (neededCapture != null) {
+            return neededCapture;
+        }
+
+        GameAction homeEligiblePiece = chooseHomeEligiblePiece(analyses);
+
+        if (homeEligiblePiece != null) {
+            return homeEligiblePiece;
+        }
+
+        GameAction closestToHome = chooseClosestToHome(analyses);
+
+        if (closestToHome != null) {
+            return closestToHome;
         }
 
         return legalActions.get(0);
@@ -104,5 +123,65 @@ public class GreenStrategy implements PlayerStrategy {
                 throw new IllegalArgumentException("Legal actions cannot contain null.");
             }
         }
+    }
+
+    private GameAction chooseNeededCapture(List<ActionAnalysis> analyses) {
+        for (ActionAnalysis analysis : analyses) {
+            if (!analysis.capturesOpponent()) {
+                continue;
+            }
+
+            Piece movingPiece = analysis.getAction().getPieces().get(0);
+
+            if (!movingPiece.hasCaptured()) {
+                return analysis.getAction();
+            }
+        }
+
+        return null;
+    }
+
+    private GameAction chooseHomeEligiblePiece(List<ActionAnalysis> analyses) {
+        ActionAnalysis bestAnalysis = null;
+
+        for (ActionAnalysis analysis : analyses) {
+            GameAction action = analysis.getAction();
+
+            if (action.getType() != ActionType.MOVE_PIECE) {
+                continue;
+            }
+
+            Piece piece = action.getPieces().get(0);
+
+            if (!piece.hasCaptured()) {
+                continue;
+            }
+
+            if (bestAnalysis == null || analysis.getDistanceToHome() < bestAnalysis.getDistanceToHome()) {
+                bestAnalysis = analysis;
+            }
+        }
+
+        return bestAnalysis == null ? null : bestAnalysis.getAction();
+    }
+
+    private GameAction chooseClosestToHome(List<ActionAnalysis> analyses) {
+        ActionAnalysis bestAnalysis = null;
+
+        for (ActionAnalysis analysis : analyses) {
+            if (analysis.getAction().getType() != ActionType.MOVE_PIECE) {
+                continue;
+            }
+
+            if (analysis.getDistanceToHome() <= 0) {
+                continue;
+            }
+
+            if (bestAnalysis == null || analysis.getDistanceToHome() < bestAnalysis.getDistanceToHome()) {
+                bestAnalysis = analysis;
+            }
+        }
+
+        return bestAnalysis == null ? null : bestAnalysis.getAction();
     }
 }
