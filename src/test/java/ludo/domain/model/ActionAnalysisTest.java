@@ -14,16 +14,36 @@ class ActionAnalysisTest {
     @Test
     void shouldCreateActionAnalysis() {
         Piece piece = new Piece(Colour.RED, 1);
+        Piece opponent = new Piece(Colour.BLUE, 1);
         GameAction action = new GameAction(ActionType.ENTER_BOARD, List.of(piece), 6);
-        ActionAnalysis analysis = new ActionAnalysis(action, true, false);
+        ActionAnalysis analysis = new ActionAnalysis(action, opponent, false, 10);
 
         assertSame(action, analysis.getAction());
         assertTrue(analysis.capturesOpponent());
+        assertSame(opponent, analysis.getCapturedPiece());
         assertFalse(analysis.createsBlock());
+        assertEquals(10, analysis.getDistanceToHome());
+    }
+
+    @Test
+    void shouldReportNoCaptureWhenCapturedPieceIsNull() {
+        Piece piece = new Piece(Colour.RED, 1);
+        GameAction action = new GameAction(ActionType.ENTER_BOARD, List.of(piece), 6);
+        ActionAnalysis analysis = new ActionAnalysis(action, null, false, 0);
+
+        assertFalse(analysis.capturesOpponent());
+        assertNull(analysis.getCapturedPiece());
     }
 
     @Test
     void shouldRejectNullAction() {
-        assertThrows(IllegalArgumentException.class, () -> new ActionAnalysis(null, false, false));
+        assertThrows(IllegalArgumentException.class, () -> new ActionAnalysis(null, null, false, 0));
+    }
+
+    @Test
+    void shouldRejectNegativeDistanceToHome() {
+        Piece piece = new Piece(Colour.RED, 1);
+        GameAction action = new GameAction(ActionType.ENTER_BOARD, List.of(piece), 6);
+        assertThrows(IllegalArgumentException.class, () -> new ActionAnalysis(action, null, false, -1));
     }
 }

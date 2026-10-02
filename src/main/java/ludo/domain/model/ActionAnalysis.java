@@ -3,17 +3,23 @@ package ludo.domain.model;
 public class ActionAnalysis {
 
     private final GameAction action;
-    private final boolean capturesOpponent;
+    private final Piece capturedPiece;
     private final boolean createsBlock;
+    private final int distanceToHome;
 
-    public ActionAnalysis(GameAction action, boolean capturesOpponent, boolean createsBlock) {
+    public ActionAnalysis(GameAction action, Piece capturedPiece, boolean createsBlock, int distanceToHome) {
         if (action == null) {
             throw new IllegalArgumentException("Game action cannot be null.");
         }
 
+        if (distanceToHome < 0) {
+            throw new IllegalArgumentException("Distance to home cannot be negative.");
+        }
+
         this.action = action;
-        this.capturesOpponent = capturesOpponent;
+        this.capturedPiece = capturedPiece;
         this.createsBlock = createsBlock;
+        this.distanceToHome = distanceToHome;
     }
 
     public GameAction getAction() {
@@ -21,10 +27,18 @@ public class ActionAnalysis {
     }
 
     public boolean capturesOpponent() {
-        return capturesOpponent;
+        return capturedPiece != null;
+    }
+
+    public Piece getCapturedPiece() {
+        return capturedPiece;
     }
 
     public boolean createsBlock() {
         return createsBlock;
+    }
+
+    public int getDistanceToHome() {
+        return distanceToHome;
     }
 }
