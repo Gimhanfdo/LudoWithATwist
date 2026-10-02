@@ -1,5 +1,6 @@
 package ludo.output;
 
+import ludo.domain.model.Piece;
 import ludo.domain.model.Player;
 
 import java.util.List;
@@ -15,6 +16,8 @@ public interface GameOutput {
     void showRoundOrder(List<Player> players);
 
     void showDiceRoll(Player player, int roll);
+
+    void showPieceEnteredBoard(Piece piece, int piecesOnBoard, int piecesInBase);
 
     void showWinner(Player player);
 }
