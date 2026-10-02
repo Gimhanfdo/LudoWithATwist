@@ -41,9 +41,9 @@ class YellowStrategyTest {
         GameAction moveAction = new GameAction(ActionType.MOVE_PIECE, List.of(movingPiece), 6);
         GameAction enterBoardAction = new GameAction(ActionType.ENTER_BOARD, List.of(basePiece), 6);
 
-        when(actionAnalyzer.analyze(moveAction)).thenReturn(new ActionAnalysis(moveAction, null, false, 5, true));
+        when(actionAnalyzer.analyze(moveAction)).thenReturn(new ActionAnalysis(moveAction, null, false, 5, true, false));
         when(actionAnalyzer.analyze(enterBoardAction))
-                .thenReturn(new ActionAnalysis(enterBoardAction, null, false, 0, false));
+                .thenReturn(new ActionAnalysis(enterBoardAction, null, false, 0, false, false));
 
         GameAction chosen = strategy.chooseAction(yellowPlayer, List.of(moveAction, enterBoardAction));
 
@@ -64,9 +64,9 @@ class YellowStrategyTest {
         GameAction enterBoardAction = new GameAction(ActionType.ENTER_BOARD, List.of(basePiece), 6);
 
         when(actionAnalyzer.analyze(captureAction))
-                .thenReturn(new ActionAnalysis(captureAction, opponent, false, 5, true));
+                .thenReturn(new ActionAnalysis(captureAction, opponent, false, 5, true, false));
         when(actionAnalyzer.analyze(enterBoardAction))
-                .thenReturn(new ActionAnalysis(enterBoardAction, null, false, 0, false));
+                .thenReturn(new ActionAnalysis(enterBoardAction, null, false, 0, false, false));
 
         GameAction chosen = strategy.chooseAction(yellowPlayer, List.of(captureAction, enterBoardAction));
 
@@ -88,9 +88,9 @@ class YellowStrategyTest {
         GameAction captureAction = new GameAction(ActionType.MOVE_PIECE, List.of(secondPiece), 4);
 
         when(actionAnalyzer.analyze(progressAction))
-                .thenReturn(new ActionAnalysis(progressAction, null, false, 3, true));
+                .thenReturn(new ActionAnalysis(progressAction, null, false, 3, true, false));
         when(actionAnalyzer.analyze(captureAction))
-                .thenReturn(new ActionAnalysis(captureAction, opponent, false, 10, true));
+                .thenReturn(new ActionAnalysis(captureAction, opponent, false, 10, true, false));
 
         GameAction chosen = strategy.chooseAction(yellowPlayer, List.of(progressAction, captureAction));
 
@@ -114,9 +114,9 @@ class YellowStrategyTest {
         GameAction progressAction = new GameAction(ActionType.MOVE_PIECE, List.of(progressPiece), 3);
 
         when(actionAnalyzer.analyze(captureAction))
-                .thenReturn(new ActionAnalysis(captureAction, opponent, false, 10, true));
+                .thenReturn(new ActionAnalysis(captureAction, opponent, false, 10, true, false));
         when(actionAnalyzer.analyze(progressAction))
-                .thenReturn(new ActionAnalysis(progressAction, null, false, 4, true));
+                .thenReturn(new ActionAnalysis(progressAction, null, false, 4, true, false));
 
         GameAction chosen = strategy.chooseAction(yellowPlayer, List.of(captureAction, progressAction));
 
@@ -134,8 +134,8 @@ class YellowStrategyTest {
         GameAction firstAction = new GameAction(ActionType.MOVE_PIECE, List.of(firstPiece), 3);
         GameAction secondAction = new GameAction(ActionType.MOVE_PIECE, List.of(secondPiece), 3);
 
-        when(actionAnalyzer.analyze(firstAction)).thenReturn(new ActionAnalysis(firstAction, null, false, 12, true));
-        when(actionAnalyzer.analyze(secondAction)).thenReturn(new ActionAnalysis(secondAction, null, false, 5, true));
+        when(actionAnalyzer.analyze(firstAction)).thenReturn(new ActionAnalysis(firstAction, null, false, 12, true, false));
+        when(actionAnalyzer.analyze(secondAction)).thenReturn(new ActionAnalysis(secondAction, null, false, 5, true, false));
 
         GameAction chosen = strategy.chooseAction(yellowPlayer, List.of(firstAction, secondAction));
 
@@ -156,8 +156,8 @@ class YellowStrategyTest {
         GameAction homeAction = new GameAction(ActionType.MOVE_PIECE, List.of(secondPiece), 2);
 
         when(actionAnalyzer.analyze(ordinaryAction))
-                .thenReturn(new ActionAnalysis(ordinaryAction, null, false, 5, true));
-        when(actionAnalyzer.analyze(homeAction)).thenReturn(new ActionAnalysis(homeAction, null, false, 0, true));
+                .thenReturn(new ActionAnalysis(ordinaryAction, null, false, 5, true, false));
+        when(actionAnalyzer.analyze(homeAction)).thenReturn(new ActionAnalysis(homeAction, null, false, 0, true, false));
 
         GameAction chosen = strategy.chooseAction(yellowPlayer, List.of(ordinaryAction, homeAction));
 
@@ -176,8 +176,8 @@ class YellowStrategyTest {
         GameAction knownAction = new GameAction(ActionType.MOVE_PIECE, List.of(secondPiece), 2);
 
         when(actionAnalyzer.analyze(unknownAction))
-                .thenReturn(new ActionAnalysis(unknownAction, null, false, 0, false));
-        when(actionAnalyzer.analyze(knownAction)).thenReturn(new ActionAnalysis(knownAction, null, false, 10, true));
+                .thenReturn(new ActionAnalysis(unknownAction, null, false, 0, false, false));
+        when(actionAnalyzer.analyze(knownAction)).thenReturn(new ActionAnalysis(knownAction, null, false, 10, true, false));
 
         GameAction chosen = strategy.chooseAction(yellowPlayer, List.of(unknownAction, knownAction));
 

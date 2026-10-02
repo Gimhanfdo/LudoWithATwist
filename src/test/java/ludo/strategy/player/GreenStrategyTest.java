@@ -41,9 +41,9 @@ class GreenStrategyTest {
         GameAction moveAction = new GameAction(ActionType.MOVE_PIECE, List.of(movingPiece), 6);
         GameAction enterBoardAction = new GameAction(ActionType.ENTER_BOARD, List.of(basePiece), 6);
 
-        when(actionAnalyzer.analyze(moveAction)).thenReturn(new ActionAnalysis(moveAction, null, false, 10, true));
+        when(actionAnalyzer.analyze(moveAction)).thenReturn(new ActionAnalysis(moveAction, null, false, 10, true, false));
         when(actionAnalyzer.analyze(enterBoardAction))
-                .thenReturn(new ActionAnalysis(enterBoardAction, null, false, 0, false));
+                .thenReturn(new ActionAnalysis(enterBoardAction, null, false, 0, false, false));
 
         GameAction chosen = strategy.chooseAction(greenPlayer, List.of(moveAction, enterBoardAction));
 
@@ -60,9 +60,9 @@ class GreenStrategyTest {
         GameAction blockMove = new GameAction(ActionType.MOVE_PIECE, List.of(movingPiece), 6);
         GameAction enterBoardAction = new GameAction(ActionType.ENTER_BOARD, List.of(basePiece), 6);
 
-        when(actionAnalyzer.analyze(blockMove)).thenReturn(new ActionAnalysis(blockMove, null, true, 10, true));
+        when(actionAnalyzer.analyze(blockMove)).thenReturn(new ActionAnalysis(blockMove, null, true, 10, true, false));
         when(actionAnalyzer.analyze(enterBoardAction))
-                .thenReturn(new ActionAnalysis(enterBoardAction, null, false, 0, false));
+                .thenReturn(new ActionAnalysis(enterBoardAction, null, false, 0, false, false));
 
         GameAction chosen = strategy.chooseAction(greenPlayer, List.of(enterBoardAction, blockMove));
 
@@ -80,8 +80,8 @@ class GreenStrategyTest {
         GameAction ordinaryMove = new GameAction(ActionType.MOVE_PIECE, List.of(firstPiece), 3);
         GameAction blockMove = new GameAction(ActionType.MOVE_PIECE, List.of(secondPiece), 3);
 
-        when(actionAnalyzer.analyze(ordinaryMove)).thenReturn(new ActionAnalysis(ordinaryMove, null, false, 10, true));
-        when(actionAnalyzer.analyze(blockMove)).thenReturn(new ActionAnalysis(blockMove, null, true, 12, true));
+        when(actionAnalyzer.analyze(ordinaryMove)).thenReturn(new ActionAnalysis(ordinaryMove, null, false, 10, true, false));
+        when(actionAnalyzer.analyze(blockMove)).thenReturn(new ActionAnalysis(blockMove, null, true, 12, true, false));
 
         GameAction chosen = strategy.chooseAction(greenPlayer, List.of(ordinaryMove, blockMove));
 
@@ -99,8 +99,8 @@ class GreenStrategyTest {
         GameAction ordinaryMove = new GameAction(ActionType.MOVE_PIECE, List.of(firstPiece), 4);
         GameAction blockMove = new GameAction(ActionType.MOVE_BLOCK, List.of(firstPiece, secondPiece), 4);
 
-        when(actionAnalyzer.analyze(ordinaryMove)).thenReturn(new ActionAnalysis(ordinaryMove, null, false, 10, true));
-        when(actionAnalyzer.analyze(blockMove)).thenReturn(new ActionAnalysis(blockMove, null, false, 0, false));
+        when(actionAnalyzer.analyze(ordinaryMove)).thenReturn(new ActionAnalysis(ordinaryMove, null, false, 10, true, false));
+        when(actionAnalyzer.analyze(blockMove)).thenReturn(new ActionAnalysis(blockMove, null, false, 0, false, false));
 
         GameAction chosen = strategy.chooseAction(greenPlayer, List.of(ordinaryMove, blockMove));
 
@@ -120,8 +120,8 @@ class GreenStrategyTest {
         GameAction blockAction = new GameAction(ActionType.MOVE_BLOCK, List.of(firstPiece, secondPiece), 6);
 
         when(actionAnalyzer.analyze(enterBoardAction))
-                .thenReturn(new ActionAnalysis(enterBoardAction, null, false, 0, false));
-        when(actionAnalyzer.analyze(blockAction)).thenReturn(new ActionAnalysis(blockAction, null, false, 0, false));
+                .thenReturn(new ActionAnalysis(enterBoardAction, null, false, 0, false, false));
+        when(actionAnalyzer.analyze(blockAction)).thenReturn(new ActionAnalysis(blockAction, null, false, 0, false, false));
 
         GameAction chosen = strategy.chooseAction(greenPlayer, List.of(enterBoardAction, blockAction));
 
@@ -174,9 +174,9 @@ class GreenStrategyTest {
         GameAction captureAction = new GameAction(ActionType.MOVE_PIECE, List.of(secondPiece), 3);
 
         when(actionAnalyzer.analyze(ordinaryAction))
-                .thenReturn(new ActionAnalysis(ordinaryAction, null, false, 5, true));
+                .thenReturn(new ActionAnalysis(ordinaryAction, null, false, 5, true, false));
         when(actionAnalyzer.analyze(captureAction))
-                .thenReturn(new ActionAnalysis(captureAction, opponent, false, 10, true));
+                .thenReturn(new ActionAnalysis(captureAction, opponent, false, 10, true, false));
 
         GameAction chosen = strategy.chooseAction(greenPlayer, List.of(ordinaryAction, captureAction));
 
@@ -200,9 +200,9 @@ class GreenStrategyTest {
         GameAction progressAction = new GameAction(ActionType.MOVE_PIECE, List.of(progressingPiece), 3);
 
         when(actionAnalyzer.analyze(captureAction))
-                .thenReturn(new ActionAnalysis(captureAction, opponent, false, 12, true));
+                .thenReturn(new ActionAnalysis(captureAction, opponent, false, 12, true, false));
         when(actionAnalyzer.analyze(progressAction))
-                .thenReturn(new ActionAnalysis(progressAction, null, false, 5, true));
+                .thenReturn(new ActionAnalysis(progressAction, null, false, 5, true, false));
 
         GameAction chosen = strategy.chooseAction(greenPlayer, List.of(captureAction, progressAction));
 
@@ -222,8 +222,8 @@ class GreenStrategyTest {
         GameAction firstAction = new GameAction(ActionType.MOVE_PIECE, List.of(firstPiece), 4);
         GameAction secondAction = new GameAction(ActionType.MOVE_PIECE, List.of(secondPiece), 4);
 
-        when(actionAnalyzer.analyze(firstAction)).thenReturn(new ActionAnalysis(firstAction, null, false, 14, true));
-        when(actionAnalyzer.analyze(secondAction)).thenReturn(new ActionAnalysis(secondAction, null, false, 6, true));
+        when(actionAnalyzer.analyze(firstAction)).thenReturn(new ActionAnalysis(firstAction, null, false, 14, true, false));
+        when(actionAnalyzer.analyze(secondAction)).thenReturn(new ActionAnalysis(secondAction, null, false, 6, true, false));
 
         GameAction chosen = strategy.chooseAction(greenPlayer, List.of(firstAction, secondAction));
 
@@ -241,8 +241,8 @@ class GreenStrategyTest {
         GameAction firstAction = new GameAction(ActionType.MOVE_PIECE, List.of(firstPiece), 2);
         GameAction secondAction = new GameAction(ActionType.MOVE_PIECE, List.of(secondPiece), 2);
 
-        when(actionAnalyzer.analyze(firstAction)).thenReturn(new ActionAnalysis(firstAction, null, false, 15, true));
-        when(actionAnalyzer.analyze(secondAction)).thenReturn(new ActionAnalysis(secondAction, null, false, 9, true));
+        when(actionAnalyzer.analyze(firstAction)).thenReturn(new ActionAnalysis(firstAction, null, false, 15, true, false));
+        when(actionAnalyzer.analyze(secondAction)).thenReturn(new ActionAnalysis(secondAction, null, false, 9, true, false));
 
         GameAction chosen = strategy.chooseAction(greenPlayer, List.of(firstAction, secondAction));
 
@@ -264,8 +264,8 @@ class GreenStrategyTest {
         GameAction blockAction = new GameAction(ActionType.MOVE_PIECE, List.of(blockPiece), 4);
 
         when(actionAnalyzer.analyze(captureAction))
-                .thenReturn(new ActionAnalysis(captureAction, opponent, false, 5, true));
-        when(actionAnalyzer.analyze(blockAction)).thenReturn(new ActionAnalysis(blockAction, null, true, 12, true));
+                .thenReturn(new ActionAnalysis(captureAction, opponent, false, 5, true, false));
+        when(actionAnalyzer.analyze(blockAction)).thenReturn(new ActionAnalysis(blockAction, null, true, 12, true, false));
 
         GameAction chosen = strategy.chooseAction(greenPlayer, List.of(captureAction, blockAction));
 
@@ -286,8 +286,8 @@ class GreenStrategyTest {
         GameAction homeAction = new GameAction(ActionType.MOVE_PIECE, List.of(secondPiece), 2);
 
         when(actionAnalyzer.analyze(ordinaryAction))
-                .thenReturn(new ActionAnalysis(ordinaryAction, null, false, 5, true));
-        when(actionAnalyzer.analyze(homeAction)).thenReturn(new ActionAnalysis(homeAction, null, false, 0, true));
+                .thenReturn(new ActionAnalysis(ordinaryAction, null, false, 5, true, false));
+        when(actionAnalyzer.analyze(homeAction)).thenReturn(new ActionAnalysis(homeAction, null, false, 0, true, false));
 
         GameAction chosen = strategy.chooseAction(greenPlayer, List.of(ordinaryAction, homeAction));
 
