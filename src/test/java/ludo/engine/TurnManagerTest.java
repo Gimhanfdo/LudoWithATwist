@@ -13,6 +13,7 @@ import ludo.strategy.player.PlayerStrategy;
 import ludo.service.BetaBriefingService;
 import ludo.service.ConsecutiveSixTracker;
 import ludo.service.ForcedBlockBreakService;
+import ludo.output.GameOutput;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,7 @@ class TurnManagerTest {
     private PlayerStrategy strategy;
     private TurnManager turnManager;
     private Player player;
+    private GameOutput gameOutput;
 
     @BeforeEach
     void setUp() {
@@ -45,8 +47,9 @@ class TurnManagerTest {
         consecutiveSixTracker = mock(ConsecutiveSixTracker.class);
         forcedBlockBreakService = mock(ForcedBlockBreakService.class);
         betaBriefingService = mock(BetaBriefingService.class);
+        gameOutput = mock(GameOutput.class);
         turnManager = new TurnManager(dice, legalActionGenerator, strategyFactory, actionExecutor,
-                consecutiveSixTracker, forcedBlockBreakService, betaBriefingService);
+                consecutiveSixTracker, forcedBlockBreakService, betaBriefingService, gameOutput);
         player = new Player(Colour.RED);
     }
 
@@ -107,49 +110,56 @@ class TurnManagerTest {
     void shouldRejectNullDice() {
         assertThrows(IllegalArgumentException.class,
                 () -> new TurnManager(null, legalActionGenerator, strategyFactory, actionExecutor,
-                        consecutiveSixTracker, forcedBlockBreakService, betaBriefingService));
+                        consecutiveSixTracker, forcedBlockBreakService, betaBriefingService, gameOutput));
     }
 
     @Test
     void shouldRejectNullLegalActionGenerator() {
         assertThrows(IllegalArgumentException.class,
                 () -> new TurnManager(dice, null, strategyFactory, actionExecutor, consecutiveSixTracker,
-                        forcedBlockBreakService, betaBriefingService));
+                        forcedBlockBreakService, betaBriefingService, gameOutput));
     }
 
     @Test
     void shouldRejectNullStrategyFactory() {
         assertThrows(IllegalArgumentException.class,
                 () -> new TurnManager(dice, legalActionGenerator, null, actionExecutor, consecutiveSixTracker,
-                        forcedBlockBreakService, betaBriefingService));
+                        forcedBlockBreakService, betaBriefingService, gameOutput));
     }
 
     @Test
     void shouldRejectNullActionExecutor() {
         assertThrows(IllegalArgumentException.class,
                 () -> new TurnManager(dice, legalActionGenerator, strategyFactory, null, consecutiveSixTracker,
-                        forcedBlockBreakService, betaBriefingService));
+                        forcedBlockBreakService, betaBriefingService, gameOutput));
     }
 
     @Test
     void shouldRejectNullConsecutiveSixTracker() {
         assertThrows(IllegalArgumentException.class,
                 () -> new TurnManager(dice, legalActionGenerator, strategyFactory, actionExecutor, null,
-                        forcedBlockBreakService, betaBriefingService));
+                        forcedBlockBreakService, betaBriefingService, gameOutput));
     }
 
     @Test
     void shouldRejectNullForcedBlockBreakService() {
         assertThrows(IllegalArgumentException.class,
                 () -> new TurnManager(dice, legalActionGenerator, strategyFactory, actionExecutor,
-                        consecutiveSixTracker, null, betaBriefingService));
+                        consecutiveSixTracker, null, betaBriefingService, gameOutput));
     }
 
     @Test
     void shouldRejectNullBetaBriefingService() {
         assertThrows(IllegalArgumentException.class,
                 () -> new TurnManager(dice, legalActionGenerator, strategyFactory, actionExecutor,
-                        consecutiveSixTracker, forcedBlockBreakService, null));
+                        consecutiveSixTracker, forcedBlockBreakService, null, gameOutput));
+    }
+
+    @Test
+    void shouldRejectNullGameOutput() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new TurnManager(dice, legalActionGenerator, strategyFactory, actionExecutor,
+                        consecutiveSixTracker, forcedBlockBreakService, betaBriefingService, null));
     }
 
     @Test
