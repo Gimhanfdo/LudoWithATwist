@@ -1,5 +1,6 @@
 package ludo.output;
 
+import ludo.domain.enums.Direction;
 import ludo.domain.model.Piece;
 import ludo.domain.model.Player;
 
@@ -18,6 +19,8 @@ public interface GameOutput {
     void showDiceRoll(Player player, int roll);
 
     void showPieceEnteredBoard(Piece piece, int piecesOnBoard, int piecesInBase);
+
+    void showPieceMoved(Piece piece, int fromPosition, int toPosition, int distance, Direction direction);
 
     void showWinner(Player player);
 }
