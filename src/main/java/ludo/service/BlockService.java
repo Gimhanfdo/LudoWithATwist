@@ -75,26 +75,12 @@ public class BlockService {
         for (int step = 1; step <= requestedDistance; step++) {
             int position = calculatePosition(piece.getPosition(), step, piece.getDirection());
 
-            if (hasOpponentBlockAt(position, piece.getColour())) {
+            if (!getOpponentBlockAt(position, piece.getColour()).isEmpty()) {
                 return step - 1;
             }
         }
 
         return requestedDistance;
-    }
-
-    private boolean hasOpponentBlockAt(int position, Colour movingColour) {
-        for (Colour colour : Colour.values()) {
-            if (colour == movingColour) {
-                continue;
-            }
-
-            if (hasBlockAt(position, colour)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private int calculatePosition(int startPosition, int distance, Direction direction) {
@@ -270,6 +256,21 @@ public class BlockService {
 
             if (!block.isEmpty()) {
                 return block;
+            }
+        }
+
+        return Collections.emptyList();
+    }
+
+    public List<Piece> getFirstOpponentBlockInPath(Piece piece, int requestedDistance) {
+        validateMovementRequest(piece, requestedDistance);
+
+        for (int step = 1; step <= requestedDistance; step++) {
+            int position = calculatePosition(piece.getPosition(), step, piece.getDirection());
+            List<Piece> opponentBlock = getOpponentBlockAt(position, piece.getColour());
+
+            if (!opponentBlock.isEmpty()) {
+                return opponentBlock;
             }
         }
 

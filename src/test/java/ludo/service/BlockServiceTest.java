@@ -799,4 +799,42 @@ class BlockServiceTest {
         assertEquals(22, blueOne.getPosition());
         assertEquals(22, blueTwo.getPosition());
     }
+
+    @Test
+    void shouldReturnFirstOpponentBlockInPath() {
+        Piece redPiece = redPlayer.getPieces().get(0);
+        redPiece.enterBoard(10, Direction.CLOCKWISE);
+        Piece blueOne = bluePlayer.getPieces().get(0);
+        Piece blueTwo = bluePlayer.getPieces().get(1);
+        blueOne.enterBoard(14, Direction.CLOCKWISE);
+        blueTwo.enterBoard(14, Direction.CLOCKWISE);
+
+        List<Piece> block = blockService.getFirstOpponentBlockInPath(redPiece, 6);
+
+        assertEquals(List.of(blueOne, blueTwo), block);
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenNoOpponentBlockIsInPath() {
+        Piece redPiece = redPlayer.getPieces().get(0);
+        redPiece.enterBoard(10, Direction.CLOCKWISE);
+
+        List<Piece> block = blockService.getFirstOpponentBlockInPath(redPiece, 6);
+
+        assertTrue(block.isEmpty());
+    }
+
+    @Test
+    void shouldFindOpponentBlockCounterclockwise() {
+        Piece redPiece = redPlayer.getPieces().get(0);
+        redPiece.enterBoard(10, Direction.COUNTERCLOCKWISE);
+        Piece blueOne = bluePlayer.getPieces().get(0);
+        Piece blueTwo = bluePlayer.getPieces().get(1);
+        blueOne.enterBoard(7, Direction.CLOCKWISE);
+        blueTwo.enterBoard(7, Direction.CLOCKWISE);
+
+        List<Piece> block = blockService.getFirstOpponentBlockInPath(redPiece, 5);
+
+        assertEquals(List.of(blueOne, blueTwo), block);
+    }
 }
