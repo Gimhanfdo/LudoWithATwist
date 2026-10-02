@@ -9,6 +9,7 @@ import ludo.random.Dice;
 import ludo.service.GameActionExecutor;
 import ludo.service.LegalActionGenerator;
 import ludo.strategy.player.PlayerStrategy;
+import ludo.service.ConsecutiveSixTracker;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ class TurnManagerTest {
     private LegalActionGenerator legalActionGenerator;
     private PlayerStrategyFactory strategyFactory;
     private GameActionExecutor actionExecutor;
+    private ConsecutiveSixTracker consecutiveSixTracker;
     private PlayerStrategy strategy;
     private TurnManager turnManager;
     private Player player;
@@ -35,8 +37,10 @@ class TurnManagerTest {
         strategyFactory = mock(PlayerStrategyFactory.class);
         actionExecutor = mock(GameActionExecutor.class);
         strategy = mock(PlayerStrategy.class);
+        consecutiveSixTracker = mock(ConsecutiveSixTracker.class);
 
-        turnManager = new TurnManager(dice, legalActionGenerator, strategyFactory, actionExecutor);
+        turnManager = new TurnManager(dice, legalActionGenerator, strategyFactory, actionExecutor,
+                consecutiveSixTracker);
         player = new Player(Colour.RED);
     }
 
@@ -90,30 +94,60 @@ class TurnManagerTest {
     @Test
     void shouldRejectNullPlayer() {
         assertThrows(IllegalArgumentException.class, () -> turnManager.takeTurn(null));
-        verifyNoInteractions(dice, legalActionGenerator, strategyFactory, actionExecutor);
+        verifyNoInteractions(dice, legalActionGenerator, strategyFactory, actionExecutor, consecutiveSixTracker);
     }
 
     @Test
     void shouldRejectNullDice() {
         assertThrows(IllegalArgumentException.class,
-                () -> new TurnManager(null, legalActionGenerator, strategyFactory, actionExecutor));
+                () -> new TurnManager(null, legalActionGenerator, strategyFactory, actionExecutor, consecutiveSixTracker));
     }
 
     @Test
     void shouldRejectNullLegalActionGenerator() {
         assertThrows(IllegalArgumentException.class,
-                () -> new TurnManager(dice, null, strategyFactory, actionExecutor));
+                () -> new TurnManager(dice, null, strategyFactory, actionExecutor, consecutiveSixTracker));
     }
 
     @Test
     void shouldRejectNullStrategyFactory() {
         assertThrows(IllegalArgumentException.class,
-                () -> new TurnManager(dice, legalActionGenerator, null, actionExecutor));
+                () -> new TurnManager(dice, legalActionGenerator, null, actionExecutor, consecutiveSixTracker));
     }
 
     @Test
     void shouldRejectNullActionExecutor() {
         assertThrows(IllegalArgumentException.class,
-                () -> new TurnManager(dice, legalActionGenerator, strategyFactory, null));
+                () -> new TurnManager(dice, legalActionGenerator, strategyFactory, null, consecutiveSixTracker));
+    }
+
+    @Test
+    void shouldRejectNullConsecutiveSixTracker() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new TurnManager(dice, legalActionGenerator, strategyFactory, actionExecutor, null));
+    }
+
+    @Test
+    void shouldIgnoreThirdConsecutiveSix() {
+        when(dice.roll()).thenReturn(6);
+        when(consecutiveSixTracker.recordRoll(player, 6)).thenReturn(true);
+
+        turnManager.takeTurn(player);
+
+        verify(dice).roll();
+        verify(consecutiveSixTracker).recordRoll(player, 6);
+        verifyNoInteractions(legalActionGenerator, strategyFactory, actionExecutor);
+    }
+
+    @Test
+    void shouldContinueTurnWhenRollIsNotThirdConsecutiveSix() {
+        when(dice.roll()).thenReturn(5);
+        when(consecutiveSixTracker.recordRoll(player, 5)).thenReturn(false);
+        when(legalActionGenerator.generateActions(player, 5)).thenReturn(List.of());
+
+        turnManager.takeTurn(player);
+
+        verify(consecutiveSixTracker).recordRoll(player, 5);
+        verify(legalActionGenerator).generateActions(player, 5);
     }
 }

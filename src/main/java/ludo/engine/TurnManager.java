@@ -4,6 +4,7 @@ import ludo.domain.model.GameAction;
 import ludo.domain.model.Player;
 import ludo.factory.PlayerStrategyFactory;
 import ludo.random.Dice;
+import ludo.service.ConsecutiveSixTracker;
 import ludo.service.GameActionExecutor;
 import ludo.service.LegalActionGenerator;
 import ludo.strategy.player.PlayerStrategy;
@@ -16,21 +17,29 @@ public class TurnManager {
     private final LegalActionGenerator legalActionGenerator;
     private final PlayerStrategyFactory strategyFactory;
     private final GameActionExecutor actionExecutor;
+    private final ConsecutiveSixTracker consecutiveSixTracker;
 
     public TurnManager(Dice dice, LegalActionGenerator legalActionGenerator, PlayerStrategyFactory strategyFactory,
-                       GameActionExecutor actionExecutor) {
-        validateDependencies(dice, legalActionGenerator, strategyFactory, actionExecutor);
+            GameActionExecutor actionExecutor, ConsecutiveSixTracker consecutiveSixTracker) {
+        validateDependencies(dice, legalActionGenerator, strategyFactory, actionExecutor, consecutiveSixTracker);
 
         this.dice = dice;
         this.legalActionGenerator = legalActionGenerator;
         this.strategyFactory = strategyFactory;
         this.actionExecutor = actionExecutor;
+        this.consecutiveSixTracker = consecutiveSixTracker;
     }
 
     public void takeTurn(Player player) {
         validatePlayer(player);
 
         int roll = dice.roll();
+        boolean thirdConsecutiveSix = consecutiveSixTracker.recordRoll(player, roll);
+
+        if (thirdConsecutiveSix) {
+            return;
+        }
+
         List<GameAction> legalActions = legalActionGenerator.generateActions(player, roll);
 
         if (legalActions.isEmpty()) {
@@ -52,7 +61,8 @@ public class TurnManager {
     }
 
     private void validateDependencies(Dice dice, LegalActionGenerator legalActionGenerator,
-                                      PlayerStrategyFactory strategyFactory, GameActionExecutor actionExecutor) {
+            PlayerStrategyFactory strategyFactory, GameActionExecutor actionExecutor,
+            ConsecutiveSixTracker consecutiveSixTracker) {
         if (dice == null) {
             throw new IllegalArgumentException("Dice cannot be null.");
         }
@@ -67,6 +77,10 @@ public class TurnManager {
 
         if (actionExecutor == null) {
             throw new IllegalArgumentException("Action executor cannot be null.");
+        }
+
+        if (consecutiveSixTracker == null) {
+            throw new IllegalArgumentException("Consecutive six tracker cannot be null.");
         }
     }
 }
