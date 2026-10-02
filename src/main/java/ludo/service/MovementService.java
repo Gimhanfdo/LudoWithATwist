@@ -87,6 +87,4 @@ public class MovementService {
 
         return captured ? MovementResult.CAPTURED : MovementResult.MOVED;
     }
-
-    //
 }
