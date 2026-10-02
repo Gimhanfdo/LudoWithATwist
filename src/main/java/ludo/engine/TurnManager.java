@@ -1,5 +1,6 @@
 package ludo.engine;
 
+import ludo.domain.enums.ActionResult;
 import ludo.domain.model.GameAction;
 import ludo.domain.model.Player;
 import ludo.factory.PlayerStrategyFactory;
@@ -48,24 +49,26 @@ public class TurnManager {
             return false;
         }
 
-        executeAction(player, roll);
+        ActionResult result = executeAction(player, roll);
 
-        return roll == 6;
+        return roll == 6 || result == ActionResult.CAPTURED;
     }
 
-    private void executeAction(Player player, int roll) {
+    private ActionResult executeAction(Player player, int roll) {
         List<GameAction> legalActions = legalActionGenerator.generateActions(player, roll);
 
         if (legalActions.isEmpty()) {
-            return;
+            return ActionResult.NOT_MOVED;
         }
 
         PlayerStrategy strategy = strategyFactory.getStrategy(player.getColour());
         GameAction chosenAction = strategy.chooseAction(player, legalActions);
 
-        if (chosenAction != null) {
-            actionExecutor.execute(chosenAction);
+        if (chosenAction == null) {
+            return ActionResult.NOT_MOVED;
         }
+
+        return actionExecutor.execute(chosenAction);
     }
 
     private void validatePlayer(Player player) {

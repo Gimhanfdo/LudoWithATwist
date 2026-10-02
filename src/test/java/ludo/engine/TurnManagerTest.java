@@ -1,5 +1,6 @@
 package ludo.engine;
 
+import ludo.domain.enums.ActionResult;
 import ludo.domain.enums.ActionType;
 import ludo.domain.enums.Colour;
 import ludo.domain.model.GameAction;
@@ -223,5 +224,41 @@ class TurnManagerTest {
 
         verify(actionExecutor).execute(action);
         verify(dice, times(2)).roll();
+    }
+
+    @Test
+    void shouldGrantBonusRollAfterCapture() {
+        GameAction captureAction = new GameAction(ActionType.MOVE_PIECE, List.of(player.getPieces().get(0)), 4);
+        List<GameAction> legalActions = List.of(captureAction);
+
+        when(dice.roll()).thenReturn(4, 2);
+        when(consecutiveSixTracker.recordRoll(player, 4)).thenReturn(false);
+        when(consecutiveSixTracker.recordRoll(player, 2)).thenReturn(false);
+        when(legalActionGenerator.generateActions(player, 4)).thenReturn(legalActions);
+        when(legalActionGenerator.generateActions(player, 2)).thenReturn(List.of());
+        when(strategyFactory.getStrategy(Colour.RED)).thenReturn(strategy);
+        when(strategy.chooseAction(player, legalActions)).thenReturn(captureAction);
+        when(actionExecutor.execute(captureAction)).thenReturn(ActionResult.CAPTURED);
+
+        turnManager.takeTurn(player);
+
+        verify(dice, times(2)).roll();
+    }
+
+    @Test
+    void shouldNotGrantBonusRollAfterNormalMovement() {
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(player.getPieces().get(0)), 4);
+        List<GameAction> legalActions = List.of(action);
+
+        when(dice.roll()).thenReturn(4);
+        when(consecutiveSixTracker.recordRoll(player, 4)).thenReturn(false);
+        when(legalActionGenerator.generateActions(player, 4)).thenReturn(legalActions);
+        when(strategyFactory.getStrategy(Colour.RED)).thenReturn(strategy);
+        when(strategy.chooseAction(player, legalActions)).thenReturn(action);
+        when(actionExecutor.execute(action)).thenReturn(ActionResult.MOVED);
+
+        turnManager.takeTurn(player);
+
+        verify(dice, times(1)).roll();
     }
 }
