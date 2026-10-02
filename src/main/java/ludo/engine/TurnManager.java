@@ -6,8 +6,10 @@ import ludo.domain.model.Player;
 import ludo.factory.PlayerStrategyFactory;
 import ludo.random.Dice;
 import ludo.service.ConsecutiveSixTracker;
+import ludo.service.ForcedBlockBreakService;
 import ludo.service.GameActionExecutor;
 import ludo.service.LegalActionGenerator;
+import ludo.service.ForcedBlockBreakService;
 import ludo.strategy.player.PlayerStrategy;
 
 import java.util.List;
@@ -19,16 +21,20 @@ public class TurnManager {
     private final PlayerStrategyFactory strategyFactory;
     private final GameActionExecutor actionExecutor;
     private final ConsecutiveSixTracker consecutiveSixTracker;
+    private final ForcedBlockBreakService forcedBlockBreakService;
 
     public TurnManager(Dice dice, LegalActionGenerator legalActionGenerator, PlayerStrategyFactory strategyFactory,
-            GameActionExecutor actionExecutor, ConsecutiveSixTracker consecutiveSixTracker) {
-        validateDependencies(dice, legalActionGenerator, strategyFactory, actionExecutor, consecutiveSixTracker);
+            GameActionExecutor actionExecutor, ConsecutiveSixTracker consecutiveSixTracker,
+            ForcedBlockBreakService forcedBlockBreakService) {
+        validateDependencies(dice, legalActionGenerator, strategyFactory, actionExecutor, consecutiveSixTracker,
+                forcedBlockBreakService);
 
         this.dice = dice;
         this.legalActionGenerator = legalActionGenerator;
         this.strategyFactory = strategyFactory;
         this.actionExecutor = actionExecutor;
         this.consecutiveSixTracker = consecutiveSixTracker;
+        this.forcedBlockBreakService = forcedBlockBreakService;
     }
 
     public void takeTurn(Player player) {
@@ -46,6 +52,7 @@ public class TurnManager {
         boolean thirdConsecutiveSix = consecutiveSixTracker.recordRoll(player, roll);
 
         if (thirdConsecutiveSix) {
+            forcedBlockBreakService.breakBlock(player);
             return false;
         }
 
@@ -79,7 +86,7 @@ public class TurnManager {
 
     private void validateDependencies(Dice dice, LegalActionGenerator legalActionGenerator,
             PlayerStrategyFactory strategyFactory, GameActionExecutor actionExecutor,
-            ConsecutiveSixTracker consecutiveSixTracker) {
+            ConsecutiveSixTracker consecutiveSixTracker, ForcedBlockBreakService forcedBlockBreakService) {
         if (dice == null) {
             throw new IllegalArgumentException("Dice cannot be null.");
         }
@@ -98,6 +105,10 @@ public class TurnManager {
 
         if (consecutiveSixTracker == null) {
             throw new IllegalArgumentException("Consecutive six tracker cannot be null.");
+        }
+
+        if (forcedBlockBreakService == null) {
+            throw new IllegalArgumentException("Forced block break service cannot be null.");
         }
     }
 }

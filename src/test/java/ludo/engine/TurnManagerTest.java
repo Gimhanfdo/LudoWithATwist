@@ -11,6 +11,7 @@ import ludo.service.GameActionExecutor;
 import ludo.service.LegalActionGenerator;
 import ludo.strategy.player.PlayerStrategy;
 import ludo.service.ConsecutiveSixTracker;
+import ludo.service.ForcedBlockBreakService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,7 @@ class TurnManagerTest {
     private PlayerStrategyFactory strategyFactory;
     private GameActionExecutor actionExecutor;
     private ConsecutiveSixTracker consecutiveSixTracker;
+    private ForcedBlockBreakService forcedBlockBreakService;
     private PlayerStrategy strategy;
     private TurnManager turnManager;
     private Player player;
@@ -39,9 +41,9 @@ class TurnManagerTest {
         actionExecutor = mock(GameActionExecutor.class);
         strategy = mock(PlayerStrategy.class);
         consecutiveSixTracker = mock(ConsecutiveSixTracker.class);
-
+        forcedBlockBreakService = mock(ForcedBlockBreakService.class);
         turnManager = new TurnManager(dice, legalActionGenerator, strategyFactory, actionExecutor,
-                consecutiveSixTracker);
+                consecutiveSixTracker, forcedBlockBreakService);
         player = new Player(Colour.RED);
     }
 
@@ -102,31 +104,42 @@ class TurnManagerTest {
     void shouldRejectNullDice() {
         assertThrows(IllegalArgumentException.class,
                 () -> new TurnManager(null, legalActionGenerator, strategyFactory, actionExecutor,
-                        consecutiveSixTracker));
+                        consecutiveSixTracker, forcedBlockBreakService));
     }
 
     @Test
     void shouldRejectNullLegalActionGenerator() {
         assertThrows(IllegalArgumentException.class,
-                () -> new TurnManager(dice, null, strategyFactory, actionExecutor, consecutiveSixTracker));
+                () -> new TurnManager(dice, null, strategyFactory, actionExecutor, consecutiveSixTracker,
+                        forcedBlockBreakService));
     }
 
     @Test
     void shouldRejectNullStrategyFactory() {
         assertThrows(IllegalArgumentException.class,
-                () -> new TurnManager(dice, legalActionGenerator, null, actionExecutor, consecutiveSixTracker));
+                () -> new TurnManager(dice, legalActionGenerator, null, actionExecutor, consecutiveSixTracker,
+                        forcedBlockBreakService));
     }
 
     @Test
     void shouldRejectNullActionExecutor() {
         assertThrows(IllegalArgumentException.class,
-                () -> new TurnManager(dice, legalActionGenerator, strategyFactory, null, consecutiveSixTracker));
+                () -> new TurnManager(dice, legalActionGenerator, strategyFactory, null, consecutiveSixTracker,
+                        forcedBlockBreakService));
     }
 
     @Test
     void shouldRejectNullConsecutiveSixTracker() {
         assertThrows(IllegalArgumentException.class,
-                () -> new TurnManager(dice, legalActionGenerator, strategyFactory, actionExecutor, null));
+                () -> new TurnManager(dice, legalActionGenerator, strategyFactory, actionExecutor, null,
+                        forcedBlockBreakService));
+    }
+
+    @Test
+    void shouldRejectNullForcedBlockBreakService() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new TurnManager(dice, legalActionGenerator, strategyFactory, actionExecutor,
+                        consecutiveSixTracker, null));
     }
 
     @Test
@@ -195,16 +208,14 @@ class TurnManagerTest {
     }
 
     @Test
-    void shouldStopTurnWhenThirdConsecutiveSixOccurs() {
-        when(dice.roll()).thenReturn(6, 6, 6);
-        when(consecutiveSixTracker.recordRoll(player, 6)).thenReturn(false, false, true);
-        when(legalActionGenerator.generateActions(player, 6)).thenReturn(List.of());
+    void shouldAttemptForcedBlockBreakOnThirdConsecutiveSix() {
+        when(dice.roll()).thenReturn(6);
+        when(consecutiveSixTracker.recordRoll(player, 6)).thenReturn(true);
 
         turnManager.takeTurn(player);
 
-        verify(dice, times(3)).roll();
-        verify(consecutiveSixTracker, times(3)).recordRoll(player, 6);
-        verify(legalActionGenerator, times(2)).generateActions(player, 6);
+        verify(forcedBlockBreakService).breakBlock(player);
+        verifyNoInteractions(legalActionGenerator, strategyFactory, actionExecutor);
     }
 
     @Test
