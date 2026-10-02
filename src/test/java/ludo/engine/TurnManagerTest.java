@@ -100,7 +100,8 @@ class TurnManagerTest {
     @Test
     void shouldRejectNullDice() {
         assertThrows(IllegalArgumentException.class,
-                () -> new TurnManager(null, legalActionGenerator, strategyFactory, actionExecutor, consecutiveSixTracker));
+                () -> new TurnManager(null, legalActionGenerator, strategyFactory, actionExecutor,
+                        consecutiveSixTracker));
     }
 
     @Test
@@ -149,5 +150,78 @@ class TurnManagerTest {
 
         verify(consecutiveSixTracker).recordRoll(player, 5);
         verify(legalActionGenerator).generateActions(player, 5);
+    }
+
+    @Test
+    void shouldGrantBonusRollAfterSix() {
+        when(dice.roll()).thenReturn(6, 4);
+        when(consecutiveSixTracker.recordRoll(player, 6)).thenReturn(false);
+        when(consecutiveSixTracker.recordRoll(player, 4)).thenReturn(false);
+        when(legalActionGenerator.generateActions(player, 6)).thenReturn(List.of());
+        when(legalActionGenerator.generateActions(player, 4)).thenReturn(List.of());
+
+        turnManager.takeTurn(player);
+
+        verify(dice, times(2)).roll();
+        verify(legalActionGenerator).generateActions(player, 6);
+        verify(legalActionGenerator).generateActions(player, 4);
+    }
+
+    @Test
+    void shouldNotGrantBonusRollAfterNonSix() {
+        when(dice.roll()).thenReturn(5);
+        when(consecutiveSixTracker.recordRoll(player, 5)).thenReturn(false);
+        when(legalActionGenerator.generateActions(player, 5)).thenReturn(List.of());
+
+        turnManager.takeTurn(player);
+
+        verify(dice, times(1)).roll();
+    }
+
+    @Test
+    void shouldContinueAfterTwoConsecutiveSixes() {
+        when(dice.roll()).thenReturn(6, 6, 4);
+        when(consecutiveSixTracker.recordRoll(player, 6)).thenReturn(false, false);
+        when(consecutiveSixTracker.recordRoll(player, 4)).thenReturn(false);
+        when(legalActionGenerator.generateActions(player, 6)).thenReturn(List.of());
+        when(legalActionGenerator.generateActions(player, 4)).thenReturn(List.of());
+
+        turnManager.takeTurn(player);
+
+        verify(dice, times(3)).roll();
+        verify(consecutiveSixTracker, times(2)).recordRoll(player, 6);
+        verify(consecutiveSixTracker).recordRoll(player, 4);
+    }
+
+    @Test
+    void shouldStopTurnWhenThirdConsecutiveSixOccurs() {
+        when(dice.roll()).thenReturn(6, 6, 6);
+        when(consecutiveSixTracker.recordRoll(player, 6)).thenReturn(false, false, true);
+        when(legalActionGenerator.generateActions(player, 6)).thenReturn(List.of());
+
+        turnManager.takeTurn(player);
+
+        verify(dice, times(3)).roll();
+        verify(consecutiveSixTracker, times(3)).recordRoll(player, 6);
+        verify(legalActionGenerator, times(2)).generateActions(player, 6);
+    }
+
+    @Test
+    void shouldExecuteActionBeforeBonusRoll() {
+        GameAction action = new GameAction(ActionType.ENTER_BOARD, List.of(player.getPieces().get(0)), 6);
+        List<GameAction> legalActions = List.of(action);
+
+        when(dice.roll()).thenReturn(6, 2);
+        when(consecutiveSixTracker.recordRoll(player, 6)).thenReturn(false);
+        when(consecutiveSixTracker.recordRoll(player, 2)).thenReturn(false);
+        when(legalActionGenerator.generateActions(player, 6)).thenReturn(legalActions);
+        when(legalActionGenerator.generateActions(player, 2)).thenReturn(List.of());
+        when(strategyFactory.getStrategy(Colour.RED)).thenReturn(strategy);
+        when(strategy.chooseAction(player, legalActions)).thenReturn(action);
+
+        turnManager.takeTurn(player);
+
+        verify(actionExecutor).execute(action);
+        verify(dice, times(2)).roll();
     }
 }

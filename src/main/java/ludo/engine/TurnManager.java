@@ -33,13 +33,27 @@ public class TurnManager {
     public void takeTurn(Player player) {
         validatePlayer(player);
 
+        boolean bonusRoll;
+
+        do {
+            bonusRoll = executeRoll(player);
+        } while (bonusRoll);
+    }
+
+    private boolean executeRoll(Player player) {
         int roll = dice.roll();
         boolean thirdConsecutiveSix = consecutiveSixTracker.recordRoll(player, roll);
 
         if (thirdConsecutiveSix) {
-            return;
+            return false;
         }
 
+        executeAction(player, roll);
+
+        return roll == 6;
+    }
+
+    private void executeAction(Player player, int roll) {
         List<GameAction> legalActions = legalActionGenerator.generateActions(player, roll);
 
         if (legalActions.isEmpty()) {
