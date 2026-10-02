@@ -226,4 +226,46 @@ public class CaptureService {
                         && piece.getPosition() != null
                         && piece.getPosition() == position);
     }
+
+    public List<Piece> getCapturablePieces(Piece attacker, GameState gameState) {
+        validateAttacker(attacker);
+
+        if (gameState == null) {
+            throw new IllegalArgumentException("Game state cannot be null.");
+        }
+
+        if (attacker.getState() != PieceState.STANDARD_PATH) {
+            return List.of();
+        }
+
+        List<Piece> occupants = gameState.getPiecesAtStandardPosition(attacker.getPosition());
+
+        for (Piece occupant : occupants) {
+            if (occupant == attacker) {
+                continue;
+            }
+
+            if (!canCapture(attacker, occupant)) {
+                continue;
+            }
+
+            if (isPartOfBlock(occupant, occupants)) {
+                continue;
+            }
+
+            return List.of(occupant);
+        }
+
+        return List.of();
+    }
+
+    public boolean resolveCaptureForReporting(Piece attacker, GameState gameState) {
+        List<Piece> capturablePieces = getCapturablePieces(attacker, gameState);
+
+        if (capturablePieces.isEmpty()) {
+            return false;
+        }
+
+        return capture(attacker, capturablePieces.get(0));
+    }
 }

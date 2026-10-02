@@ -592,4 +592,23 @@ class CaptureServiceTest {
 
         assertFalse(captured);
     }
+
+    @Test
+    void shouldReturnCapturableOpponentWithoutCapturingIt() {
+        Player redPlayer = new Player(Colour.RED);
+        Player bluePlayer = new Player(Colour.BLUE);
+
+        GameState gameState = new GameState(List.of(redPlayer, bluePlayer));
+
+        Piece attacker = redPlayer.getPieces().get(0);
+        Piece opponent = bluePlayer.getPieces().get(0);
+        attacker.enterBoard(20, Direction.CLOCKWISE);
+        opponent.enterBoard(20, Direction.CLOCKWISE);
+
+        List<Piece> capturablePieces = captureService.getCapturablePieces(attacker, gameState);
+
+        assertEquals(List.of(opponent), capturablePieces);
+        assertEquals(PieceState.STANDARD_PATH, opponent.getState());
+        assertEquals(20, opponent.getPosition());
+    }
 }
