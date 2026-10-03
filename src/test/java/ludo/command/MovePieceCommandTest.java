@@ -3,10 +3,16 @@ package ludo.command;
 import ludo.domain.enums.ActionResult;
 import ludo.domain.enums.ActionType;
 import ludo.domain.enums.Colour;
+import ludo.domain.enums.Direction;
+import ludo.domain.enums.PieceEffect;
+import ludo.domain.enums.PieceState;
+import ludo.domain.enums.TeleportDestination;
 import ludo.domain.model.ActionExecutionResult;
+import ludo.domain.model.Board;
 import ludo.domain.model.GameAction;
 import ludo.domain.model.MovementOutcome;
 import ludo.domain.model.MovementResult;
+import ludo.domain.model.MysteryTeleportOutcome;
 import ludo.domain.model.Piece;
 import ludo.service.MovementCoordinator;
 
@@ -49,7 +55,8 @@ class MovePieceCommandTest {
         Piece piece = new Piece(Colour.YELLOW, 1);
         Piece opponent = new Piece(Colour.BLUE, 1);
         GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
-        MovementOutcome movementOutcome = new MovementOutcome(MovementResult.CAPTURED, 4, 4, 10, 14, List.of(), List.of(opponent));
+        MovementOutcome movementOutcome = new MovementOutcome(MovementResult.CAPTURED, 4, 4, 10, 14, List.of(),
+                List.of(opponent));
 
         when(movementCoordinator.moveDetailed(piece, 4)).thenReturn(movementOutcome);
 
@@ -64,7 +71,8 @@ class MovePieceCommandTest {
     void shouldReturnNotMovedWhenMovementFails() {
         Piece piece = new Piece(Colour.YELLOW, 1);
         GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
-        MovementOutcome movementOutcome = new MovementOutcome(MovementResult.NOT_MOVED, 4, 0, 10, 10, List.of(), List.of());
+        MovementOutcome movementOutcome = new MovementOutcome(MovementResult.NOT_MOVED, 4, 0, 10, 10, List.of(),
+                List.of());
 
         when(movementCoordinator.moveDetailed(piece, 4)).thenReturn(movementOutcome);
 
@@ -73,6 +81,29 @@ class MovePieceCommandTest {
         assertEquals(ActionResult.NOT_MOVED, result.getResult());
         assertSame(movementOutcome, result.getMovementOutcome());
         assertTrue(result.hasMovementOutcome());
+    }
+
+    @Test
+    void shouldPreserveMysteryTeleportOutcome() {
+        Piece piece = new Piece(Colour.YELLOW, 1);
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
+
+        MysteryTeleportOutcome mysteryOutcome = new MysteryTeleportOutcome(
+                TeleportDestination.ALPHA, PieceState.STANDARD_PATH, Board.ALPHA_POSITION,
+                Direction.CLOCKWISE, Direction.CLOCKWISE, PieceEffect.ENERGISED);
+
+        MovementOutcome movementOutcome = new MovementOutcome(
+                MovementResult.MOVED, 4, 4, 10, 14, List.of(), List.of())
+                .withMysteryTeleport(mysteryOutcome);
+
+        when(movementCoordinator.moveDetailed(piece, 4)).thenReturn(movementOutcome);
+
+        ActionExecutionResult result = command.execute(action);
+
+        assertEquals(ActionResult.MOVED, result.getResult());
+        assertSame(movementOutcome, result.getMovementOutcome());
+        assertTrue(result.getMovementOutcome().hasMysteryTeleport());
+        assertSame(mysteryOutcome, result.getMovementOutcome().getMysteryTeleportOutcome());
     }
 
     @Test
