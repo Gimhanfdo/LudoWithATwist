@@ -102,6 +102,19 @@ public class ConsoleGameOutput implements GameOutput {
     }
 
     @Override
+    public void showMysteryLanding(Piece piece, TeleportDestination destination) {
+        validatePiece(piece);
+
+        if (destination == null) {
+            throw new IllegalArgumentException("Teleport destination cannot be null.");
+        }
+
+        System.out.println(getColourName(piece)
+                + " player lands on a mystery cell and is teleported to "
+                + formatTeleportDestination(destination) + ".");
+    }
+
+    @Override
     public void showMysteryTeleport(Piece piece, TeleportDestination destination) {
         validatePiece(piece);
 
@@ -109,17 +122,8 @@ public class ConsoleGameOutput implements GameOutput {
             throw new IllegalArgumentException("Teleport destination cannot be null.");
         }
 
-        String destinationName = switch (destination) {
-            case ALPHA -> "Alpha";
-            case BETA -> "Beta";
-            case GAMMA -> "Gamma";
-            case APPROACH -> "Approach";
-            case X -> "X";
-            case BASE -> "Base";
-        };
-
         System.out.println(getColourName(piece) + " piece " + piece.getName()
-                + " teleported to " + destinationName + ".");
+                + " teleported to " + formatTeleportDestination(destination) + ".");
     }
 
     @Override
@@ -195,6 +199,15 @@ public class ConsoleGameOutput implements GameOutput {
     }
 
     @Override
+    public void showBriefingPieceReturnedToBase(Piece piece) {
+        validatePiece(piece);
+
+        System.out.println(getColourName(piece) + " piece " + piece.getName()
+                + " is movement-restricted and has rolled three consecutively. "
+                + "Teleporting piece " + piece.getName() + " to base.");
+    }
+
+    @Override
     public void showWinner(Player player) {
         validatePlayer(player);
 
@@ -205,6 +218,17 @@ public class ConsoleGameOutput implements GameOutput {
         if (position < 0 || position >= Board.STANDARD_PATH_SIZE) {
             throw new IllegalArgumentException("Position must be on the standard path.");
         }
+    }
+
+    private String formatTeleportDestination(TeleportDestination destination) {
+        return switch (destination) {
+            case ALPHA -> "Alpha";
+            case BETA -> "Beta";
+            case GAMMA -> "Gamma";
+            case BASE -> "Base";
+            case X -> "X";
+            case APPROACH -> "Approach";
+        };
     }
 
     private String getColourName(Player player) {
