@@ -3,6 +3,7 @@ package ludo.command;
 import ludo.domain.enums.ActionResult;
 import ludo.domain.enums.ActionType;
 import ludo.domain.model.ActionExecutionResult;
+import ludo.domain.model.BlockMovementOutcome;
 import ludo.domain.model.GameAction;
 import ludo.domain.model.MovementResult;
 import ludo.domain.model.Piece;
@@ -25,12 +26,12 @@ public class MoveBlockCommand implements GameActionCommand {
         validateAction(action);
 
         Piece representative = action.getPieces().get(0);
-        MovementResult movementResult = movementService.moveBlock(representative.getPosition(), representative.getColour(),
-                action.getRoll());
+        BlockMovementOutcome movementOutcome = movementService.moveBlockDetailed(
+                representative.getPosition(), representative.getColour(), action.getRoll());
 
-        ActionResult actionResult = toActionResult(movementResult);
+        ActionResult actionResult = toActionResult(movementOutcome.getResult());
 
-        return ActionExecutionResult.of(actionResult);
+        return ActionExecutionResult.withBlockMovement(actionResult, movementOutcome);
     }
 
     private ActionResult toActionResult(MovementResult result) {
