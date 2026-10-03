@@ -1,10 +1,13 @@
 package ludo.output;
 
 import ludo.domain.model.Board;
+import ludo.domain.model.MysteryCell;
 import ludo.domain.model.Piece;
 import ludo.domain.model.Player;
+import ludo.service.MysteryCellService;
 import ludo.domain.enums.Direction;
 import ludo.domain.enums.PieceEffect;
+import ludo.domain.enums.PieceState;
 import ludo.domain.enums.TeleportDestination;
 
 import java.util.List;
@@ -208,10 +211,68 @@ public class ConsoleGameOutput implements GameOutput {
     }
 
     @Override
+    public void showPlayerPieceCount(Player player) {
+        validatePlayer(player);
+
+        long piecesOnBoard = player.getPieces().stream()
+                .filter(this::isOnBoard)
+                .count();
+
+        long piecesInBase = player.getPieces().stream()
+                .filter(piece -> piece.getState() == PieceState.BASE)
+                .count();
+
+        System.out.println(getColourName(player) + " player now has " + piecesOnBoard + "/4 on pieces on the board and "
+                + piecesInBase + "/4 pieces on the base.");
+    }
+
+    private boolean isOnBoard(Piece piece) {
+        return piece.getState() == PieceState.STANDARD_PATH || piece.getState() == PieceState.HOME_STRAIGHT;
+    }
+
+    @Override
+    public void showPieceLocations(Player player) {
+        validatePlayer(player);
+
+        System.out.println("============================");
+        System.out.println("Location of pieces " + getColourName(player));
+        System.out.println("============================");
+
+        for (Piece piece : player.getPieces()) {
+            System.out.println("Piece " + piece.getName() + " -> " + formatPieceLocation(piece) + ".");
+        }
+    }
+
+    @Override
+    public void showMysteryCellStatus(MysteryCell mysteryCell) {
+        if (mysteryCell == null) {
+            throw new IllegalArgumentException("Mystery Cell cannot be null.");
+        }
+
+        if (!mysteryCell.isActive()) {
+            return;
+        }
+
+        int remainingRounds = MysteryCellService.ACTIVE_ROUNDS_BEFORE_RELOCATION - mysteryCell.getRoundsActive();
+
+        System.out.println("The mystery cell is at " + mysteryCell.getPosition()
+                + " and will be at that location for the next " + remainingRounds + " values");
+    }
+
+    @Override
     public void showWinner(Player player) {
         validatePlayer(player);
 
         System.out.println(getColourName(player) + " player wins!!!");
+    }
+
+    private String formatPieceLocation(Piece piece) {
+        return switch (piece.getState()) {
+            case BASE -> "Base";
+            case STANDARD_PATH -> String.valueOf(piece.getPosition());
+            case HOME_STRAIGHT -> getColourName(piece) + "homepath[" + piece.getPosition() + "]";
+            case HOME -> "Home";
+        };
     }
 
     private void validateStandardPathPosition(int position) {
