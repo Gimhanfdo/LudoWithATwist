@@ -16,6 +16,9 @@ import ludo.factory.PlayerStrategyFactory;
 import ludo.observer.MysteryCellRoundObserver;
 import ludo.observer.PieceEffectRoundObserver;
 import ludo.observer.RoundNotifier;
+import ludo.output.ActionReporter;
+import ludo.output.ConsoleGameOutput;
+import ludo.output.GameOutput;
 import ludo.random.*;
 import ludo.service.*;
 import ludo.strategy.effect.EnergisedMovementStrategy;
@@ -26,8 +29,6 @@ import ludo.strategy.player.GreenStrategy;
 import ludo.strategy.player.RedStrategy;
 import ludo.strategy.player.YellowStrategy;
 import ludo.strategy.teleport.*;
-import ludo.output.ConsoleGameOutput;
-import ludo.output.GameOutput;
 
 import java.util.List;
 
@@ -42,13 +43,16 @@ public class LudoApplication {
 
         // Domain
         Board board = new Board();
+
         Player red = new Player(Colour.RED);
         Player green = new Player(Colour.GREEN);
         Player yellow = new Player(Colour.YELLOW);
         Player blue = new Player(Colour.BLUE);
+
         GameState gameState = new GameState(List.of(red, green, yellow, blue));
         MysteryCell mysteryCell = new MysteryCell();
 
+        // Output
         GameOutput gameOutput = new ConsoleGameOutput();
 
         // Random implementations
@@ -59,14 +63,12 @@ public class LudoApplication {
         TeleportDestinationSelector destinationSelector = new RandomTeleportDestinationSelector();
         AlphaEffectSelector alphaEffectSelector = new RandomAlphaEffectSelector();
         ActionSelector actionSelector = new RandomActionSelector();
-
         FirstPlayerSelector firstPlayerSelector = new FirstPlayerSelector(dice, gameOutput);
 
         // Movement effects
         MovementEffectStrategy energisedMovementStrategy = new EnergisedMovementStrategy();
         MovementEffectStrategy sickMovementStrategy = new SickMovementStrategy();
-        PieceEffectService pieceEffectService = new PieceEffectService(
-                List.of(energisedMovementStrategy, sickMovementStrategy));
+        PieceEffectService pieceEffectService = new PieceEffectService(List.of(energisedMovementStrategy, sickMovementStrategy));
 
         // Core movement services
         MoveExecutor moveExecutor = new MoveExecutor(board, coin);
@@ -90,57 +92,47 @@ public class LudoApplication {
 
         MysteryTeleportService mysteryTeleportService = new MysteryTeleportService(
                 destinationSelector,
-                List.of(alphaTeleportStrategy, betaTeleportStrategy, gammaTeleportStrategy,
-                        baseTeleportStrategy, xTeleportStrategy, approachTeleportStrategy));
+                List.of(alphaTeleportStrategy, betaTeleportStrategy, gammaTeleportStrategy, baseTeleportStrategy, xTeleportStrategy, approachTeleportStrategy));
 
         MysteryLandingService mysteryLandingService = new MysteryLandingService(mysteryCell, mysteryTeleportService);
 
         // Movement coordination
-        MovementCoordinator movementCoordinator = new MovementCoordinator(
-                movementService, pieceEffectService, mysteryLandingService);
+        MovementCoordinator movementCoordinator = new MovementCoordinator(movementService, pieceEffectService, mysteryLandingService);
 
         // Action analysis and generation
-        ActionAnalyzer actionAnalyzer = new ActionAnalyzer(
-                gameState, pieceEffectService, blockService, destinationCalculator, board, mysteryCell);
-
-        LegalActionGenerator legalActionGenerator = new LegalActionGenerator(
-                pieceEffectService, blockService, moveValidator);
+        ActionAnalyzer actionAnalyzer = new ActionAnalyzer(gameState, pieceEffectService, blockService, destinationCalculator, board, mysteryCell);
+        LegalActionGenerator legalActionGenerator = new LegalActionGenerator(pieceEffectService, blockService, moveValidator);
 
         // Player strategies
         RedStrategy redStrategy = new RedStrategy(actionAnalyzer, board);
         GreenStrategy greenStrategy = new GreenStrategy(actionAnalyzer);
         YellowStrategy yellowStrategy = new YellowStrategy(actionAnalyzer);
         BlueStrategy blueStrategy = new BlueStrategy(actionAnalyzer, actionSelector);
-
-        PlayerStrategyFactory playerStrategyFactory = new PlayerStrategyFactory(
-                redStrategy, greenStrategy, yellowStrategy, blueStrategy);
+        PlayerStrategyFactory playerStrategyFactory = new PlayerStrategyFactory(redStrategy, greenStrategy, yellowStrategy, blueStrategy);
 
         // Commands
         EnterBoardCommand enterBoardCommand = new EnterBoardCommand(moveExecutor);
         MovePieceCommand movePieceCommand = new MovePieceCommand(movementCoordinator);
         MoveBlockCommand moveBlockCommand = new MoveBlockCommand(movementService);
+        GameActionCommandFactory commandFactory = new GameActionCommandFactory(enterBoardCommand, movePieceCommand, moveBlockCommand);
 
-        GameActionCommandFactory commandFactory = new GameActionCommandFactory(
-                enterBoardCommand, movePieceCommand, moveBlockCommand);
+        // Action reporting
+        ActionReporter actionReporter = new ActionReporter(gameState, gameOutput);
 
-        GameActionExecutor actionExecutor = new GameActionExecutor(commandFactory, gameState, gameOutput);
+        // Action execution
+        GameActionExecutor gameActionExecutor = new GameActionExecutor(commandFactory, actionReporter);
 
         // Turn rules
         ConsecutiveSixTracker consecutiveSixTracker = new ConsecutiveSixTracker();
         ForcedBlockBreakService forcedBlockBreakService = new ForcedBlockBreakService(blockService);
         BetaRollTracker betaRollTracker = new BetaRollTracker();
         BetaBriefingService betaBriefingService = new BetaBriefingService(betaRollTracker);
-
-        TurnManager turnManager = new TurnManager(
-                dice, legalActionGenerator, playerStrategyFactory, actionExecutor,
-                consecutiveSixTracker, forcedBlockBreakService, betaBriefingService, gameOutput);
+        TurnManager turnManager = new TurnManager(dice, legalActionGenerator, playerStrategyFactory, gameActionExecutor, consecutiveSixTracker, forcedBlockBreakService, betaBriefingService, gameOutput);
 
         // Round observers
         MysteryCellRoundObserver mysteryCellRoundObserver = new MysteryCellRoundObserver(mysteryCellService);
         PieceEffectRoundObserver pieceEffectRoundObserver = new PieceEffectRoundObserver(gameState, pieceEffectService);
-
-        RoundNotifier roundNotifier = new RoundNotifier(
-                List.of(mysteryCellRoundObserver, pieceEffectRoundObserver));
+        RoundNotifier roundNotifier = new RoundNotifier(List.of(mysteryCellRoundObserver, pieceEffectRoundObserver));
 
         // Game lifecycle
         GameCompletionService gameCompletionService = new GameCompletionService();
