@@ -5,6 +5,7 @@ import ludo.domain.enums.ActionType;
 import ludo.domain.enums.Colour;
 import ludo.domain.enums.Direction;
 import ludo.domain.model.ActionExecutionResult;
+import ludo.domain.model.BlockMovementOutcome;
 import ludo.domain.model.GameAction;
 import ludo.domain.model.GameState;
 import ludo.domain.model.MovementOutcome;
@@ -165,23 +166,59 @@ class ActionReporterTest {
     }
 
     @Test
-    void shouldReportEachCapturedPiece() {
-        Piece attacker = red.getPieces().get(0);
-        Piece opponentOne = blue.getPieces().get(0);
-        Piece opponentTwo = blue.getPieces().get(1);
+    void shouldNotReportOrdinaryBlockMovement() {
+        Piece firstPiece = red.getPieces().get(0);
+        Piece secondPiece = red.getPieces().get(1);
 
-        attacker.enterBoard(26, Direction.CLOCKWISE);
-        attacker.moveTo(30);
+        firstPiece.enterBoard(26, Direction.CLOCKWISE);
+        secondPiece.enterBoard(26, Direction.CLOCKWISE);
+        firstPiece.moveTo(23);
+        secondPiece.moveTo(23);
 
-        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(attacker), 4);
-        MovementOutcome movementOutcome = new MovementOutcome(MovementResult.CAPTURED, 4, 4, 26, 30, List.of(),
-                List.of(opponentOne, opponentTwo));
-        ActionExecutionResult result = ActionExecutionResult.withMovement(ActionResult.CAPTURED, movementOutcome);
+        List<Piece> block = List.of(firstPiece, secondPiece);
+        GameAction action = new GameAction(ActionType.MOVE_BLOCK, block, 6);
 
-        reporter.report(action, result, Direction.CLOCKWISE);
+        BlockMovementOutcome blockMovementOutcome = new BlockMovementOutcome(
+                MovementResult.MOVED, 3, 3, 20, 23, Direction.CLOCKWISE, block, List.of());
 
-        verify(gameOutput).showPieceCaptured(attacker, opponentOne, 30, 1, 15);
-        verify(gameOutput).showPieceCaptured(attacker, opponentTwo, 30, 1, 15);
+        ActionExecutionResult result = ActionExecutionResult.withBlockMovement(ActionResult.MOVED,
+                blockMovementOutcome);
+
+        reporter.report(action, result, null);
+
+        verifyNoInteractions(gameOutput);
+    }
+
+    @Test
+    void shouldReportBlockCapture() {
+        Piece redOne = red.getPieces().get(0);
+        Piece redTwo = red.getPieces().get(1);
+        Piece blueOne = blue.getPieces().get(0);
+        Piece blueTwo = blue.getPieces().get(1);
+
+        redOne.enterBoard(26, Direction.CLOCKWISE);
+        redTwo.enterBoard(26, Direction.CLOCKWISE);
+        redOne.moveTo(23);
+        redTwo.moveTo(23);
+
+        List<Piece> attackingBlock = List.of(redOne, redTwo);
+        List<Piece> capturedBlock = List.of(blueOne, blueTwo);
+
+        blueOne.reset();
+        blueTwo.reset();
+
+        GameAction action = new GameAction(ActionType.MOVE_BLOCK, attackingBlock, 6);
+
+        BlockMovementOutcome blockMovementOutcome = new BlockMovementOutcome(
+                MovementResult.CAPTURED, 3, 3, 20, 23, Direction.CLOCKWISE, attackingBlock, capturedBlock);
+
+        ActionExecutionResult result = ActionExecutionResult.withBlockMovement(ActionResult.CAPTURED,
+                blockMovementOutcome);
+
+        reporter.report(action, result, null);
+
+        verify(gameOutput).showPieceCaptured(redOne, blueOne, 23, 2, 14);
+        verify(gameOutput).showPieceCaptured(redOne, blueTwo, 23, 2, 14);
     }
 
     @Test

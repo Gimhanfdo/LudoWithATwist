@@ -1,10 +1,13 @@
 package ludo.output;
 
+import java.util.List;
+
 import ludo.domain.enums.ActionResult;
 import ludo.domain.enums.ActionType;
 import ludo.domain.enums.Direction;
 import ludo.domain.enums.PieceState;
 import ludo.domain.model.ActionExecutionResult;
+import ludo.domain.model.BlockMovementOutcome;
 import ludo.domain.model.GameAction;
 import ludo.domain.model.GameState;
 import ludo.domain.model.MovementOutcome;
@@ -37,12 +40,46 @@ public class ActionReporter {
             return;
         }
 
+        if (action.getType() == ActionType.MOVE_BLOCK && executionResult.hasBlockMovementOutcome()) {
+            reportBlockMovement(executionResult);
+            return;
+        }
+
         if (executionResult.getResult() == ActionResult.NOT_MOVED) {
             return;
         }
 
         if (action.getType() == ActionType.ENTER_BOARD) {
             reportEnteredBoard(action);
+        }
+    }
+
+    private void reportBlockMovement(ActionExecutionResult executionResult) {
+        BlockMovementOutcome blockMovementOutcome = executionResult.getBlockMovementOutcome();
+
+        if (!blockMovementOutcome.captured()) {
+            return;
+        }
+
+        reportBlockCapture(blockMovementOutcome);
+    }
+
+    private void reportBlockCapture(BlockMovementOutcome blockMovementOutcome) {
+        if (blockMovementOutcome.getCapturedPieces().isEmpty()) {
+            return;
+        }
+
+        List<Piece> movingPieces = blockMovementOutcome.getMovingPieces();
+
+        if (movingPieces.isEmpty()) {
+            return;
+        }
+
+        Piece attacker = movingPieces.get(0);
+
+        for (Piece capturedPiece : blockMovementOutcome.getCapturedPieces()) {
+            gameOutput.showPieceCaptured(attacker, capturedPiece, blockMovementOutcome.getToPosition(),
+                    countPiecesOnBoard(), countPiecesInBase());
         }
     }
 
