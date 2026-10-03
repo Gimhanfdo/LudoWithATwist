@@ -42,5 +42,7 @@ public interface GameOutput {
 
     void showGammaRedirectedToBeta(Piece piece);
 
+    void showMysteryCellSpawned(int position);
+
     void showWinner(Player player);
 }
