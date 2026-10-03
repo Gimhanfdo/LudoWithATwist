@@ -2,8 +2,10 @@ package ludo.command;
 
 import ludo.domain.enums.ActionResult;
 import ludo.domain.enums.ActionType;
+import ludo.domain.model.ActionExecutionResult;
 import ludo.domain.model.GameAction;
 import ludo.domain.model.Piece;
+import ludo.domain.model.ActionExecutionResult;
 import ludo.service.MoveExecutor;
 
 public class EnterBoardCommand implements GameActionCommand {
@@ -19,13 +21,15 @@ public class EnterBoardCommand implements GameActionCommand {
     }
 
     @Override
-    public ActionResult execute(GameAction action) {
+    public ActionExecutionResult execute(GameAction action) {
         validateAction(action);
 
         Piece piece = action.getPieces().get(0);
         boolean moved = moveExecutor.moveFromBase(piece, action.getRoll());
 
-        return moved ? ActionResult.MOVED : ActionResult.NOT_MOVED;
+        ActionResult result = moved ? ActionResult.MOVED : ActionResult.NOT_MOVED;
+
+        return ActionExecutionResult.of(result);
     }
 
     private void validateAction(GameAction action) {

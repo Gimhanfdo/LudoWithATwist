@@ -3,6 +3,7 @@ package ludo.command;
 import ludo.domain.enums.ActionResult;
 import ludo.domain.enums.ActionType;
 import ludo.domain.enums.Colour;
+import ludo.domain.model.ActionExecutionResult;
 import ludo.domain.model.GameAction;
 import ludo.domain.model.Piece;
 import ludo.service.MoveExecutor;
@@ -33,9 +34,10 @@ class EnterBoardCommandTest {
 
         when(moveExecutor.moveFromBase(piece, 6)).thenReturn(true);
 
-        ActionResult result = command.execute(action);
+        ActionExecutionResult result = command.execute(action);
 
-        assertEquals(ActionResult.MOVED, result);
+        assertEquals(ActionResult.MOVED, result.getResult());
+        assertFalse(result.hasMovementOutcome());
         verify(moveExecutor).moveFromBase(piece, 6);
     }
 
@@ -46,9 +48,10 @@ class EnterBoardCommandTest {
 
         when(moveExecutor.moveFromBase(piece, 6)).thenReturn(false);
 
-        ActionResult result = command.execute(action);
+        ActionExecutionResult result = command.execute(action);
 
-        assertEquals(ActionResult.NOT_MOVED, result);
+        assertEquals(ActionResult.NOT_MOVED, result.getResult());
+        assertFalse(result.hasMovementOutcome());
     }
 
     @Test
