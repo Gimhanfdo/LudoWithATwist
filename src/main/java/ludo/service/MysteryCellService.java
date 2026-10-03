@@ -8,7 +8,7 @@ import ludo.domain.enums.PieceState;
 public class MysteryCellService {
 
     private static final int INITIAL_SPAWN_ROUND = 2;
-    private static final int ACTIVE_ROUNDS_BEFORE_RELOCATION = 4;
+    public static final int ACTIVE_ROUNDS_BEFORE_RELOCATION = 4;
 
     private final MysteryCell mysteryCell;
     private final MysteryPositionSelector positionSelector;
