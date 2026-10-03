@@ -1,7 +1,11 @@
 package ludo.service;
 
 import ludo.domain.enums.Colour;
+import ludo.domain.enums.Direction;
+import ludo.domain.enums.PieceEffect;
+import ludo.domain.enums.PieceState;
 import ludo.domain.enums.TeleportDestination;
+import ludo.domain.model.MysteryTeleportOutcome;
 import ludo.domain.model.Piece;
 import ludo.random.TeleportDestinationSelector;
 import ludo.strategy.teleport.TeleportStrategy;
@@ -31,45 +35,71 @@ class MysteryTeleportServiceTest {
         when(betaStrategy.getDestination()).thenReturn(TeleportDestination.BETA);
 
         teleportService = new MysteryTeleportService(
-                destinationSelector,
-                List.of(alphaStrategy, betaStrategy));
+                destinationSelector, List.of(alphaStrategy, betaStrategy));
     }
 
     @Test
     void shouldUseStrategyForSelectedDestination() {
-        Piece piece = new Piece(Colour.RED, 1);
+        Piece piece = createPiece(Colour.RED);
 
         when(destinationSelector.selectDestination()).thenReturn(TeleportDestination.ALPHA);
 
-        TeleportDestination destination = teleportService.teleport(piece);
+        MysteryTeleportOutcome outcome = teleportService.teleport(piece);
 
-        assertEquals(TeleportDestination.ALPHA, destination);
+        assertEquals(TeleportDestination.ALPHA, outcome.getSelectedDestination());
+        assertEquals(PieceState.STANDARD_PATH, outcome.getFinalState());
+        assertEquals(26, outcome.getFinalPosition());
+        assertEquals(Direction.CLOCKWISE, outcome.getPreviousDirection());
+        assertEquals(Direction.CLOCKWISE, outcome.getFinalDirection());
+        assertEquals(PieceEffect.NONE, outcome.getFinalEffect());
+
         verify(alphaStrategy).teleport(piece);
         verify(betaStrategy, never()).teleport(piece);
     }
 
     @Test
     void shouldUseDifferentStrategyForDifferentDestination() {
-        Piece piece = new Piece(Colour.BLUE, 1);
+        Piece piece = createPiece(Colour.BLUE);
 
         when(destinationSelector.selectDestination()).thenReturn(TeleportDestination.BETA);
 
-        TeleportDestination destination = teleportService.teleport(piece);
+        MysteryTeleportOutcome outcome = teleportService.teleport(piece);
 
-        assertEquals(TeleportDestination.BETA, destination);
+        assertEquals(TeleportDestination.BETA, outcome.getSelectedDestination());
+
         verify(betaStrategy).teleport(piece);
         verify(alphaStrategy, never()).teleport(piece);
     }
 
     @Test
+    void shouldCaptureStateAfterStrategyExecution() {
+        Piece piece = createPiece(Colour.RED);
+
+        when(destinationSelector.selectDestination()).thenReturn(TeleportDestination.ALPHA);
+        doAnswer(invocation -> {
+            piece.teleportToStandardPath(8);
+            piece.applyEffect(PieceEffect.ENERGISED, 4);
+            return null;
+        }).when(alphaStrategy).teleport(piece);
+
+        MysteryTeleportOutcome outcome = teleportService.teleport(piece);
+
+        assertEquals(TeleportDestination.ALPHA, outcome.getSelectedDestination());
+        assertEquals(PieceState.STANDARD_PATH, outcome.getFinalState());
+        assertEquals(8, outcome.getFinalPosition());
+        assertEquals(Direction.CLOCKWISE, outcome.getPreviousDirection());
+        assertEquals(Direction.CLOCKWISE, outcome.getFinalDirection());
+        assertEquals(PieceEffect.ENERGISED, outcome.getFinalEffect());
+    }
+
+    @Test
     void shouldRejectDestinationWithoutRegisteredStrategy() {
-        Piece piece = new Piece(Colour.GREEN, 1);
+        Piece piece = createPiece(Colour.GREEN);
 
         when(destinationSelector.selectDestination()).thenReturn(TeleportDestination.GAMMA);
 
         IllegalStateException exception = assertThrows(
-                IllegalStateException.class,
-                () -> teleportService.teleport(piece));
+                IllegalStateException.class, () -> teleportService.teleport(piece));
 
         assertEquals("No teleport strategy registered for GAMMA.", exception.getMessage());
     }
@@ -88,9 +118,7 @@ class MysteryTeleportServiceTest {
         when(anotherAlphaStrategy.getDestination()).thenReturn(TeleportDestination.ALPHA);
 
         assertThrows(IllegalArgumentException.class,
-                () -> new MysteryTeleportService(
-                        destinationSelector,
-                        List.of(alphaStrategy, anotherAlphaStrategy)));
+                () -> new MysteryTeleportService(destinationSelector, List.of(alphaStrategy, anotherAlphaStrategy)));
     }
 
     @Test
@@ -124,5 +152,20 @@ class MysteryTeleportServiceTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> new MysteryTeleportService(destinationSelector, List.of(invalidStrategy)));
+    }
+
+    private Piece createPiece(Colour colour) {
+        Piece piece = new Piece(colour, 1);
+
+        int startPosition = switch (colour) {
+            case YELLOW -> 0;
+            case BLUE -> 13;
+            case RED -> 26;
+            case GREEN -> 39;
+        };
+
+        piece.enterBoard(startPosition, Direction.CLOCKWISE);
+
+        return piece;
     }
 }

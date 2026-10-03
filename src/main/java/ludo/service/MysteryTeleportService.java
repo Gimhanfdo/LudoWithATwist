@@ -1,6 +1,8 @@
 package ludo.service;
 
+import ludo.domain.enums.Direction;
 import ludo.domain.enums.TeleportDestination;
+import ludo.domain.model.MysteryTeleportOutcome;
 import ludo.domain.model.Piece;
 import ludo.random.TeleportDestinationSelector;
 import ludo.strategy.teleport.TeleportStrategy;
@@ -27,17 +29,19 @@ public class MysteryTeleportService {
         this.strategies = createStrategyMap(strategies);
     }
 
-    public TeleportDestination teleport(Piece piece) {
+    public MysteryTeleportOutcome teleport(Piece piece) {
         if (piece == null) {
             throw new IllegalArgumentException("Piece cannot be null.");
         }
 
         TeleportDestination destination = destinationSelector.selectDestination();
         TeleportStrategy strategy = getStrategy(destination);
+        Direction previousDirection = piece.getDirection();
 
         strategy.teleport(piece);
 
-        return destination;
+        return new MysteryTeleportOutcome(destination, piece.getState(), piece.getPosition(),
+                previousDirection, piece.getDirection(), piece.getEffect());
     }
 
     private Map<TeleportDestination, TeleportStrategy> createStrategyMap(List<TeleportStrategy> strategies) {
