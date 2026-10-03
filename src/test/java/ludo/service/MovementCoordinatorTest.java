@@ -2,8 +2,13 @@ package ludo.service;
 
 import ludo.domain.enums.Colour;
 import ludo.domain.enums.Direction;
+import ludo.domain.enums.PieceEffect;
+import ludo.domain.enums.PieceState;
+import ludo.domain.enums.TeleportDestination;
 import ludo.domain.model.MovementResult;
+import ludo.domain.model.MysteryTeleportOutcome;
 import ludo.domain.model.Piece;
+import ludo.domain.model.Board;
 import ludo.domain.model.MovementOutcome;
 import java.util.List;
 
@@ -275,15 +280,45 @@ class MovementCoordinatorTest {
     }
 
     @Test
-    void shouldResolveMysteryLandingAfterDetailedMovement() {
+    void shouldIncludeMysteryTeleportAfterDetailedMovement() {
         Piece piece = createPiece();
-        MovementOutcome expected = new MovementOutcome(MovementResult.MOVED, 4, 4, 26, 30, List.of(), List.of());
+
+        MovementOutcome movementOutcome = new MovementOutcome(
+                MovementResult.MOVED, 4, 4, 26, 30, List.of(), List.of());
+
+        MysteryTeleportOutcome mysteryOutcome = new MysteryTeleportOutcome(
+                TeleportDestination.ALPHA, PieceState.STANDARD_PATH, Board.ALPHA_POSITION,
+                Direction.CLOCKWISE, Direction.CLOCKWISE, PieceEffect.ENERGISED);
+
+        when(pieceEffectService.canMove(piece)).thenReturn(true);
+        when(pieceEffectService.calculateMovement(piece, 4)).thenReturn(4);
+        when(movementService.moveOnStandardPathDetailed(piece, 4)).thenReturn(movementOutcome);
+        when(mysteryLandingService.resolveLanding(piece)).thenReturn(mysteryOutcome);
+
+        MovementOutcome actual = coordinator.moveDetailed(piece, 4);
+
+        assertTrue(actual.hasMysteryTeleport());
+        assertSame(mysteryOutcome, actual.getMysteryTeleportOutcome());
+
+        verify(mysteryLandingService).resolveLanding(piece);
+    }
+
+    @Test
+    void shouldReturnOriginalOutcomeWhenDetailedMovementDoesNotLandOnMysteryCell() {
+        Piece piece = createPiece();
+
+        MovementOutcome expected = new MovementOutcome(
+                MovementResult.MOVED, 4, 4, 26, 30, List.of(), List.of());
 
         when(pieceEffectService.canMove(piece)).thenReturn(true);
         when(pieceEffectService.calculateMovement(piece, 4)).thenReturn(4);
         when(movementService.moveOnStandardPathDetailed(piece, 4)).thenReturn(expected);
+        when(mysteryLandingService.resolveLanding(piece)).thenReturn(null);
 
-        coordinator.moveDetailed(piece, 4);
+        MovementOutcome actual = coordinator.moveDetailed(piece, 4);
+
+        assertSame(expected, actual);
+        assertFalse(actual.hasMysteryTeleport());
 
         verify(mysteryLandingService).resolveLanding(piece);
     }

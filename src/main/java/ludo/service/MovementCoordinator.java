@@ -2,6 +2,7 @@ package ludo.service;
 
 import ludo.domain.enums.PieceState;
 import ludo.domain.model.MovementResult;
+import ludo.domain.model.MysteryTeleportOutcome;
 import ludo.domain.model.Piece;
 
 import java.util.List;
@@ -91,11 +92,17 @@ public class MovementCoordinator {
 
         MovementOutcome outcome = moveDetailedByState(piece, movementDistance);
 
-        if (outcome.getResult() != MovementResult.NOT_MOVED && piece.getState() == PieceState.STANDARD_PATH) {
-            mysteryLandingService.resolveLanding(piece);
+        if (outcome.getResult() == MovementResult.NOT_MOVED || piece.getState() != PieceState.STANDARD_PATH) {
+            return outcome;
         }
 
-        return outcome;
+        MysteryTeleportOutcome mysteryOutcome = mysteryLandingService.resolveLanding(piece);
+
+        if (mysteryOutcome == null) {
+            return outcome;
+        }
+
+        return outcome.withMysteryTeleport(mysteryOutcome);
     }
 
     private MovementOutcome moveDetailedByState(Piece piece, int movementDistance) {
