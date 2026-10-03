@@ -3,7 +3,9 @@ package ludo.command;
 import ludo.domain.enums.ActionResult;
 import ludo.domain.enums.ActionType;
 import ludo.domain.enums.Colour;
+import ludo.domain.model.ActionExecutionResult;
 import ludo.domain.model.GameAction;
+import ludo.domain.model.MovementOutcome;
 import ludo.domain.model.MovementResult;
 import ludo.domain.model.Piece;
 import ludo.service.MovementCoordinator;
@@ -31,36 +33,46 @@ class MovePieceCommandTest {
     void shouldReturnMovedWhenPieceMoves() {
         Piece piece = new Piece(Colour.YELLOW, 1);
         GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
+        MovementOutcome movementOutcome = new MovementOutcome(MovementResult.MOVED, 4, 4, 10, 14, List.of(), List.of());
 
-        when(movementCoordinator.move(piece, 4)).thenReturn(MovementResult.MOVED);
+        when(movementCoordinator.moveDetailed(piece, 4)).thenReturn(movementOutcome);
 
-        ActionResult result = command.execute(action);
+        ActionExecutionResult result = command.execute(action);
 
-        assertEquals(ActionResult.MOVED, result);
+        assertEquals(ActionResult.MOVED, result.getResult());
+        assertSame(movementOutcome, result.getMovementOutcome());
+        assertTrue(result.hasMovementOutcome());
     }
 
     @Test
     void shouldReturnCapturedWhenMovementCapturesOpponent() {
         Piece piece = new Piece(Colour.YELLOW, 1);
+        Piece opponent = new Piece(Colour.BLUE, 1);
         GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
+        MovementOutcome movementOutcome = new MovementOutcome(MovementResult.CAPTURED, 4, 4, 10, 14, List.of(), List.of(opponent));
 
-        when(movementCoordinator.move(piece, 4)).thenReturn(MovementResult.CAPTURED);
+        when(movementCoordinator.moveDetailed(piece, 4)).thenReturn(movementOutcome);
 
-        ActionResult result = command.execute(action);
+        ActionExecutionResult result = command.execute(action);
 
-        assertEquals(ActionResult.CAPTURED, result);
+        assertEquals(ActionResult.CAPTURED, result.getResult());
+        assertSame(movementOutcome, result.getMovementOutcome());
+        assertTrue(result.hasMovementOutcome());
     }
 
     @Test
     void shouldReturnNotMovedWhenMovementFails() {
         Piece piece = new Piece(Colour.YELLOW, 1);
         GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
+        MovementOutcome movementOutcome = new MovementOutcome(MovementResult.NOT_MOVED, 4, 0, 10, 10, List.of(), List.of());
 
-        when(movementCoordinator.move(piece, 4)).thenReturn(MovementResult.NOT_MOVED);
+        when(movementCoordinator.moveDetailed(piece, 4)).thenReturn(movementOutcome);
 
-        ActionResult result = command.execute(action);
+        ActionExecutionResult result = command.execute(action);
 
-        assertEquals(ActionResult.NOT_MOVED, result);
+        assertEquals(ActionResult.NOT_MOVED, result.getResult());
+        assertSame(movementOutcome, result.getMovementOutcome());
+        assertTrue(result.hasMovementOutcome());
     }
 
     @Test
@@ -75,6 +87,7 @@ class MovePieceCommandTest {
     @Test
     void shouldRejectNullAction() {
         assertThrows(IllegalArgumentException.class, () -> command.execute(null));
+        verifyNoInteractions(movementCoordinator);
     }
 
     @Test

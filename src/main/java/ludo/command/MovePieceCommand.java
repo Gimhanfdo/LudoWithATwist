@@ -2,7 +2,9 @@ package ludo.command;
 
 import ludo.domain.enums.ActionResult;
 import ludo.domain.enums.ActionType;
+import ludo.domain.model.ActionExecutionResult;
 import ludo.domain.model.GameAction;
+import ludo.domain.model.MovementOutcome;
 import ludo.domain.model.MovementResult;
 import ludo.domain.model.Piece;
 import ludo.service.MovementCoordinator;
@@ -20,21 +22,14 @@ public class MovePieceCommand implements GameActionCommand {
     }
 
     @Override
-    public ActionResult execute(GameAction action) {
+    public ActionExecutionResult execute(GameAction action) {
         validateAction(action);
 
         Piece piece = action.getPieces().get(0);
-        MovementResult result = movementCoordinator.move(piece, action.getRoll());
+        MovementOutcome movementOutcome = movementCoordinator.moveDetailed(piece, action.getRoll());
+        ActionResult actionResult = toActionResult(movementOutcome.getResult());
 
-        return toActionResult(result);
-    }
-
-    private ActionResult toActionResult(MovementResult result) {
-        return switch (result) {
-            case NOT_MOVED -> ActionResult.NOT_MOVED;
-            case MOVED -> ActionResult.MOVED;
-            case CAPTURED -> ActionResult.CAPTURED;
-        };
+        return ActionExecutionResult.withMovement(actionResult, movementOutcome);
     }
 
     private void validateAction(GameAction action) {
@@ -47,7 +42,15 @@ public class MovePieceCommand implements GameActionCommand {
         }
 
         if (action.getPieces().size() != 1) {
-            throw new IllegalArgumentException("Move piece action must contain one piece.");
+            throw new IllegalArgumentException("Move piece action must contain exactly one piece.");
         }
+    }
+
+    private ActionResult toActionResult(MovementResult movementResult) {
+        return switch (movementResult) {
+            case NOT_MOVED -> ActionResult.NOT_MOVED;
+            case MOVED -> ActionResult.MOVED;
+            case CAPTURED -> ActionResult.CAPTURED;
+        };
     }
 }
