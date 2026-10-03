@@ -87,6 +87,17 @@ public class ConsoleGameOutput implements GameOutput {
     }
 
     @Override
+    public void showPieceCaptured(Piece attacker, Piece capturedPiece, int position, int piecesOnBoard,
+            int piecesInBase) {
+        System.out.println(attacker.getColour().name().toLowerCase() + " piece " + attacker.getName() + " lands on square " + position
+                + ", captures " + capturedPiece.getColour().name().toLowerCase() + " piece " + capturedPiece.getName()
+                + ", and returns it to the base.");
+
+        System.out.println(
+                "There are " + piecesOnBoard + " pieces on the board and " + piecesInBase + " pieces in the base.");
+    }
+
+    @Override
     public void showWinner(Player player) {
         validatePlayer(player);
 
@@ -117,5 +128,26 @@ public class ConsoleGameOutput implements GameOutput {
         if (roll < 1 || roll > 6) {
             throw new IllegalArgumentException("Roll must be between 1 and 6.");
         }
+    }
+
+    @Override
+    public void showPieceBlocked(Piece piece, int fromPosition, int blockedPosition, Piece blockingPiece) {
+        System.out.println((piece.getColour().name().toLowerCase()) + " piece " + piece.getName()
+                + " is blocked from moving from " + fromPosition + " to " + blockedPosition + " by "
+                + (blockingPiece.getColour().name().toLowerCase()) + " piece " + blockingPiece.getName() + ".");
+    }
+
+    @Override
+    public void showBlockedPieceNotMoved(Piece piece) {
+        System.out.println((piece.getColour().name().toLowerCase())
+                + " does not have other pieces in the board to move instead of the blocked piece. "
+                + "Ignoring the throw and moving on to the next player.");
+    }
+
+    @Override
+    public void showBlockedPieceMoved(Piece piece, int position) {
+        System.out.println((piece.getColour().name().toLowerCase())
+                + " does not have other pieces in the board to move instead of the blocked piece. "
+                + "Moved the piece to square " + position + " which is the cell before the block.");
     }
 }
