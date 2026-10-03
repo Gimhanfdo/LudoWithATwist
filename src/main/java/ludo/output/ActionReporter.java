@@ -119,6 +119,7 @@ public class ActionReporter {
         MysteryTeleportOutcome mysteryOutcome = movementOutcome.getMysteryTeleportOutcome();
         TeleportDestination destination = mysteryOutcome.getSelectedDestination();
 
+        gameOutput.showMysteryLanding(piece, destination);
         gameOutput.showMysteryTeleport(piece, destination);
 
         switch (destination) {

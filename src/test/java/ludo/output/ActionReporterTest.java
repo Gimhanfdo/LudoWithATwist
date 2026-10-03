@@ -247,6 +247,7 @@ class ActionReporterTest {
         reporter.report(action, result, Direction.CLOCKWISE);
 
         verify(gameOutput).showPieceMoved(piece, 4, 8, 4, Direction.CLOCKWISE);
+        verify(gameOutput).showMysteryLanding(piece, TeleportDestination.ALPHA);
         verify(gameOutput).showMysteryTeleport(piece, TeleportDestination.ALPHA);
         verify(gameOutput).showAlphaEffect(piece, PieceEffect.ENERGISED);
     }
@@ -271,6 +272,7 @@ class ActionReporterTest {
 
         reporter.report(action, result, Direction.CLOCKWISE);
 
+        verify(gameOutput).showMysteryLanding(piece, TeleportDestination.BETA);
         verify(gameOutput).showMysteryTeleport(piece, TeleportDestination.BETA);
         verify(gameOutput).showBetaBriefing(piece);
     }
@@ -296,6 +298,7 @@ class ActionReporterTest {
 
         reporter.report(action, result, Direction.CLOCKWISE);
 
+        verify(gameOutput).showMysteryLanding(piece, TeleportDestination.GAMMA);
         verify(gameOutput).showMysteryTeleport(piece, TeleportDestination.GAMMA);
         verify(gameOutput).showGammaDirectionChanged(piece);
         verify(gameOutput, never()).showGammaRedirectedToBeta(any(Piece.class));
@@ -321,6 +324,7 @@ class ActionReporterTest {
 
         reporter.report(action, result, Direction.COUNTERCLOCKWISE);
 
+        verify(gameOutput).showMysteryLanding(piece, TeleportDestination.GAMMA);
         verify(gameOutput).showMysteryTeleport(piece, TeleportDestination.GAMMA);
         verify(gameOutput).showGammaRedirectedToBeta(piece);
         verify(gameOutput).showBetaBriefing(piece);
