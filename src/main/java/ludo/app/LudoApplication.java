@@ -130,7 +130,7 @@ public class LudoApplication {
         TurnManager turnManager = new TurnManager(dice, legalActionGenerator, playerStrategyFactory, gameActionExecutor, consecutiveSixTracker, forcedBlockBreakService, betaBriefingService, gameOutput);
 
         // Round observers
-        MysteryCellRoundObserver mysteryCellRoundObserver = new MysteryCellRoundObserver(mysteryCellService);
+        MysteryCellRoundObserver mysteryCellRoundObserver = new MysteryCellRoundObserver(mysteryCellService, gameOutput);
         PieceEffectRoundObserver pieceEffectRoundObserver = new PieceEffectRoundObserver(gameState, pieceEffectService);
         RoundNotifier roundNotifier = new RoundNotifier(List.of(mysteryCellRoundObserver, pieceEffectRoundObserver));
 
