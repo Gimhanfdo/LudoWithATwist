@@ -7,22 +7,13 @@ public class Movement {
     private final int toPosition;
     private final int distance;
 
-    public Movement(
-            Piece piece,
-            int fromPosition,
-            int toPosition,
-            int distance
-    ) {
+    public Movement(Piece piece, int fromPosition, int toPosition, int distance) {
         if (piece == null) {
-            throw new IllegalArgumentException(
-                    "Piece cannot be null."
-            );
+            throw new IllegalArgumentException("Piece cannot be null.");
         }
 
         if (distance <= 0) {
-            throw new IllegalArgumentException(
-                    "Move distance must be greater than zero."
-            );
+            throw new IllegalArgumentException("Move distance must be greater than zero.");
         }
 
         this.piece = piece;
