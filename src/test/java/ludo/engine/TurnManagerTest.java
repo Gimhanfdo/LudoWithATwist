@@ -363,4 +363,25 @@ class TurnManagerTest {
 
         verify(gameOutput, never()).showBriefingPieceReturnedToBase(any(Piece.class));
     }
+
+    @Test
+    void shouldGrantSingleBonusRollWhenSixCapturesOpponent() {
+        GameAction captureAction = new GameAction(
+                ActionType.MOVE_PIECE, List.of(player.getPieces().get(0)), 6);
+
+        List<GameAction> legalActions = List.of(captureAction);
+
+        when(dice.roll()).thenReturn(6, 2);
+        when(consecutiveSixTracker.recordRoll(player, 6)).thenReturn(false);
+        when(consecutiveSixTracker.recordRoll(player, 2)).thenReturn(false);
+        when(legalActionGenerator.generateActions(player, 6)).thenReturn(legalActions);
+        when(legalActionGenerator.generateActions(player, 2)).thenReturn(List.of());
+        when(strategyFactory.getStrategy(Colour.RED)).thenReturn(strategy);
+        when(strategy.chooseAction(player, legalActions)).thenReturn(captureAction);
+        when(actionExecutor.execute(captureAction)).thenReturn(ActionResult.CAPTURED);
+
+        turnManager.takeTurn(player);
+
+        verify(dice, times(2)).roll();
+    }
 }

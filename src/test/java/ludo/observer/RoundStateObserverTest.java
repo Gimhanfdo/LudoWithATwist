@@ -43,8 +43,8 @@ class RoundStateObserverTest {
         observer.onRoundCompleted();
 
         order.verify(gameOutput).showPlayerPieceCount(red);
-        order.verify(gameOutput).showPlayerPieceCount(green);
         order.verify(gameOutput).showPieceLocations(red);
+        order.verify(gameOutput).showPlayerPieceCount(green);
         order.verify(gameOutput).showPieceLocations(green);
         order.verify(gameOutput).showMysteryCellStatus(mysteryCell);
     }

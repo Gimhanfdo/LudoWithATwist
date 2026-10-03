@@ -41,8 +41,10 @@ class GameActionExecutorTest {
         Piece piece = new Piece(Colour.RED, 1);
         piece.enterBoard(26, Direction.CLOCKWISE);
         GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
-        MovementOutcome movementOutcome = new MovementOutcome(MovementResult.CAPTURED, 4, 4, 26, 30, List.of(), List.of());
-        ActionExecutionResult executionResult = ActionExecutionResult.withMovement(ActionResult.CAPTURED, movementOutcome);
+        MovementOutcome movementOutcome = new MovementOutcome(MovementResult.CAPTURED, 4, 4, 26, 30, List.of(),
+                List.of());
+        ActionExecutionResult executionResult = ActionExecutionResult.withMovement(ActionResult.CAPTURED,
+                movementOutcome);
 
         when(commandFactory.getCommand(ActionType.MOVE_PIECE)).thenReturn(command);
         when(command.execute(action)).thenReturn(executionResult);
@@ -68,6 +70,32 @@ class GameActionExecutorTest {
         executor.execute(action);
 
         verify(actionReporter).report(action, executionResult, Direction.CLOCKWISE);
+    }
+
+    @Test
+    void shouldPreserveDirectionFromBeforeCommandExecution() {
+        Piece piece = new Piece(Colour.RED, 1);
+        piece.enterBoard(26, Direction.CLOCKWISE);
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
+
+        MovementOutcome movementOutcome = new MovementOutcome(
+                MovementResult.MOVED, 4, 4, 26, 30, List.of(), List.of());
+
+        ActionExecutionResult executionResult = ActionExecutionResult.withMovement(ActionResult.MOVED, movementOutcome);
+
+        when(commandFactory.getCommand(ActionType.MOVE_PIECE)).thenReturn(command);
+
+        when(command.execute(action)).thenAnswer(invocation -> {
+            piece.changeDirection(Direction.COUNTERCLOCKWISE);
+            return executionResult;
+        });
+
+        executor.execute(action);
+
+        verify(actionReporter).report(action, executionResult, Direction.CLOCKWISE);
+
+        assertEquals(Direction.COUNTERCLOCKWISE, piece.getDirection());
     }
 
     @Test
