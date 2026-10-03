@@ -4,12 +4,17 @@ import ludo.domain.enums.ActionResult;
 import ludo.domain.enums.ActionType;
 import ludo.domain.enums.Colour;
 import ludo.domain.enums.Direction;
+import ludo.domain.enums.PieceEffect;
+import ludo.domain.enums.PieceState;
+import ludo.domain.enums.TeleportDestination;
 import ludo.domain.model.ActionExecutionResult;
 import ludo.domain.model.BlockMovementOutcome;
+import ludo.domain.model.Board;
 import ludo.domain.model.GameAction;
 import ludo.domain.model.GameState;
 import ludo.domain.model.MovementOutcome;
 import ludo.domain.model.MovementResult;
+import ludo.domain.model.MysteryTeleportOutcome;
 import ludo.domain.model.Piece;
 import ludo.domain.model.Player;
 
@@ -219,6 +224,107 @@ class ActionReporterTest {
 
         verify(gameOutput).showPieceCaptured(redOne, blueOne, 23, 2, 14);
         verify(gameOutput).showPieceCaptured(redOne, blueTwo, 23, 2, 14);
+    }
+
+    @Test
+    void shouldReportAlphaMysteryTeleportAndEffect() {
+        Piece piece = red.getPieces().get(0);
+        piece.enterBoard(26, Direction.CLOCKWISE);
+        piece.moveTo(Board.ALPHA_POSITION);
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
+
+        MysteryTeleportOutcome mysteryOutcome = new MysteryTeleportOutcome(
+                TeleportDestination.ALPHA, PieceState.STANDARD_PATH, Board.ALPHA_POSITION,
+                Direction.CLOCKWISE, Direction.CLOCKWISE, PieceEffect.ENERGISED);
+
+        MovementOutcome movementOutcome = new MovementOutcome(
+                MovementResult.MOVED, 4, 4, 4, 8, List.of(), List.of())
+                .withMysteryTeleport(mysteryOutcome);
+
+        ActionExecutionResult result = ActionExecutionResult.withMovement(ActionResult.MOVED, movementOutcome);
+
+        reporter.report(action, result, Direction.CLOCKWISE);
+
+        verify(gameOutput).showPieceMoved(piece, 4, 8, 4, Direction.CLOCKWISE);
+        verify(gameOutput).showMysteryTeleport(piece, TeleportDestination.ALPHA);
+        verify(gameOutput).showAlphaEffect(piece, PieceEffect.ENERGISED);
+    }
+
+    @Test
+    void shouldReportBetaMysteryTeleportAndBriefing() {
+        Piece piece = red.getPieces().get(0);
+        piece.enterBoard(26, Direction.CLOCKWISE);
+        piece.moveTo(Board.BETA_POSITION);
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
+
+        MysteryTeleportOutcome mysteryOutcome = new MysteryTeleportOutcome(
+                TeleportDestination.BETA, PieceState.STANDARD_PATH, Board.BETA_POSITION,
+                Direction.CLOCKWISE, Direction.CLOCKWISE, PieceEffect.BRIEFING);
+
+        MovementOutcome movementOutcome = new MovementOutcome(
+                MovementResult.MOVED, 4, 4, 10, 14, List.of(), List.of())
+                .withMysteryTeleport(mysteryOutcome);
+
+        ActionExecutionResult result = ActionExecutionResult.withMovement(ActionResult.MOVED, movementOutcome);
+
+        reporter.report(action, result, Direction.CLOCKWISE);
+
+        verify(gameOutput).showMysteryTeleport(piece, TeleportDestination.BETA);
+        verify(gameOutput).showBetaBriefing(piece);
+    }
+
+    @Test
+    void shouldReportGammaDirectionChangeForClockwisePiece() {
+        Piece piece = red.getPieces().get(0);
+        piece.enterBoard(26, Direction.CLOCKWISE);
+        piece.moveTo(Board.GAMMA_POSITION);
+        piece.changeDirection(Direction.COUNTERCLOCKWISE);
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
+
+        MysteryTeleportOutcome mysteryOutcome = new MysteryTeleportOutcome(
+                TeleportDestination.GAMMA, PieceState.STANDARD_PATH, Board.GAMMA_POSITION,
+                Direction.CLOCKWISE, Direction.COUNTERCLOCKWISE, PieceEffect.NONE);
+
+        MovementOutcome movementOutcome = new MovementOutcome(
+                MovementResult.MOVED, 4, 4, 10, 14, List.of(), List.of())
+                .withMysteryTeleport(mysteryOutcome);
+
+        ActionExecutionResult result = ActionExecutionResult.withMovement(ActionResult.MOVED, movementOutcome);
+
+        reporter.report(action, result, Direction.CLOCKWISE);
+
+        verify(gameOutput).showMysteryTeleport(piece, TeleportDestination.GAMMA);
+        verify(gameOutput).showGammaDirectionChanged(piece);
+        verify(gameOutput, never()).showGammaRedirectedToBeta(any(Piece.class));
+    }
+
+    @Test
+    void shouldReportGammaRedirectToBetaForCounterclockwisePiece() {
+        Piece piece = red.getPieces().get(0);
+        piece.enterBoard(26, Direction.COUNTERCLOCKWISE);
+        piece.moveTo(Board.BETA_POSITION);
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
+
+        MysteryTeleportOutcome mysteryOutcome = new MysteryTeleportOutcome(
+                TeleportDestination.GAMMA, PieceState.STANDARD_PATH, Board.BETA_POSITION,
+                Direction.COUNTERCLOCKWISE, Direction.COUNTERCLOCKWISE, PieceEffect.BRIEFING);
+
+        MovementOutcome movementOutcome = new MovementOutcome(
+                MovementResult.MOVED, 4, 4, 18, 14, List.of(), List.of())
+                .withMysteryTeleport(mysteryOutcome);
+
+        ActionExecutionResult result = ActionExecutionResult.withMovement(ActionResult.MOVED, movementOutcome);
+
+        reporter.report(action, result, Direction.COUNTERCLOCKWISE);
+
+        verify(gameOutput).showMysteryTeleport(piece, TeleportDestination.GAMMA);
+        verify(gameOutput).showGammaRedirectedToBeta(piece);
+        verify(gameOutput).showBetaBriefing(piece);
+        verify(gameOutput, never()).showGammaDirectionChanged(any(Piece.class));
     }
 
     @Test

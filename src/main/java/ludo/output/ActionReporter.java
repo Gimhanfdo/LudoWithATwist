@@ -5,13 +5,16 @@ import java.util.List;
 import ludo.domain.enums.ActionResult;
 import ludo.domain.enums.ActionType;
 import ludo.domain.enums.Direction;
+import ludo.domain.enums.PieceEffect;
 import ludo.domain.enums.PieceState;
+import ludo.domain.enums.TeleportDestination;
 import ludo.domain.model.ActionExecutionResult;
 import ludo.domain.model.BlockMovementOutcome;
 import ludo.domain.model.GameAction;
 import ludo.domain.model.GameState;
 import ludo.domain.model.MovementOutcome;
 import ludo.domain.model.MovementResult;
+import ludo.domain.model.MysteryTeleportOutcome;
 import ludo.domain.model.Piece;
 
 public class ActionReporter {
@@ -101,10 +104,53 @@ public class ActionReporter {
 
         if (movementOutcome.captured()) {
             reportCapture(piece, movementOutcome);
+        } else {
+            reportStandardMovement(piece, movementOutcome, previousDirection);
+        }
+
+        reportMysteryTeleport(piece, movementOutcome);
+    }
+
+    private void reportMysteryTeleport(Piece piece, MovementOutcome movementOutcome) {
+        if (!movementOutcome.hasMysteryTeleport()) {
             return;
         }
 
-        reportStandardMovement(piece, movementOutcome, previousDirection);
+        MysteryTeleportOutcome mysteryOutcome = movementOutcome.getMysteryTeleportOutcome();
+        TeleportDestination destination = mysteryOutcome.getSelectedDestination();
+
+        gameOutput.showMysteryTeleport(piece, destination);
+
+        switch (destination) {
+            case ALPHA -> reportAlphaEffect(piece, mysteryOutcome);
+            case BETA -> gameOutput.showBetaBriefing(piece);
+            case GAMMA -> reportGammaOutcome(piece, mysteryOutcome);
+            case BASE, X, APPROACH -> {
+            }
+        }
+    }
+
+    private void reportAlphaEffect(Piece piece, MysteryTeleportOutcome mysteryOutcome) {
+        PieceEffect effect = mysteryOutcome.getFinalEffect();
+
+        if (effect == PieceEffect.ENERGISED || effect == PieceEffect.SICK) {
+            gameOutput.showAlphaEffect(piece, effect);
+        }
+    }
+
+    private void reportGammaOutcome(Piece piece, MysteryTeleportOutcome mysteryOutcome) {
+        if (mysteryOutcome.getPreviousDirection() == Direction.CLOCKWISE) {
+            gameOutput.showGammaDirectionChanged(piece);
+            return;
+        }
+
+        if (mysteryOutcome.getPreviousDirection() == Direction.COUNTERCLOCKWISE) {
+            gameOutput.showGammaRedirectedToBeta(piece);
+
+            if (mysteryOutcome.getFinalEffect() == PieceEffect.BRIEFING) {
+                gameOutput.showBetaBriefing(piece);
+            }
+        }
     }
 
     private void reportCapture(Piece attacker, MovementOutcome movementOutcome) {
