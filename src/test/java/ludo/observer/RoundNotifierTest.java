@@ -6,8 +6,10 @@ import ludo.domain.enums.Colour;
 import ludo.domain.model.GameState;
 import ludo.domain.model.Piece;
 import ludo.domain.model.Player;
+import ludo.domain.model.MysteryCellUpdate;
 import ludo.service.MysteryCellService;
 import ludo.service.PieceEffectService;
+import ludo.output.GameOutput;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,10 +64,14 @@ class RoundNotifierTest {
     void shouldNotifyConcreteRoundObservers() {
         MysteryCellService mysteryCellService = mock(MysteryCellService.class);
         PieceEffectService pieceEffectService = mock(PieceEffectService.class);
+        GameOutput gameOutput = mock(GameOutput.class);
+
+        when(mysteryCellService.completeRound()).thenReturn(MysteryCellUpdate.none());
+
         Player red = new Player(Colour.RED);
         GameState gameState = new GameState(List.of(red));
 
-        RoundObserver mysteryObserver = new MysteryCellRoundObserver(mysteryCellService);
+        RoundObserver mysteryObserver = new MysteryCellRoundObserver(mysteryCellService, gameOutput);
         RoundObserver effectObserver = new PieceEffectRoundObserver(gameState, pieceEffectService);
         RoundNotifier notifier = new RoundNotifier(List.of(mysteryObserver, effectObserver));
 
