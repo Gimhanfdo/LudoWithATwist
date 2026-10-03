@@ -3,6 +3,8 @@ package ludo.output;
 import ludo.domain.model.Piece;
 import ludo.domain.model.Player;
 import ludo.domain.enums.Direction;
+import ludo.domain.enums.PieceEffect;
+import ludo.domain.enums.TeleportDestination;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -89,12 +91,77 @@ public class ConsoleGameOutput implements GameOutput {
     @Override
     public void showPieceCaptured(Piece attacker, Piece capturedPiece, int position, int piecesOnBoard,
             int piecesInBase) {
-        System.out.println(attacker.getColour().name().toLowerCase() + " piece " + attacker.getName() + " lands on square " + position
+        System.out.println(attacker.getColour().name().toLowerCase() + " piece " + attacker.getName()
+                + " lands on square " + position
                 + ", captures " + capturedPiece.getColour().name().toLowerCase() + " piece " + capturedPiece.getName()
                 + ", and returns it to the base.");
 
         System.out.println(
                 "There are " + piecesOnBoard + " pieces on the board and " + piecesInBase + " pieces in the base.");
+    }
+
+    @Override
+    public void showMysteryTeleport(Piece piece, TeleportDestination destination) {
+        validatePiece(piece);
+
+        if (destination == null) {
+            throw new IllegalArgumentException("Teleport destination cannot be null.");
+        }
+
+        String destinationName = switch (destination) {
+            case ALPHA -> "Alpha";
+            case BETA -> "Beta";
+            case GAMMA -> "Gamma";
+            case APPROACH -> "Approach";
+            case X -> "X";
+            case BASE -> "Base";
+        };
+
+        System.out.println(getColourName(piece) + " piece " + piece.getName()
+                + " teleported to " + destinationName + ".");
+    }
+
+    @Override
+    public void showAlphaEffect(Piece piece, PieceEffect effect) {
+        validatePiece(piece);
+
+        if (effect == PieceEffect.ENERGISED) {
+            System.out.println(getColourName(piece) + " piece " + piece.getName()
+                    + " feels energized, and movement speed doubles.");
+            return;
+        }
+
+        if (effect == PieceEffect.SICK) {
+            System.out.println(getColourName(piece) + " piece " + piece.getName()
+                    + " feels sick, and movement speed halves.");
+            return;
+        }
+
+        throw new IllegalArgumentException("Alpha effect must be ENERGISED or SICK.");
+    }
+
+    @Override
+    public void showBetaBriefing(Piece piece) {
+        validatePiece(piece);
+
+        System.out.println(getColourName(piece) + " piece " + piece.getName()
+                + " attends briefing and cannot move for four rounds.");
+    }
+
+    @Override
+    public void showGammaDirectionChanged(Piece piece) {
+        validatePiece(piece);
+
+        System.out.println("The " + getColourName(piece) + " piece " + piece.getName()
+                + ", which was moving clockwise, has changed to moving counterclockwise.");
+    }
+
+    @Override
+    public void showGammaRedirectedToBeta(Piece piece) {
+        validatePiece(piece);
+
+        System.out.println("The " + getColourName(piece) + " piece " + piece.getName()
+                + " is moving in a counterclockwise direction. Teleporting to Beta from Gamma.");
     }
 
     @Override
@@ -111,6 +178,16 @@ public class ConsoleGameOutput implements GameOutput {
     private void validatePlayer(Player player) {
         if (player == null) {
             throw new IllegalArgumentException("Player cannot be null.");
+        }
+    }
+
+    private String getColourName(Piece piece) {
+        return piece.getColour().name().toLowerCase();
+    }
+
+    private void validatePiece(Piece piece) {
+        if (piece == null) {
+            throw new IllegalArgumentException("Piece cannot be null.");
         }
     }
 
