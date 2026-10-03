@@ -1,9 +1,9 @@
 package ludo.service;
 
 import ludo.domain.enums.PieceState;
-import ludo.domain.enums.TeleportDestination;
 import ludo.domain.model.MysteryCell;
 import ludo.domain.model.Piece;
+import ludo.domain.model.MysteryTeleportOutcome;
 
 public class MysteryLandingService {
 
@@ -23,7 +23,7 @@ public class MysteryLandingService {
         this.teleportService = teleportService;
     }
 
-    public TeleportDestination resolveLanding(Piece piece) {
+    public MysteryTeleportOutcome resolveLanding(Piece piece) {
         validatePiece(piece);
 
         if (!hasLandedOnMysteryCell(piece)) {
