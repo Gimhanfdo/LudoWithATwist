@@ -11,8 +11,16 @@ public class MovementOutcome {
     private final Integer toPosition;
     private final List<Piece> blockingPieces;
     private final List<Piece> capturedPieces;
+    private final MysteryTeleportOutcome mysteryTeleportOutcome;
 
-    public MovementOutcome(MovementResult result, int requestedDistance, int actualDistance, Integer fromPosition, Integer toPosition, List<Piece> blockingPieces, List<Piece> capturedPieces) {
+    public MovementOutcome(MovementResult result, int requestedDistance, int actualDistance, Integer fromPosition,
+                           Integer toPosition, List<Piece> blockingPieces, List<Piece> capturedPieces) {
+        this(result, requestedDistance, actualDistance, fromPosition, toPosition, blockingPieces, capturedPieces, null);
+    }
+
+    private MovementOutcome(MovementResult result, int requestedDistance, int actualDistance, Integer fromPosition,
+                            Integer toPosition, List<Piece> blockingPieces, List<Piece> capturedPieces,
+                            MysteryTeleportOutcome mysteryTeleportOutcome) {
         if (result == null) {
             throw new IllegalArgumentException("Movement result cannot be null.");
         }
@@ -44,6 +52,16 @@ public class MovementOutcome {
         this.toPosition = toPosition;
         this.blockingPieces = List.copyOf(blockingPieces);
         this.capturedPieces = List.copyOf(capturedPieces);
+        this.mysteryTeleportOutcome = mysteryTeleportOutcome;
+    }
+
+    public MovementOutcome withMysteryTeleport(MysteryTeleportOutcome mysteryTeleportOutcome) {
+        if (mysteryTeleportOutcome == null) {
+            throw new IllegalArgumentException("Mystery teleport outcome cannot be null.");
+        }
+
+        return new MovementOutcome(result, requestedDistance, actualDistance, fromPosition, toPosition,
+                blockingPieces, capturedPieces, mysteryTeleportOutcome);
     }
 
     public MovementResult getResult() {
@@ -72,6 +90,14 @@ public class MovementOutcome {
 
     public List<Piece> getCapturedPieces() {
         return capturedPieces;
+    }
+
+    public MysteryTeleportOutcome getMysteryTeleportOutcome() {
+        return mysteryTeleportOutcome;
+    }
+
+    public boolean hasMysteryTeleport() {
+        return mysteryTeleportOutcome != null;
     }
 
     public boolean wasBlocked() {
