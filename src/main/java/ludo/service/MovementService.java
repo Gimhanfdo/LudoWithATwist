@@ -3,7 +3,9 @@ package ludo.service;
 import java.util.List;
 
 import ludo.domain.enums.Colour;
+import ludo.domain.enums.Direction;
 import ludo.domain.enums.PieceState;
+import ludo.domain.model.BlockMovementOutcome;
 import ludo.domain.model.GameState;
 import ludo.domain.model.MovementResult;
 import ludo.domain.model.Piece;
@@ -144,5 +146,44 @@ public class MovementService {
 
         return new MovementOutcome(captured ? MovementResult.CAPTURED : MovementResult.MOVED, distance, allowedDistance,
                 fromPosition, toPosition, blockingPieces, captured ? capturedPieces : List.of());
+    }
+
+    public BlockMovementOutcome moveBlockDetailed(int position, Colour colour, int diceValue) {
+        List<Piece> movingBlock = blockService.getBlockAt(position, colour);
+
+        if (movingBlock.isEmpty()) {
+            return new BlockMovementOutcome(MovementResult.NOT_MOVED, 0, 0, position, position, null, List.of(),
+                    List.of());
+        }
+
+        Direction direction = blockService.getBlockMovementDirection(position, colour);
+        int requestedDistance = blockService.getBlockMovementDistance(diceValue, movingBlock.size());
+
+        if (requestedDistance == 0) {
+            return new BlockMovementOutcome(MovementResult.NOT_MOVED, 0, 0, position, position, direction, movingBlock,
+                    List.of());
+        }
+
+        int allowedDistance = blockService.getAllowedBlockMovementDistance(position, colour, requestedDistance);
+
+        if (allowedDistance == 0) {
+            return new BlockMovementOutcome(MovementResult.NOT_MOVED, requestedDistance, 0, position, position,
+                    direction, movingBlock, List.of());
+        }
+
+        boolean moved = blockService.moveBlock(position, colour, diceValue);
+
+        if (!moved) {
+            return new BlockMovementOutcome(MovementResult.NOT_MOVED, requestedDistance, 0, position, position,
+                    direction, movingBlock, List.of());
+        }
+
+        int destination = movingBlock.get(0).getPosition();
+        List<Piece> capturedPieces = captureService.getCapturableBlockPieces(movingBlock, gameState);
+        boolean captured = captureService.resolveBlockCapture(movingBlock, gameState);
+
+        return new BlockMovementOutcome(captured ? MovementResult.CAPTURED : MovementResult.MOVED, requestedDistance,
+                allowedDistance,
+                position, destination, direction, movingBlock, captured ? capturedPieces : List.of());
     }
 }

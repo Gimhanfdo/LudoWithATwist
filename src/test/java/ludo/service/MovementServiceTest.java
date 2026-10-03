@@ -3,6 +3,7 @@ package ludo.service;
 import ludo.domain.enums.Colour;
 import ludo.domain.enums.Direction;
 import ludo.domain.enums.PieceState;
+import ludo.domain.model.BlockMovementOutcome;
 import ludo.domain.model.GameState;
 import ludo.domain.model.MovementOutcome;
 import ludo.domain.model.Piece;
@@ -426,5 +427,121 @@ class MovementServiceTest {
         assertEquals(List.of(opponent), outcome.getCapturedPieces());
         assertTrue(outcome.captured());
         assertEquals(PieceState.BASE, opponent.getState());
+    }
+
+    @Test
+    void shouldReturnDetailedOutcomeForBlockMovement() {
+        Piece firstPiece = new Piece(Colour.RED, 1);
+        Piece secondPiece = new Piece(Colour.RED, 2);
+
+        firstPiece.enterBoard(26, Direction.CLOCKWISE);
+        secondPiece.enterBoard(26, Direction.CLOCKWISE);
+        firstPiece.moveTo(20);
+        secondPiece.moveTo(20);
+
+        List<Piece> block = List.of(firstPiece, secondPiece);
+
+        when(blockService.getBlockAt(20, Colour.RED)).thenReturn(block);
+        when(blockService.getBlockMovementDirection(20, Colour.RED)).thenReturn(Direction.CLOCKWISE);
+        when(blockService.getBlockMovementDistance(6, 2)).thenReturn(3);
+        when(blockService.getAllowedBlockMovementDistance(20, Colour.RED, 3)).thenReturn(3);
+        when(blockService.moveBlock(20, Colour.RED, 6)).thenAnswer(invocation -> {
+            firstPiece.moveTo(23);
+            secondPiece.moveTo(23);
+            return true;
+        });
+        when(captureService.getCapturableBlockPieces(block, gameState)).thenReturn(List.of());
+        when(captureService.resolveBlockCapture(block, gameState)).thenReturn(false);
+
+        BlockMovementOutcome outcome = movementService.moveBlockDetailed(20, Colour.RED, 6);
+
+        assertEquals(MovementResult.MOVED, outcome.getResult());
+        assertEquals(3, outcome.getRequestedDistance());
+        assertEquals(3, outcome.getActualDistance());
+        assertEquals(20, outcome.getFromPosition());
+        assertEquals(23, outcome.getToPosition());
+        assertEquals(Direction.CLOCKWISE, outcome.getDirection());
+        assertEquals(block, outcome.getMovingPieces());
+        assertFalse(outcome.captured());
+    }
+
+    @Test
+    void shouldReturnDetailedOutcomeWhenBlockMovementIsShortened() {
+        Piece firstPiece = new Piece(Colour.RED, 1);
+        Piece secondPiece = new Piece(Colour.RED, 2);
+
+        firstPiece.enterBoard(26, Direction.CLOCKWISE);
+        secondPiece.enterBoard(26, Direction.CLOCKWISE);
+        firstPiece.moveTo(20);
+        secondPiece.moveTo(20);
+
+        List<Piece> block = List.of(firstPiece, secondPiece);
+
+        when(blockService.getBlockAt(20, Colour.RED)).thenReturn(block);
+        when(blockService.getBlockMovementDirection(20, Colour.RED)).thenReturn(Direction.CLOCKWISE);
+        when(blockService.getBlockMovementDistance(6, 2)).thenReturn(3);
+        when(blockService.getAllowedBlockMovementDistance(20, Colour.RED, 3)).thenReturn(2);
+        when(blockService.moveBlock(20, Colour.RED, 6)).thenAnswer(invocation -> {
+            firstPiece.moveTo(22);
+            secondPiece.moveTo(22);
+            return true;
+        });
+        when(captureService.getCapturableBlockPieces(block, gameState)).thenReturn(List.of());
+        when(captureService.resolveBlockCapture(block, gameState)).thenReturn(false);
+
+        BlockMovementOutcome outcome = movementService.moveBlockDetailed(20, Colour.RED, 6);
+
+        assertEquals(MovementResult.MOVED, outcome.getResult());
+        assertEquals(3, outcome.getRequestedDistance());
+        assertEquals(2, outcome.getActualDistance());
+        assertEquals(22, outcome.getToPosition());
+        assertTrue(outcome.wasShortened());
+    }
+
+    @Test
+    void shouldReturnCapturedPiecesInDetailedBlockOutcome() {
+        Piece redOne = new Piece(Colour.RED, 1);
+        Piece redTwo = new Piece(Colour.RED, 2);
+        Piece blueOne = new Piece(Colour.BLUE, 1);
+        Piece blueTwo = new Piece(Colour.BLUE, 2);
+
+        redOne.enterBoard(26, Direction.CLOCKWISE);
+        redTwo.enterBoard(26, Direction.CLOCKWISE);
+        blueOne.enterBoard(13, Direction.CLOCKWISE);
+        blueTwo.enterBoard(13, Direction.CLOCKWISE);
+
+        redOne.moveTo(20);
+        redTwo.moveTo(20);
+
+        List<Piece> attackingBlock = List.of(redOne, redTwo);
+        List<Piece> defendingBlock = List.of(blueOne, blueTwo);
+
+        when(blockService.getBlockAt(20, Colour.RED)).thenReturn(attackingBlock);
+        when(blockService.getBlockMovementDirection(20, Colour.RED)).thenReturn(Direction.CLOCKWISE);
+        when(blockService.getBlockMovementDistance(6, 2)).thenReturn(3);
+        when(blockService.getAllowedBlockMovementDistance(20, Colour.RED, 3)).thenReturn(3);
+        when(blockService.moveBlock(20, Colour.RED, 6)).thenAnswer(invocation -> {
+            redOne.moveTo(23);
+            redTwo.moveTo(23);
+            blueOne.moveTo(23);
+            blueTwo.moveTo(23);
+            return true;
+        });
+        when(captureService.getCapturableBlockPieces(attackingBlock, gameState)).thenReturn(defendingBlock);
+        when(captureService.resolveBlockCapture(attackingBlock, gameState)).thenAnswer(invocation -> {
+            blueOne.reset();
+            blueTwo.reset();
+            redOne.recordCapture();
+            redTwo.recordCapture();
+            return true;
+        });
+
+        BlockMovementOutcome outcome = movementService.moveBlockDetailed(20, Colour.RED, 6);
+
+        assertEquals(MovementResult.CAPTURED, outcome.getResult());
+        assertEquals(defendingBlock, outcome.getCapturedPieces());
+        assertTrue(outcome.captured());
+        assertEquals(PieceState.BASE, blueOne.getState());
+        assertEquals(PieceState.BASE, blueTwo.getState());
     }
 }
