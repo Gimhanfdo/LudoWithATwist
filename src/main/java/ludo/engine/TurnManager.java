@@ -2,6 +2,7 @@ package ludo.engine;
 
 import ludo.domain.enums.ActionResult;
 import ludo.domain.model.GameAction;
+import ludo.domain.model.Piece;
 import ludo.domain.model.Player;
 import ludo.factory.PlayerStrategyFactory;
 import ludo.random.Dice;
@@ -28,7 +29,8 @@ public class TurnManager {
 
     public TurnManager(Dice dice, LegalActionGenerator legalActionGenerator, PlayerStrategyFactory strategyFactory,
             GameActionExecutor actionExecutor, ConsecutiveSixTracker consecutiveSixTracker,
-            ForcedBlockBreakService forcedBlockBreakService, BetaBriefingService betaBriefingService, GameOutput gameOutput) {
+            ForcedBlockBreakService forcedBlockBreakService, BetaBriefingService betaBriefingService,
+            GameOutput gameOutput) {
         validateDependencies(dice, legalActionGenerator, strategyFactory, actionExecutor, consecutiveSixTracker,
                 forcedBlockBreakService, betaBriefingService, gameOutput);
 
@@ -57,7 +59,9 @@ public class TurnManager {
 
         gameOutput.showDiceRoll(player, roll);
 
-        betaBriefingService.recordRoll(player, roll);
+        List<Piece> returnedPieces = betaBriefingService.recordRoll(player, roll);
+
+        reportBriefingReturns(returnedPieces);
 
         boolean thirdConsecutiveSix = consecutiveSixTracker.recordRoll(player, roll);
 
@@ -69,6 +73,12 @@ public class TurnManager {
         ActionResult result = executeAction(player, roll);
 
         return roll == 6 || result == ActionResult.CAPTURED;
+    }
+
+    private void reportBriefingReturns(List<Piece> returnedPieces) {
+        for (Piece piece : returnedPieces) {
+            gameOutput.showBriefingPieceReturnedToBase(piece);
+        }
     }
 
     private ActionResult executeAction(Player player, int roll) {

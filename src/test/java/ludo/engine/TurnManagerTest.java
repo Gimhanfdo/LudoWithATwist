@@ -4,6 +4,7 @@ import ludo.domain.enums.ActionResult;
 import ludo.domain.enums.ActionType;
 import ludo.domain.enums.Colour;
 import ludo.domain.model.GameAction;
+import ludo.domain.model.Piece;
 import ludo.domain.model.Player;
 import ludo.factory.PlayerStrategyFactory;
 import ludo.random.Dice;
@@ -21,6 +22,8 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 class TurnManagerTest {
@@ -48,6 +51,9 @@ class TurnManagerTest {
         forcedBlockBreakService = mock(ForcedBlockBreakService.class);
         betaBriefingService = mock(BetaBriefingService.class);
         gameOutput = mock(GameOutput.class);
+
+        when(betaBriefingService.recordRoll(any(Player.class), anyInt()))
+                .thenReturn(List.of());
         turnManager = new TurnManager(dice, legalActionGenerator, strategyFactory, actionExecutor,
                 consecutiveSixTracker, forcedBlockBreakService, betaBriefingService, gameOutput);
         player = new Player(Colour.RED);
@@ -103,7 +109,8 @@ class TurnManagerTest {
     @Test
     void shouldRejectNullPlayer() {
         assertThrows(IllegalArgumentException.class, () -> turnManager.takeTurn(null));
-        verifyNoInteractions(dice, legalActionGenerator, strategyFactory, actionExecutor, consecutiveSixTracker, forcedBlockBreakService, betaBriefingService);
+        verifyNoInteractions(dice, legalActionGenerator, strategyFactory, actionExecutor, consecutiveSixTracker,
+                forcedBlockBreakService, betaBriefingService);
     }
 
     @Test
@@ -329,5 +336,31 @@ class TurnManagerTest {
         verify(betaBriefingService).recordRoll(player, 6);
         verify(betaBriefingService).recordRoll(player, 3);
         verify(dice, times(2)).roll();
+    }
+
+    @Test
+    void shouldReportBriefingPieceReturnedToBase() {
+        Piece piece = player.getPieces().get(0);
+
+        when(dice.roll()).thenReturn(3);
+        when(betaBriefingService.recordRoll(player, 3)).thenReturn(List.of(piece));
+        when(consecutiveSixTracker.recordRoll(player, 3)).thenReturn(false);
+        when(legalActionGenerator.generateActions(player, 3)).thenReturn(List.of());
+
+        turnManager.takeTurn(player);
+
+        verify(gameOutput).showBriefingPieceReturnedToBase(piece);
+    }
+
+    @Test
+    void shouldNotReportBriefingReturnWhenNoPieceReturnsToBase() {
+        when(dice.roll()).thenReturn(3);
+        when(betaBriefingService.recordRoll(player, 3)).thenReturn(List.of());
+        when(consecutiveSixTracker.recordRoll(player, 3)).thenReturn(false);
+        when(legalActionGenerator.generateActions(player, 3)).thenReturn(List.of());
+
+        turnManager.takeTurn(player);
+
+        verify(gameOutput, never()).showBriefingPieceReturnedToBase(any(Piece.class));
     }
 }
