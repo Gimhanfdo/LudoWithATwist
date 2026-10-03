@@ -32,6 +32,8 @@ public interface GameOutput {
 
     void showPieceCaptured(Piece attacker, Piece capturedPiece, int position, int piecesOnBoard, int piecesInBase);
 
+    void showMysteryLanding(Piece piece, TeleportDestination destination);
+
     void showMysteryTeleport(Piece piece, TeleportDestination destination);
 
     void showAlphaEffect(Piece piece, PieceEffect effect);
@@ -43,6 +45,8 @@ public interface GameOutput {
     void showGammaRedirectedToBeta(Piece piece);
 
     void showMysteryCellSpawned(int position);
+
+    void showBriefingPieceReturnedToBase(Piece piece);
 
     void showWinner(Player player);
 }
