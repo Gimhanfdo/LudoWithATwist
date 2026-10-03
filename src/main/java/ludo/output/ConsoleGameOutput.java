@@ -1,5 +1,6 @@
 package ludo.output;
 
+import ludo.domain.model.Board;
 import ludo.domain.model.Piece;
 import ludo.domain.model.Player;
 import ludo.domain.enums.Direction;
@@ -165,10 +166,45 @@ public class ConsoleGameOutput implements GameOutput {
     }
 
     @Override
+    public void showPieceBlocked(Piece piece, int fromPosition, int blockedPosition, Piece blockingPiece) {
+        System.out.println((piece.getColour().name().toLowerCase()) + " piece " + piece.getName()
+                + " is blocked from moving from " + fromPosition + " to " + blockedPosition + " by "
+                + (blockingPiece.getColour().name().toLowerCase()) + " piece " + blockingPiece.getName() + ".");
+    }
+
+    @Override
+    public void showBlockedPieceNotMoved(Piece piece) {
+        System.out.println((piece.getColour().name().toLowerCase())
+                + " does not have other pieces in the board to move instead of the blocked piece. "
+                + "Ignoring the throw and moving on to the next player.");
+    }
+
+    @Override
+    public void showBlockedPieceMoved(Piece piece, int position) {
+        System.out.println((piece.getColour().name().toLowerCase())
+                + " does not have other pieces in the board to move instead of the blocked piece. "
+                + "Moved the piece to square " + position + " which is the cell before the block.");
+    }
+
+    @Override
+    public void showMysteryCellSpawned(int position) {
+        validateStandardPathPosition(position);
+
+        System.out.println("A mystery cell has spawned in location " + position
+                + " and will be at this location for the next four rounds.");
+    }
+
+    @Override
     public void showWinner(Player player) {
         validatePlayer(player);
 
         System.out.println(getColourName(player) + " player wins!!!");
+    }
+
+    private void validateStandardPathPosition(int position) {
+        if (position < 0 || position >= Board.STANDARD_PATH_SIZE) {
+            throw new IllegalArgumentException("Position must be on the standard path.");
+        }
     }
 
     private String getColourName(Player player) {
@@ -205,26 +241,5 @@ public class ConsoleGameOutput implements GameOutput {
         if (roll < 1 || roll > 6) {
             throw new IllegalArgumentException("Roll must be between 1 and 6.");
         }
-    }
-
-    @Override
-    public void showPieceBlocked(Piece piece, int fromPosition, int blockedPosition, Piece blockingPiece) {
-        System.out.println((piece.getColour().name().toLowerCase()) + " piece " + piece.getName()
-                + " is blocked from moving from " + fromPosition + " to " + blockedPosition + " by "
-                + (blockingPiece.getColour().name().toLowerCase()) + " piece " + blockingPiece.getName() + ".");
-    }
-
-    @Override
-    public void showBlockedPieceNotMoved(Piece piece) {
-        System.out.println((piece.getColour().name().toLowerCase())
-                + " does not have other pieces in the board to move instead of the blocked piece. "
-                + "Ignoring the throw and moving on to the next player.");
-    }
-
-    @Override
-    public void showBlockedPieceMoved(Piece piece, int position) {
-        System.out.println((piece.getColour().name().toLowerCase())
-                + " does not have other pieces in the board to move instead of the blocked piece. "
-                + "Moved the piece to square " + position + " which is the cell before the block.");
     }
 }
