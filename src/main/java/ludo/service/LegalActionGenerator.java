@@ -17,7 +17,8 @@ public class LegalActionGenerator {
     private final BlockService blockService;
     private final MoveValidator moveValidator;
 
-    public LegalActionGenerator(PieceEffectService pieceEffectService, BlockService blockService, MoveValidator moveValidator) {
+    public LegalActionGenerator(PieceEffectService pieceEffectService, BlockService blockService,
+            MoveValidator moveValidator) {
         if (pieceEffectService == null) {
             throw new IllegalArgumentException("Piece effect service cannot be null.");
         }
@@ -45,9 +46,39 @@ public class LegalActionGenerator {
             addLegalAction(actions, piece, roll);
         }
 
+        removeRestrictedPieceMovesWhenAlternativeExists(actions);
         addBlockActions(actions, player, roll);
 
         return List.copyOf(actions);
+    }
+
+    private void removeRestrictedPieceMovesWhenAlternativeExists(List<GameAction> actions) {
+        boolean hasUnrestrictedPieceMove = actions.stream()
+                .filter(this::isPieceMove)
+                .anyMatch(action -> !isRestrictedByBlock(action));
+
+        if (!hasUnrestrictedPieceMove) {
+            return;
+        }
+
+        actions.removeIf(action -> isPieceMove(action) && isRestrictedByBlock(action));
+    }
+
+    private boolean isPieceMove(GameAction action) {
+        return action.getType() == ActionType.MOVE_PIECE;
+    }
+
+    private boolean isRestrictedByBlock(GameAction action) {
+        Piece piece = action.getPieces().get(0);
+
+        if (piece.getState() != PieceState.STANDARD_PATH) {
+            return false;
+        }
+
+        int movementDistance = pieceEffectService.calculateMovement(piece, action.getRoll());
+        int allowedDistance = blockService.getAllowedMovementDistance(piece, movementDistance);
+
+        return allowedDistance < movementDistance;
     }
 
     private void addIfValid(List<GameAction> actions, GameAction action) {

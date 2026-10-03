@@ -14,6 +14,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class LegalActionGeneratorTest {
@@ -250,6 +251,56 @@ class LegalActionGeneratorTest {
         List<GameAction> actions = generator.generateActions(player, 4);
 
         assertTrue(actions.stream().noneMatch(action -> action.getType() == ActionType.MOVE_PIECE));
+    }
+
+    @Test
+    void shouldExcludeRestrictedPieceMoveWhenAnotherPieceCanMoveFully() {
+        Player red = new Player(Colour.RED);
+        Piece restrictedPiece = red.getPieces().get(0);
+        Piece unrestrictedPiece = red.getPieces().get(1);
+
+        restrictedPiece.enterBoard(26, Direction.CLOCKWISE);
+        unrestrictedPiece.enterBoard(26, Direction.CLOCKWISE);
+        unrestrictedPiece.moveTo(10);
+
+        GameAction restrictedAction = new GameAction(ActionType.MOVE_PIECE, List.of(restrictedPiece), 6);
+        GameAction unrestrictedAction = new GameAction(ActionType.MOVE_PIECE, List.of(unrestrictedPiece), 6);
+
+        when(pieceEffectService.canMove(any(Piece.class))).thenReturn(true);
+        when(pieceEffectService.calculateMovement(any(Piece.class), eq(6))).thenReturn(6);
+        when(moveValidator.isValid(any(GameAction.class))).thenReturn(true);
+        when(blockService.getAllowedMovementDistance(restrictedPiece, 6)).thenReturn(3);
+        when(blockService.getAllowedMovementDistance(unrestrictedPiece, 6)).thenReturn(6);
+
+        List<GameAction> actions = generator.generateActions(red, 6);
+
+        assertFalse(actions.stream()
+                .anyMatch(action -> action.getType() == ActionType.MOVE_PIECE
+                        && action.getPieces().contains(restrictedPiece)));
+
+        assertTrue(actions.stream()
+                .anyMatch(action -> action.getType() == ActionType.MOVE_PIECE
+                        && action.getPieces().contains(unrestrictedPiece)));
+    }
+
+    @Test
+    void shouldKeepRestrictedPieceMoveWhenNoOtherPieceCanMoveFully() {
+        Player red = new Player(Colour.RED);
+        Piece piece = red.getPieces().get(0);
+        piece.enterBoard(26, Direction.CLOCKWISE);
+
+        when(pieceEffectService.canMove(piece)).thenReturn(true);
+        when(pieceEffectService.calculateMovement(piece, 4)).thenReturn(4);
+        when(moveValidator.isValid(any(GameAction.class))).thenAnswer(invocation -> {
+            GameAction action = invocation.getArgument(0);
+            return action.getType() == ActionType.MOVE_PIECE;
+        });
+        when(blockService.getAllowedMovementDistance(piece, 4)).thenReturn(2);
+
+        List<GameAction> actions = generator.generateActions(red, 4);
+
+        assertTrue(actions.stream()
+                .anyMatch(action -> action.getType() == ActionType.MOVE_PIECE && action.getPieces().contains(piece)));
     }
 
     @Test
