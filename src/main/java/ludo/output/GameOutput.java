@@ -22,5 +22,13 @@ public interface GameOutput {
 
     void showPieceMoved(Piece piece, int fromPosition, int toPosition, int distance, Direction direction);
 
+    void showPieceBlocked(Piece piece, int fromPosition, int blockedPosition, Piece blockingPiece);
+
+    void showBlockedPieceNotMoved(Piece piece);
+
+    void showBlockedPieceMoved(Piece piece, int position);
+
+    void showPieceCaptured(Piece attacker, Piece capturedPiece, int position, int piecesOnBoard, int piecesInBase);
+
     void showWinner(Player player);
 }
