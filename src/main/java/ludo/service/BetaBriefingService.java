@@ -1,5 +1,8 @@
 package ludo.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ludo.domain.enums.PieceEffect;
 import ludo.domain.model.Piece;
 import ludo.domain.model.Player;
@@ -16,10 +19,10 @@ public class BetaBriefingService {
         this.rollTracker = rollTracker;
     }
 
-    public boolean recordRoll(Player player, int roll) {
+    public List<Piece> recordRoll(Player player, int roll) {
         validatePlayer(player);
 
-        boolean pieceReturnedToBase = false;
+        List<Piece> returnedPieces = new ArrayList<>();
 
         for (Piece piece : player.getPieces()) {
             if (piece.getEffect() != PieceEffect.BRIEFING) {
@@ -29,25 +32,11 @@ public class BetaBriefingService {
 
             if (rollTracker.recordRoll(piece, roll)) {
                 piece.reset();
-                pieceReturnedToBase = true;
+                returnedPieces.add(piece);
             }
         }
 
-        return pieceReturnedToBase;
-    }
-
-    private boolean hasBriefingPiece(Player player) {
-        return player.getPieces()
-                .stream()
-                .anyMatch(piece -> piece.getEffect() == PieceEffect.BRIEFING);
-    }
-
-    private void returnBriefingPiecesToBase(Player player) {
-        for (Piece piece : player.getPieces()) {
-            if (piece.getEffect() == PieceEffect.BRIEFING) {
-                piece.reset();
-            }
-        }
+        return List.copyOf(returnedPieces);
     }
 
     private void validatePlayer(Player player) {

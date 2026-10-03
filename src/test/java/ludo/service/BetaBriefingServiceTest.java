@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.List;
+
 class BetaBriefingServiceTest {
 
     private BetaBriefingService service;
@@ -27,8 +29,8 @@ class BetaBriefingServiceTest {
         Player player = new Player(Colour.RED);
         Piece piece = prepareBriefingPiece(player);
 
-        service.recordRoll(player, 3);
-        service.recordRoll(player, 3);
+        assertTrue(service.recordRoll(player, 3).isEmpty());
+        assertTrue(service.recordRoll(player, 3).isEmpty());
 
         assertEquals(PieceState.STANDARD_PATH, piece.getState());
         assertEquals(PieceEffect.BRIEFING, piece.getEffect());
@@ -42,9 +44,9 @@ class BetaBriefingServiceTest {
         service.recordRoll(player, 3);
         service.recordRoll(player, 3);
 
-        boolean returnedToBase = service.recordRoll(player, 3);
+        List<Piece> returnedPieces = service.recordRoll(player, 3);
 
-        assertTrue(returnedToBase);
+        assertEquals(List.of(piece), returnedPieces);
         assertEquals(PieceState.BASE, piece.getState());
         assertNull(piece.getPosition());
         assertEquals(PieceEffect.NONE, piece.getEffect());
@@ -68,7 +70,7 @@ class BetaBriefingServiceTest {
     void shouldNotTrackRollsWithoutBriefingPiece() {
         Player player = new Player(Colour.RED);
 
-        assertFalse(service.recordRoll(player, 3));
+        assertTrue(service.recordRoll(player, 3).isEmpty());
     }
 
     @Test
@@ -119,8 +121,9 @@ class BetaBriefingServiceTest {
         new BetaTeleportStrategy().teleport(secondPiece);
 
         service.recordRoll(player, 3);
-        service.recordRoll(player, 3);
+        List<Piece> returnedPieces = service.recordRoll(player, 3);
 
+        assertEquals(List.of(firstPiece), returnedPieces);
         assertEquals(PieceState.BASE, firstPiece.getState());
         assertEquals(PieceState.STANDARD_PATH, secondPiece.getState());
         assertEquals(PieceEffect.BRIEFING, secondPiece.getEffect());
