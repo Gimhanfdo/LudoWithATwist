@@ -2,6 +2,7 @@ package ludo.service;
 
 import ludo.domain.model.GameState;
 import ludo.domain.model.MysteryCell;
+import ludo.domain.model.MysteryCellUpdate;
 import ludo.domain.model.Player;
 import ludo.domain.enums.Colour;
 import ludo.domain.enums.Direction;
@@ -49,7 +50,7 @@ class MysteryCellServiceTest {
 
     @Test
     void shouldNotActivateMysteryCellAfterFirstRound() {
-        
+
         placeRedPieceOnStandardPath();
         mysteryCellService.completeRound();
 
@@ -256,6 +257,61 @@ class MysteryCellServiceTest {
         verify(positionSelector, times(1)).selectPosition();
         verify(positionSelector, times(1)).selectPosition(10);
         verify(positionSelector, times(1)).selectPosition(20);
+    }
+
+    @Test
+    void shouldReturnNoChangeWhenNoPieceIsOnStandardPath() {
+        MysteryCellUpdate update = mysteryCellService.completeRound();
+
+        assertEquals(MysteryCellUpdate.Type.NONE, update.getType());
+        assertFalse(update.hasChanged());
+        assertNull(update.getPosition());
+    }
+
+    @Test
+    void shouldReturnNoChangeBeforeMysteryCellSpawns() {
+        placeRedPieceOnStandardPath();
+
+        MysteryCellUpdate update = mysteryCellService.completeRound();
+
+        assertEquals(MysteryCellUpdate.Type.NONE, update.getType());
+        assertFalse(update.hasChanged());
+    }
+
+    @Test
+    void shouldReturnSpawnedUpdateWhenMysteryCellActivates() {
+        placeRedPieceOnStandardPath();
+        when(positionSelector.selectPosition()).thenReturn(20);
+
+        mysteryCellService.completeRound();
+
+        MysteryCellUpdate update = mysteryCellService.completeRound();
+
+        assertEquals(MysteryCellUpdate.Type.SPAWNED, update.getType());
+        assertEquals(20, update.getPosition());
+        assertTrue(update.hasChanged());
+    }
+
+    @Test
+    void shouldReturnRelocatedUpdateAfterFourActiveRounds() {
+        placeRedPieceOnStandardPath();
+
+        when(positionSelector.selectPosition()).thenReturn(20);
+        when(positionSelector.selectPosition(20)).thenReturn(30);
+
+        mysteryCellService.completeRound();
+        mysteryCellService.completeRound();
+
+        mysteryCellService.completeRound();
+        mysteryCellService.completeRound();
+        mysteryCellService.completeRound();
+
+        MysteryCellUpdate update = mysteryCellService.completeRound();
+
+        assertEquals(MysteryCellUpdate.Type.RELOCATED, update.getType());
+        assertEquals(30, update.getPosition());
+
+        assertTrue(update.hasChanged());
     }
 
     @Test

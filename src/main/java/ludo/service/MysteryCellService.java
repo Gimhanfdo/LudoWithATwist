@@ -2,6 +2,7 @@ package ludo.service;
 
 import ludo.domain.model.GameState;
 import ludo.domain.model.MysteryCell;
+import ludo.domain.model.MysteryCellUpdate;
 import ludo.domain.enums.PieceState;
 
 public class MysteryCellService {
@@ -34,21 +35,22 @@ public class MysteryCellService {
         this.completedRounds = 0;
     }
 
-    public void completeRound() {
+    public MysteryCellUpdate completeRound() {
         if (!hasPieceOnStandardPath() && !mysteryCell.isActive()) {
-            return;
+            return MysteryCellUpdate.none();
         }
 
         completedRounds++;
 
         if (shouldActivateMysteryCell()) {
-            activateMysteryCell();
-            return;
+            return activateMysteryCell();
         }
 
         if (mysteryCell.isActive()) {
-            updateActiveMysteryCell();
+            return updateActiveMysteryCell();
         }
+
+        return MysteryCellUpdate.none();
     }
 
     private boolean hasPieceOnStandardPath() {
@@ -57,24 +59,27 @@ public class MysteryCellService {
                 .anyMatch(piece -> piece.getState() == PieceState.STANDARD_PATH);
     }
 
-    private void updateActiveMysteryCell() {
-
+    private MysteryCellUpdate updateActiveMysteryCell() {
         mysteryCell.completeRound();
 
         if (shouldRelocateMysteryCell()) {
-            relocateMysteryCell();
+            return relocateMysteryCell();
         }
+
+        return MysteryCellUpdate.none();
     }
 
     private boolean shouldRelocateMysteryCell() {
         return mysteryCell.getRoundsActive() == ACTIVE_ROUNDS_BEFORE_RELOCATION;
     }
 
-    private void relocateMysteryCell() {
+    private MysteryCellUpdate relocateMysteryCell() {
         int currentPosition = mysteryCell.getPosition();
         int newPosition = positionSelector.selectPosition(currentPosition);
 
         mysteryCell.activate(newPosition);
+
+        return MysteryCellUpdate.relocated(newPosition);
     }
 
     public int getCompletedRounds() {
@@ -85,8 +90,10 @@ public class MysteryCellService {
         return completedRounds == INITIAL_SPAWN_ROUND && !mysteryCell.isActive();
     }
 
-    private void activateMysteryCell() {
+    private MysteryCellUpdate activateMysteryCell() {
         int position = positionSelector.selectPosition();
         mysteryCell.activate(position);
+
+        return MysteryCellUpdate.spawned(position);
     }
 }
