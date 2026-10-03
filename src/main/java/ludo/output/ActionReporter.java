@@ -99,10 +99,7 @@ public class ActionReporter {
 
         if (movementOutcome.wasBlocked()) {
             reportBlockedMovement(piece, movementOutcome);
-            return;
-        }
-
-        if (movementOutcome.captured()) {
+        } else if (movementOutcome.captured()) {
             reportCapture(piece, movementOutcome);
         } else {
             reportStandardMovement(piece, movementOutcome, previousDirection);
@@ -172,10 +169,6 @@ public class ActionReporter {
 
         if (previousDirection == null || movementOutcome.getFromPosition() == null
                 || movementOutcome.getToPosition() == null) {
-            return;
-        }
-
-        if (piece.getState() != PieceState.STANDARD_PATH) {
             return;
         }
 

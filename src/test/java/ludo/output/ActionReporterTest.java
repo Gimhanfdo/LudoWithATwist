@@ -332,6 +332,69 @@ class ActionReporterTest {
     }
 
     @Test
+    void shouldReportMovementBeforeMysteryTeleportToBase() {
+        Piece piece = red.getPieces().get(0);
+
+        piece.enterBoard(26, Direction.CLOCKWISE);
+        piece.moveTo(25);
+        piece.reset();
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 5);
+
+        MysteryTeleportOutcome mysteryOutcome = new MysteryTeleportOutcome(
+                TeleportDestination.BASE, PieceState.BASE, null,
+                Direction.CLOCKWISE, null, PieceEffect.NONE);
+
+        MovementOutcome movementOutcome = new MovementOutcome(
+                MovementResult.MOVED, 5, 5, 20, 25, List.of(), List.of())
+                .withMysteryTeleport(mysteryOutcome);
+
+        ActionExecutionResult result = ActionExecutionResult.withMovement(ActionResult.MOVED, movementOutcome);
+
+        reporter.report(action, result, Direction.CLOCKWISE);
+
+        verify(gameOutput).showPieceMoved(piece, 20, 25, 5, Direction.CLOCKWISE);
+        verify(gameOutput).showMysteryLanding(piece, TeleportDestination.BASE);
+        verify(gameOutput).showMysteryTeleport(piece, TeleportDestination.BASE);
+    }
+
+    @Test
+    void shouldReportMysteryTeleportAfterMovementShortenedByBlock() {
+        Piece piece = red.getPieces().get(0);
+        piece.enterBoard(26, Direction.CLOCKWISE);
+        piece.moveTo(29);
+
+        Piece blockerOne = green.getPieces().get(0);
+        Piece blockerTwo = green.getPieces().get(1);
+
+        blockerOne.enterBoard(39, Direction.CLOCKWISE);
+        blockerTwo.enterBoard(39, Direction.CLOCKWISE);
+        blockerOne.moveTo(30);
+        blockerTwo.moveTo(30);
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 6);
+
+        MysteryTeleportOutcome mysteryOutcome = new MysteryTeleportOutcome(
+                TeleportDestination.BASE, PieceState.BASE, null,
+                Direction.CLOCKWISE, null, PieceEffect.NONE);
+
+        MovementOutcome movementOutcome = new MovementOutcome(
+                MovementResult.MOVED, 6, 3, 26, 29,
+                List.of(blockerOne, blockerTwo), List.of())
+                .withMysteryTeleport(mysteryOutcome);
+
+        ActionExecutionResult result = ActionExecutionResult.withMovement(ActionResult.MOVED, movementOutcome);
+
+        reporter.report(action, result, Direction.CLOCKWISE);
+
+        verify(gameOutput).showPieceBlocked(piece, 26, 30, blockerOne);
+        verify(gameOutput).showBlockedPieceMoved(piece, 29);
+        verify(gameOutput).showMysteryLanding(piece, TeleportDestination.BASE);
+        verify(gameOutput).showMysteryTeleport(piece, TeleportDestination.BASE);
+        verify(gameOutput, never()).showPieceMoved(eq(piece), anyInt(), anyInt(), anyInt(), any(Direction.class));
+    }
+
+    @Test
     void shouldRejectNullAction() {
         ActionExecutionResult result = ActionExecutionResult.of(ActionResult.MOVED);
 
