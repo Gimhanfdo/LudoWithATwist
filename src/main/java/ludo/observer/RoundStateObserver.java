@@ -31,20 +31,11 @@ public class RoundStateObserver implements RoundObserver {
 
     @Override
     public void onRoundCompleted() {
-        showPlayerPieceCounts();
-        showPlayerPieceLocations();
-        gameOutput.showMysteryCellStatus(mysteryCell);
-    }
-
-    private void showPlayerPieceCounts() {
         for (Player player : gameState.getPlayers()) {
             gameOutput.showPlayerPieceCount(player);
-        }
-    }
-
-    private void showPlayerPieceLocations() {
-        for (Player player : gameState.getPlayers()) {
             gameOutput.showPieceLocations(player);
         }
+
+        gameOutput.showMysteryCellStatus(mysteryCell);
     }
 }

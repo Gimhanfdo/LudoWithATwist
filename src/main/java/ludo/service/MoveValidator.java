@@ -1,6 +1,5 @@
 package ludo.service;
 
-import ludo.domain.enums.ActionType;
 import ludo.domain.enums.PieceState;
 import ludo.domain.model.Board;
 import ludo.domain.model.GameAction;
