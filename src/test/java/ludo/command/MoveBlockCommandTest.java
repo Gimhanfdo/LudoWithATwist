@@ -4,6 +4,7 @@ import ludo.domain.enums.ActionResult;
 import ludo.domain.enums.ActionType;
 import ludo.domain.enums.Colour;
 import ludo.domain.enums.Direction;
+import ludo.domain.model.ActionExecutionResult;
 import ludo.domain.model.GameAction;
 import ludo.domain.model.MovementResult;
 import ludo.domain.model.Piece;
@@ -32,19 +33,18 @@ class MoveBlockCommandTest {
     void shouldExecuteBlockMovement() {
         Piece firstPiece = new Piece(Colour.GREEN, 1);
         Piece secondPiece = new Piece(Colour.GREEN, 2);
-
         firstPiece.enterBoard(39, Direction.CLOCKWISE);
         secondPiece.enterBoard(39, Direction.CLOCKWISE);
         firstPiece.moveTo(20);
         secondPiece.moveTo(20);
-
         GameAction action = new GameAction(ActionType.MOVE_BLOCK, List.of(firstPiece, secondPiece), 4);
 
         when(movementService.moveBlock(20, Colour.GREEN, 4)).thenReturn(MovementResult.MOVED);
 
-        ActionResult result = command.execute(action);
+        ActionExecutionResult result = command.execute(action);
 
-        assertEquals(ActionResult.MOVED, result);
+        assertEquals(ActionResult.MOVED, result.getResult());
+        assertFalse(result.hasMovementOutcome());
         verify(movementService).moveBlock(20, Colour.GREEN, 4);
     }
 
@@ -52,19 +52,18 @@ class MoveBlockCommandTest {
     void shouldReturnCapturedWhenBlockCapturesOpponentBlock() {
         Piece firstPiece = new Piece(Colour.GREEN, 1);
         Piece secondPiece = new Piece(Colour.GREEN, 2);
-
         firstPiece.enterBoard(39, Direction.CLOCKWISE);
         secondPiece.enterBoard(39, Direction.CLOCKWISE);
         firstPiece.moveTo(20);
         secondPiece.moveTo(20);
-
         GameAction action = new GameAction(ActionType.MOVE_BLOCK, List.of(firstPiece, secondPiece), 4);
 
         when(movementService.moveBlock(20, Colour.GREEN, 4)).thenReturn(MovementResult.CAPTURED);
 
-        ActionResult result = command.execute(action);
+        ActionExecutionResult result = command.execute(action);
 
-        assertEquals(ActionResult.CAPTURED, result);
+        assertEquals(ActionResult.CAPTURED, result.getResult());
+        assertFalse(result.hasMovementOutcome());
     }
 
     @Test
