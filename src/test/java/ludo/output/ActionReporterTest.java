@@ -69,26 +69,11 @@ class ActionReporterTest {
     }
 
     @Test
-    void shouldReportActualDistanceWhenMovementIsShortened() {
-        Piece piece = red.getPieces().get(0);
-        piece.enterBoard(26, Direction.CLOCKWISE);
-        piece.moveTo(29);
-        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 6);
-        Piece blockerOne = new Piece(Colour.BLUE, 1);
-        Piece blockerTwo = new Piece(Colour.BLUE, 2);
-        MovementOutcome movementOutcome = new MovementOutcome(MovementResult.MOVED, 6, 3, 26, 29, List.of(blockerOne, blockerTwo), List.of());
-        ActionExecutionResult result = ActionExecutionResult.withMovement(ActionResult.MOVED, movementOutcome);
-
-        reporter.report(action, result, Direction.CLOCKWISE);
-
-        verify(gameOutput).showPieceMoved(piece, 26, 29, 3, Direction.CLOCKWISE);
-    }
-
-    @Test
     void shouldNotReportFailedAction() {
         Piece piece = red.getPieces().get(0);
         GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
-        MovementOutcome movementOutcome = new MovementOutcome(MovementResult.NOT_MOVED, 4, 0, 26, 26, List.of(), List.of());
+        MovementOutcome movementOutcome = new MovementOutcome(MovementResult.NOT_MOVED, 4, 0, 26, 26, List.of(),
+                List.of());
         ActionExecutionResult result = ActionExecutionResult.withMovement(ActionResult.NOT_MOVED, movementOutcome);
 
         reporter.report(action, result, Direction.CLOCKWISE);
@@ -106,6 +91,97 @@ class ActionReporterTest {
         reporter.report(action, result, Direction.CLOCKWISE);
 
         verifyNoInteractions(gameOutput);
+    }
+
+    @Test
+    void shouldReportCompletelyBlockedMovement() {
+        Piece piece = red.getPieces().get(0);
+        piece.enterBoard(26, Direction.CLOCKWISE);
+
+        Piece blockerOne = green.getPieces().get(0);
+        Piece blockerTwo = green.getPieces().get(1);
+        blockerOne.enterBoard(39, Direction.CLOCKWISE);
+        blockerTwo.enterBoard(39, Direction.CLOCKWISE);
+        blockerOne.moveTo(27);
+        blockerTwo.moveTo(27);
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 4);
+        MovementOutcome movementOutcome = new MovementOutcome(MovementResult.NOT_MOVED, 4, 0, 26, 26,
+                List.of(blockerOne, blockerTwo), List.of());
+        ActionExecutionResult result = ActionExecutionResult.withMovement(ActionResult.NOT_MOVED, movementOutcome);
+
+        reporter.report(action, result, Direction.CLOCKWISE);
+
+        verify(gameOutput).showPieceBlocked(piece, 26, 27, blockerOne);
+        verify(gameOutput).showBlockedPieceNotMoved(piece);
+        verify(gameOutput, never()).showBlockedPieceMoved(any(Piece.class), anyInt());
+    }
+
+    @Test
+    void shouldReportMovementShortenedByBlock() {
+        Piece piece = red.getPieces().get(0);
+        piece.enterBoard(26, Direction.CLOCKWISE);
+        piece.moveTo(29);
+
+        Piece blockerOne = green.getPieces().get(0);
+        Piece blockerTwo = green.getPieces().get(1);
+        blockerOne.enterBoard(39, Direction.CLOCKWISE);
+        blockerTwo.enterBoard(39, Direction.CLOCKWISE);
+        blockerOne.moveTo(30);
+        blockerTwo.moveTo(30);
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(piece), 6);
+        MovementOutcome movementOutcome = new MovementOutcome(MovementResult.MOVED, 6, 3, 26, 29,
+                List.of(blockerOne, blockerTwo), List.of());
+        ActionExecutionResult result = ActionExecutionResult.withMovement(ActionResult.MOVED, movementOutcome);
+
+        reporter.report(action, result, Direction.CLOCKWISE);
+
+        verify(gameOutput).showPieceBlocked(piece, 26, 30, blockerOne);
+        verify(gameOutput).showBlockedPieceMoved(piece, 29);
+        verify(gameOutput, never()).showBlockedPieceNotMoved(any(Piece.class));
+    }
+
+    @Test
+    void shouldReportCapturedPiece() {
+        Piece attacker = red.getPieces().get(0);
+        Piece opponent = blue.getPieces().get(0);
+
+        attacker.enterBoard(26, Direction.CLOCKWISE);
+        opponent.enterBoard(13, Direction.CLOCKWISE);
+        attacker.moveTo(30);
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(attacker), 4);
+        MovementOutcome movementOutcome = new MovementOutcome(MovementResult.CAPTURED, 4, 4, 26, 30, List.of(),
+                List.of(opponent));
+        opponent.reset();
+        ActionExecutionResult result = ActionExecutionResult.withMovement(ActionResult.CAPTURED, movementOutcome);
+
+        reporter.report(action, result, Direction.CLOCKWISE);
+
+        verify(gameOutput).showPieceCaptured(attacker, opponent, 30, 1, 15);
+        verify(gameOutput, never()).showPieceMoved(any(Piece.class), anyInt(), anyInt(), anyInt(),
+                any(Direction.class));
+    }
+
+    @Test
+    void shouldReportEachCapturedPiece() {
+        Piece attacker = red.getPieces().get(0);
+        Piece opponentOne = blue.getPieces().get(0);
+        Piece opponentTwo = blue.getPieces().get(1);
+
+        attacker.enterBoard(26, Direction.CLOCKWISE);
+        attacker.moveTo(30);
+
+        GameAction action = new GameAction(ActionType.MOVE_PIECE, List.of(attacker), 4);
+        MovementOutcome movementOutcome = new MovementOutcome(MovementResult.CAPTURED, 4, 4, 26, 30, List.of(),
+                List.of(opponentOne, opponentTwo));
+        ActionExecutionResult result = ActionExecutionResult.withMovement(ActionResult.CAPTURED, movementOutcome);
+
+        reporter.report(action, result, Direction.CLOCKWISE);
+
+        verify(gameOutput).showPieceCaptured(attacker, opponentOne, 30, 1, 15);
+        verify(gameOutput).showPieceCaptured(attacker, opponentTwo, 30, 1, 15);
     }
 
     @Test

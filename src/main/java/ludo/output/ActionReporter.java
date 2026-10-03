@@ -8,6 +8,7 @@ import ludo.domain.model.ActionExecutionResult;
 import ludo.domain.model.GameAction;
 import ludo.domain.model.GameState;
 import ludo.domain.model.MovementOutcome;
+import ludo.domain.model.MovementResult;
 import ludo.domain.model.Piece;
 
 public class ActionReporter {
@@ -31,16 +32,17 @@ public class ActionReporter {
     public void report(GameAction action, ActionExecutionResult executionResult, Direction previousDirection) {
         validateArguments(action, executionResult);
 
+        if (action.getType() == ActionType.MOVE_PIECE && executionResult.hasMovementOutcome()) {
+            reportPieceMovement(action, executionResult, previousDirection);
+            return;
+        }
+
         if (executionResult.getResult() == ActionResult.NOT_MOVED) {
             return;
         }
 
-        switch (action.getType()) {
-            case ENTER_BOARD -> reportEnteredBoard(action);
-            case MOVE_PIECE -> reportPieceMovement(action, executionResult, previousDirection);
-            case MOVE_BLOCK -> {
-                // Block reporting will be added in 10M.4.
-            }
+        if (action.getType() == ActionType.ENTER_BOARD) {
+            reportEnteredBoard(action);
         }
     }
 
@@ -50,24 +52,75 @@ public class ActionReporter {
         gameOutput.showPieceEnteredBoard(piece, countPiecesOnBoard(), countPiecesInBase());
     }
 
-    private void reportPieceMovement(GameAction action, ActionExecutionResult executionResult, Direction previousDirection) {
-        if (!executionResult.hasMovementOutcome() || previousDirection == null) {
-            return;
-        }
-
+    private void reportPieceMovement(GameAction action, ActionExecutionResult executionResult,
+            Direction previousDirection) {
         MovementOutcome movementOutcome = executionResult.getMovementOutcome();
+        Piece piece = action.getPieces().get(0);
 
-        if (movementOutcome.getFromPosition() == null || movementOutcome.getToPosition() == null) {
+        if (movementOutcome.wasBlocked()) {
+            reportBlockedMovement(piece, movementOutcome);
             return;
         }
 
-        Piece piece = action.getPieces().get(0);
+        if (movementOutcome.captured()) {
+            reportCapture(piece, movementOutcome);
+            return;
+        }
+
+        reportStandardMovement(piece, movementOutcome, previousDirection);
+    }
+
+    private void reportCapture(Piece attacker, MovementOutcome movementOutcome) {
+        if (movementOutcome.getToPosition() == null || movementOutcome.getCapturedPieces().isEmpty()) {
+            return;
+        }
+
+        for (Piece capturedPiece : movementOutcome.getCapturedPieces()) {
+            gameOutput.showPieceCaptured(attacker, capturedPiece, movementOutcome.getToPosition(), countPiecesOnBoard(),
+                    countPiecesInBase());
+        }
+    }
+
+    private void reportStandardMovement(Piece piece, MovementOutcome movementOutcome, Direction previousDirection) {
+        if (movementOutcome.getResult() == MovementResult.NOT_MOVED) {
+            return;
+        }
+
+        if (previousDirection == null || movementOutcome.getFromPosition() == null
+                || movementOutcome.getToPosition() == null) {
+            return;
+        }
 
         if (piece.getState() != PieceState.STANDARD_PATH) {
             return;
         }
 
-        gameOutput.showPieceMoved(piece, movementOutcome.getFromPosition(), movementOutcome.getToPosition(), movementOutcome.getActualDistance(), previousDirection);
+        gameOutput.showPieceMoved(piece, movementOutcome.getFromPosition(), movementOutcome.getToPosition(),
+                movementOutcome.getActualDistance(), previousDirection);
+    }
+
+    private void reportBlockedMovement(Piece piece, MovementOutcome movementOutcome) {
+        if (movementOutcome.getFromPosition() == null || movementOutcome.getBlockingPieces().isEmpty()) {
+            return;
+        }
+
+        Piece blockingPiece = movementOutcome.getBlockingPieces().get(0);
+        Integer blockedPosition = blockingPiece.getPosition();
+
+        if (blockedPosition == null) {
+            return;
+        }
+
+        gameOutput.showPieceBlocked(piece, movementOutcome.getFromPosition(), blockedPosition, blockingPiece);
+
+        if (movementOutcome.wasCompletelyBlocked()) {
+            gameOutput.showBlockedPieceNotMoved(piece);
+            return;
+        }
+
+        if (movementOutcome.wasShortened() && movementOutcome.getToPosition() != null) {
+            gameOutput.showBlockedPieceMoved(piece, movementOutcome.getToPosition());
+        }
     }
 
     private int countPiecesOnBoard() {
