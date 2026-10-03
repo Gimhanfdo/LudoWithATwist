@@ -169,38 +169,13 @@ public class CaptureService {
     }
 
     public boolean resolveBlockCapture(List<Piece> attackingBlock, GameState gameState) {
+        List<Piece> defendingBlock = getCapturableBlockPieces(attackingBlock, gameState);
 
-        validateBlock(attackingBlock);
-
-        if (gameState == null) {
-            throw new IllegalArgumentException("Game state cannot be null.");
-        }
-
-        if (!formsBlock(attackingBlock)) {
+        if (defendingBlock.isEmpty()) {
             return false;
         }
 
-        int position = attackingBlock.get(0).getPosition();
-        List<Piece> occupants = gameState.getPiecesAtStandardPosition(position);
-        Colour attackingColour = attackingBlock.get(0).getColour();
-
-        for (Colour colour : Colour.values()) {
-            if (colour == attackingColour) {
-                continue;
-            }
-
-            List<Piece> defendingBlock = getPiecesOfColour(occupants, colour);
-
-            if (defendingBlock.size() != attackingBlock.size()) {
-                continue;
-            }
-
-            if (captureBlock(attackingBlock, defendingBlock)) {
-                return true;
-            }
-        }
-
-        return false;
+        return captureBlock(attackingBlock, defendingBlock);
     }
 
     private List<Piece> getPiecesOfColour(List<Piece> pieces, Colour colour) {
@@ -267,5 +242,35 @@ public class CaptureService {
         }
 
         return capture(attacker, capturablePieces.get(0));
+    }
+
+    public List<Piece> getCapturableBlockPieces(List<Piece> attackingBlock, GameState gameState) {
+        validateBlock(attackingBlock);
+
+        if (gameState == null) {
+            throw new IllegalArgumentException("Game state cannot be null.");
+        }
+
+        if (!formsBlock(attackingBlock)) {
+            return List.of();
+        }
+
+        int position = attackingBlock.get(0).getPosition();
+        Colour attackingColour = attackingBlock.get(0).getColour();
+        List<Piece> occupants = gameState.getPiecesAtStandardPosition(position);
+
+        for (Colour colour : Colour.values()) {
+            if (colour == attackingColour) {
+                continue;
+            }
+
+            List<Piece> defendingBlock = getPiecesOfColour(occupants, colour);
+
+            if (defendingBlock.size() == attackingBlock.size()) {
+                return List.copyOf(defendingBlock);
+            }
+        }
+
+        return List.of();
     }
 }

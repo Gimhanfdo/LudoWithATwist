@@ -611,4 +611,63 @@ class CaptureServiceTest {
         assertEquals(PieceState.STANDARD_PATH, opponent.getState());
         assertEquals(20, opponent.getPosition());
     }
+
+    @Test
+    void shouldReturnCapturableOpponentBlockWithoutCapturingIt() {
+        Player redPlayer = new Player(Colour.RED);
+        Player bluePlayer = new Player(Colour.BLUE);
+        GameState gameState = new GameState(List.of(redPlayer, bluePlayer));
+
+        Piece redOne = redPlayer.getPieces().get(0);
+        Piece redTwo = redPlayer.getPieces().get(1);
+        Piece blueOne = bluePlayer.getPieces().get(0);
+        Piece blueTwo = bluePlayer.getPieces().get(1);
+
+        redOne.enterBoard(26, Direction.CLOCKWISE);
+        redTwo.enterBoard(26, Direction.CLOCKWISE);
+        blueOne.enterBoard(13, Direction.CLOCKWISE);
+        blueTwo.enterBoard(13, Direction.CLOCKWISE);
+
+        redOne.moveTo(20);
+        redTwo.moveTo(20);
+        blueOne.moveTo(20);
+        blueTwo.moveTo(20);
+
+        List<Piece> capturablePieces = captureService.getCapturableBlockPieces(List.of(redOne, redTwo), gameState);
+
+        assertEquals(List.of(blueOne, blueTwo), capturablePieces);
+        assertEquals(PieceState.STANDARD_PATH, blueOne.getState());
+        assertEquals(PieceState.STANDARD_PATH, blueTwo.getState());
+        assertEquals(20, blueOne.getPosition());
+        assertEquals(20, blueTwo.getPosition());
+    }
+
+    @Test
+    void shouldReturnNoCapturableBlockWhenSizesDiffer() {
+        Player redPlayer = new Player(Colour.RED);
+        Player bluePlayer = new Player(Colour.BLUE);
+        GameState gameState = new GameState(List.of(redPlayer, bluePlayer));
+
+        Piece redOne = redPlayer.getPieces().get(0);
+        Piece redTwo = redPlayer.getPieces().get(1);
+        Piece blueOne = bluePlayer.getPieces().get(0);
+        Piece blueTwo = bluePlayer.getPieces().get(1);
+        Piece blueThree = bluePlayer.getPieces().get(2);
+
+        redOne.enterBoard(26, Direction.CLOCKWISE);
+        redTwo.enterBoard(26, Direction.CLOCKWISE);
+        blueOne.enterBoard(13, Direction.CLOCKWISE);
+        blueTwo.enterBoard(13, Direction.CLOCKWISE);
+        blueThree.enterBoard(13, Direction.CLOCKWISE);
+
+        redOne.moveTo(20);
+        redTwo.moveTo(20);
+        blueOne.moveTo(20);
+        blueTwo.moveTo(20);
+        blueThree.moveTo(20);
+
+        List<Piece> capturablePieces = captureService.getCapturableBlockPieces(List.of(redOne, redTwo), gameState);
+
+        assertTrue(capturablePieces.isEmpty());
+    }
 }
