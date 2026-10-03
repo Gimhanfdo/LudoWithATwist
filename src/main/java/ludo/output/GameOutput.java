@@ -3,6 +3,7 @@ package ludo.output;
 import ludo.domain.enums.Direction;
 import ludo.domain.enums.PieceEffect;
 import ludo.domain.enums.TeleportDestination;
+import ludo.domain.model.MysteryCell;
 import ludo.domain.model.Piece;
 import ludo.domain.model.Player;
 
@@ -47,6 +48,12 @@ public interface GameOutput {
     void showMysteryCellSpawned(int position);
 
     void showBriefingPieceReturnedToBase(Piece piece);
+
+    void showPlayerPieceCount(Player player);
+
+    void showPieceLocations(Player player);
+
+    void showMysteryCellStatus(MysteryCell mysteryCell);
 
     void showWinner(Player player);
 }
