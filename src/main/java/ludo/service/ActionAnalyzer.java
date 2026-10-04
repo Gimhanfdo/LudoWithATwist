@@ -2,6 +2,7 @@ package ludo.service;
 
 import ludo.domain.enums.ActionType;
 import ludo.domain.enums.PieceState;
+import ludo.domain.enums.Direction;
 import ludo.domain.model.ActionAnalysis;
 import ludo.domain.model.GameAction;
 import ludo.domain.model.GameState;
@@ -65,8 +66,12 @@ public class ActionAnalyzer {
             return neutralAnalysis(action);
         }
 
-        if (board.movesBeyondApproach(piece.getPosition(), allowedDistance, piece.getColour(), piece.getDirection())) {
-            return neutralAnalysis(action);
+        if (board.movesBeyondApproach(
+                piece.getPosition(),
+                allowedDistance,
+                piece.getColour(),
+                piece.getDirection())) {
+            return analyzeMoveBeyondApproach(action, piece, allowedDistance);
         }
 
         int destination = destinationCalculator.calculateStandardDestination(piece, allowedDistance);
@@ -122,5 +127,36 @@ public class ActionAnalyzer {
     private boolean wouldCreateBlock(Piece movingPiece, int destination) {
         return gameState.getPiecesAtStandardPosition(destination).stream()
                 .anyMatch(piece -> piece.getColour() == movingPiece.getColour());
+    }
+
+    private ActionAnalysis analyzeMoveBeyondApproach(GameAction action, Piece piece, int movementDistance) {
+        if (!canEnterHomeStraight(piece)) {
+            return neutralAnalysis(action);
+        }
+
+        int distanceToApproach = board.getDistanceToApproach(piece.getPosition(), piece.getColour(),
+                piece.getDirection());
+        int remainingDistance = movementDistance - distanceToApproach;
+        int homeStraightPosition = remainingDistance - 1;
+
+        if (homeStraightPosition > Board.HOME_STRAIGHT_SIZE) {
+            return neutralAnalysis(action);
+        }
+
+        int distanceToHome = Board.HOME_STRAIGHT_SIZE - homeStraightPosition;
+
+        return new ActionAnalysis(action, null, false, distanceToHome, true, false);
+    }
+
+    private boolean canEnterHomeStraight(Piece piece) {
+        if (!piece.hasCaptured()) {
+            return false;
+        }
+
+        if (piece.getDirection() == Direction.CLOCKWISE) {
+            return true;
+        }
+
+        return piece.hasPassedApproachTwice();
     }
 }
