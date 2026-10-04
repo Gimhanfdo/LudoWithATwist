@@ -328,4 +328,71 @@ class ActionAnalyzerTest {
 
         assertFalse(analysis.landsOnMystery());
     }
+
+    @Test
+    void shouldAnalyzeProgressWhenStandardPathMoveEntersHomeStraight() {
+        Piece piece = redPlayer.getPieces().get(0);
+
+        piece.enterBoard(26, Direction.CLOCKWISE);
+        piece.recordCapture();
+        piece.moveTo(24);
+
+        GameAction action = new GameAction(
+                ActionType.MOVE_PIECE,
+                List.of(piece),
+                3);
+
+        when(pieceEffectService.calculateMovement(piece, 3)).thenReturn(3);
+        when(blockService.getAllowedMovementDistance(piece, 3)).thenReturn(3);
+
+        ActionAnalysis analysis = analyzer.analyze(action);
+
+        assertTrue(analysis.isProgressKnown());
+        assertEquals(4, analysis.getDistanceToHome());
+    }
+
+    @Test
+    void shouldNotAnalyzeHomeStraightEntryBeforeCounterclockwisePiecePassesApproachTwice() {
+        Piece piece = redPlayer.getPieces().get(0);
+
+        piece.enterBoard(26, Direction.COUNTERCLOCKWISE);
+        piece.recordCapture();
+        piece.moveTo(27);
+
+        GameAction action = new GameAction(
+                ActionType.MOVE_PIECE,
+                List.of(piece),
+                3);
+
+        when(pieceEffectService.calculateMovement(piece, 3)).thenReturn(3);
+        when(blockService.getAllowedMovementDistance(piece, 3)).thenReturn(3);
+
+        ActionAnalysis analysis = analyzer.analyze(action);
+
+        assertFalse(analysis.isProgressKnown());
+    }
+
+    @Test
+    void shouldAnalyzeHomeStraightEntryAfterCounterclockwisePiecePassesApproachTwice() {
+        Piece piece = redPlayer.getPieces().get(0);
+
+        piece.enterBoard(26, Direction.COUNTERCLOCKWISE);
+        piece.recordCapture();
+        piece.recordApproachPass();
+        piece.recordApproachPass();
+        piece.moveTo(27);
+
+        GameAction action = new GameAction(
+                ActionType.MOVE_PIECE,
+                List.of(piece),
+                3);
+
+        when(pieceEffectService.calculateMovement(piece, 3)).thenReturn(3);
+        when(blockService.getAllowedMovementDistance(piece, 3)).thenReturn(3);
+
+        ActionAnalysis analysis = analyzer.analyze(action);
+
+        assertTrue(analysis.isProgressKnown());
+        assertEquals(5, analysis.getDistanceToHome());
+    }
 }
