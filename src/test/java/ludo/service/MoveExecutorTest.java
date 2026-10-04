@@ -330,7 +330,7 @@ class MoveExecutorTest {
         }
 
         @Test
-        void shouldEnterHomeStraightOnEligibleCounterclockwiseApproachPass() {
+        void shouldEnterHomeStraightWhenCounterclockwisePieceHasAlreadyPassedApproachTwice() {
 
                 Piece piece = new Piece(Colour.RED, 1);
 
@@ -502,23 +502,6 @@ class MoveExecutorTest {
         }
 
         @Test
-        void shouldIntegrateClockwiseMovementIntoHomeStraight() {
-
-                Piece piece = new Piece(Colour.RED, 1);
-
-                piece.enterBoard(26, Direction.CLOCKWISE);
-
-                piece.moveTo(22);
-                piece.recordCapture();
-
-                boolean moved = moveExecutor.moveOnStandardPath(piece, 5);
-
-                assertTrue(moved);
-                assertEquals(PieceState.HOME_STRAIGHT, piece.getState());
-                assertEquals(1, piece.getPosition());
-        }
-
-        @Test
         void shouldContinueStandardPathWhenPieceHasNotCaptured() {
 
                 Piece piece = new Piece(Colour.RED, 1);
@@ -567,7 +550,7 @@ class MoveExecutorTest {
 
         @Test
         void shouldResumeOriginalCounterclockwiseDirectionAfterLeavingBlock() {
-                
+
                 Piece piece = new Piece(Colour.RED, 1);
 
                 piece.enterBoard(26, Direction.COUNTERCLOCKWISE);

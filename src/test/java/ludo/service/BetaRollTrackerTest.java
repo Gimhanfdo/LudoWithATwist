@@ -74,7 +74,7 @@ class BetaRollTrackerTest {
     }
 
     @Test
-    void shouldRejectNullColour() {
+    void shouldRejectNullPiece() {
         assertThrows(IllegalArgumentException.class, () -> tracker.recordRoll(null, 3));
     }
 }

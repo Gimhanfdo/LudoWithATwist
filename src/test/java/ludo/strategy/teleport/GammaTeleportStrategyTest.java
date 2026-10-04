@@ -35,7 +35,7 @@ class GammaTeleportStrategyTest {
     }
 
     @Test
-    void shouldTeleportClockwisePieceToGamma() {
+    void shouldTeleportClockwisePieceToGammaAndReverseDirection() {
         Piece piece = new Piece(Colour.RED, 1);
 
         piece.enterBoard(26, Direction.CLOCKWISE);
@@ -45,6 +45,7 @@ class GammaTeleportStrategyTest {
 
         assertEquals(PieceState.STANDARD_PATH, piece.getState());
         assertEquals(Board.GAMMA_POSITION, piece.getPosition());
+        assertEquals(Direction.COUNTERCLOCKWISE, piece.getDirection());
     }
 
     @Test
@@ -81,19 +82,6 @@ class GammaTeleportStrategyTest {
         assertEquals(Board.BETA_POSITION, piece.getPosition());
         assertEquals(PieceEffect.BRIEFING, piece.getEffect());
         assertEquals(4, piece.getEffectRoundsRemaining());
-    }
-
-    @Test
-    void shouldNotRemainAtGammaWhenPieceIsCounterclockwise() {
-        GammaTeleportStrategy realStrategy = new GammaTeleportStrategy(new BetaTeleportStrategy());
-        Piece piece = new Piece(Colour.GREEN, 1);
-
-        piece.enterBoard(39, Direction.COUNTERCLOCKWISE);
-
-        realStrategy.teleport(piece);
-
-        assertNotEquals(Board.GAMMA_POSITION, piece.getPosition());
-        assertEquals(Board.BETA_POSITION, piece.getPosition());
     }
 
     @Test

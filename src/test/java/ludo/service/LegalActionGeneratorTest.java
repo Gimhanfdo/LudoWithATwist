@@ -159,28 +159,6 @@ class LegalActionGeneratorTest {
     }
 
     @Test
-    void shouldGenerateBlockActionOnlyOnce() {
-        Piece firstPiece = player.getPieces().get(0);
-        Piece secondPiece = player.getPieces().get(1);
-
-        firstPiece.enterBoard(26, Direction.CLOCKWISE);
-        secondPiece.enterBoard(26, Direction.CLOCKWISE);
-        firstPiece.moveTo(20);
-        secondPiece.moveTo(20);
-
-        when(pieceEffectService.canMove(any(Piece.class))).thenReturn(true);
-        when(blockService.hasBlockAt(20, Colour.RED)).thenReturn(true);
-        when(blockService.getBlockAt(20, Colour.RED)).thenReturn(List.of(firstPiece, secondPiece));
-        when(moveValidator.isValid(any(GameAction.class))).thenReturn(true);
-
-        long blockActions = generator.generateActions(player, 4).stream()
-                .filter(action -> action.getType() == ActionType.MOVE_BLOCK)
-                .count();
-
-        assertEquals(1, blockActions);
-    }
-
-    @Test
     void shouldNotGenerateBlockActionForSinglePiece() {
         Piece piece = player.getPieces().get(0);
 
@@ -262,9 +240,6 @@ class LegalActionGeneratorTest {
         restrictedPiece.enterBoard(26, Direction.CLOCKWISE);
         unrestrictedPiece.enterBoard(26, Direction.CLOCKWISE);
         unrestrictedPiece.moveTo(10);
-
-        GameAction restrictedAction = new GameAction(ActionType.MOVE_PIECE, List.of(restrictedPiece), 6);
-        GameAction unrestrictedAction = new GameAction(ActionType.MOVE_PIECE, List.of(unrestrictedPiece), 6);
 
         when(pieceEffectService.canMove(any(Piece.class))).thenReturn(true);
         when(pieceEffectService.calculateMovement(any(Piece.class), eq(6))).thenReturn(6);

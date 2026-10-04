@@ -80,7 +80,7 @@ class BlueStrategyTest {
     }
 
     @Test
-    void shouldUseActionSelectorForPreferredActions() {
+    void shouldUseActionSelectorWhenMultiplePreferredActionsExist() {
         Piece b1 = bluePlayer.getPieces().get(0);
         Piece b2 = bluePlayer.getPieces().get(1);
 

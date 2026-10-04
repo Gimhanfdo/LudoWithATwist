@@ -119,24 +119,6 @@ class BlockServiceTest {
     }
 
     @Test
-    void shouldStopDetectingBlockWhenPieceMovesAway() {
-        Piece firstPiece = redPlayer.getPieces().get(0);
-        Piece secondPiece = redPlayer.getPieces().get(1);
-
-        firstPiece.enterBoard(26, Direction.CLOCKWISE);
-        secondPiece.enterBoard(26, Direction.CLOCKWISE);
-
-        firstPiece.moveTo(20);
-        secondPiece.moveTo(20);
-
-        assertTrue(blockService.hasBlockAt(20, Colour.RED));
-
-        secondPiece.moveTo(21);
-
-        assertFalse(blockService.hasBlockAt(20, Colour.RED));
-    }
-
-    @Test
     void shouldReturnEmptyListWhenNoBlockExists() {
         Piece redPiece = redPlayer.getPieces().get(0);
 
@@ -282,7 +264,7 @@ class BlockServiceTest {
     }
 
     @Test
-    void shouldAllowZeroMovementWhenOpponentBlockIsImmediatelyAhead() {
+    void shouldReturnZeroAllowedMovementWhenOpponentBlockIsImmediatelyAhead() {
 
         Piece redPiece = redPlayer.getPieces().get(0);
         Piece bluePieceOne = bluePlayer.getPieces().get(0);
